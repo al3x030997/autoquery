@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoQuery - Coming Soon</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'DM Sans', sans-serif; 
+            background-color: #1c1917; 
+            color: #fafaf9; 
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Crimson Pro', serif;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            margin-bottom: 60px;
+        }
+        h1 {
+            font-size: clamp(42px, 8vw, 64px);
+            font-weight: 700;
+            margin-bottom: 24px;
+            font-family: 'Crimson Pro', serif;
+            line-height: 1.1;
+        }
+        p {
+            font-size: clamp(18px, 3vw, 24px);
+            color: #a8a29e;
+            margin-bottom: 48px;
+            line-height: 1.5;
+        }
+        input {
+            width: 100%;
+            padding: 18px 24px;
+            font-size: 16px;
+            background: #292524;
+            border: 1px solid #44403c;
+            border-radius: 10px;
+            color: #fafaf9;
+            margin-bottom: 16px;
+            outline: none;
+            font-family: 'DM Sans', sans-serif;
+        }
+        input:focus {
+            border-color: #4ade80;
+        }
+        button {
+            width: 100%;
+            padding: 20px 32px;
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+            color: white;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: 'DM Sans', sans-serif;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.5);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .back-link {
+            margin-top: 32px;
+            display: inline-block;
+            color: #4ade80;
+            text-decoration: none;
+            font-size: 16px;
+            transition: opacity 0.2s;
+        }
+        .back-link:hover {
+            opacity: 0.8;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            h1 {
+                font-size: 36px;
+            }
+            p {
+                font-size: 18px;
+            }
+            input, button {
+                font-size: 14px;
+                padding: 16px 20px;
+            }
+            .logo {
+                font-size: 24px;
+                margin-bottom: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">AutoQuery</div>
+        <h1>Oops, we're still building</h1>
+        <p>But you can support us with your email</p>
+        
+        <form id="waitlistForm">
+            <input 
+                type="email" 
+                id="emailInput"
+                placeholder="Enter your email address"
+                required
+            />
+            <button type="submit">Join the Waitlist</button>
+        </form>
+        
+        <a href="index.html" class="back-link">← Back to home</a>
+    </div>
+
+    <footer style="width: 100%; max-width: 600px; margin: 0 auto; padding: 32px 0; border-top: 1px solid #44403c; text-align: center;">
+        <p style="color: #a8a29e; font-size: 14px;">© 2026 AutoQuery. All rights reserved.</p>
+    </footer>
+    
+    <script>
+        document.getElementById('waitlistForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('emailInput').value;
+            
+            // Show success message
+            alert('Thanks for joining! We\'ll notify you at ' + email + ' when we launch.');
+            
+            // Clear form
+            document.getElementById('emailInput').value = '';
+        });
+    </script>
+</body>
+</html>
