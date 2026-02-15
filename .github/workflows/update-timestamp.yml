@@ -24,13 +24,14 @@ jobs:
 
       - name: Update timestamps in HTML files
         run: |
-          # Get current date in English format
-          CURRENT_DATE_EN=$(date '+%B %d, %Y')
+          # Get current date and time in English format
+          CURRENT_DATE_EN=$(date '+%B %d, %Y at %H:%M')
 
           # Get current date in German format
           MONTH=$(date '+%m')
           DAY=$(date '+%d')
           YEAR=$(date '+%Y')
+          TIME=$(date '+%H:%M')
 
           # Convert month to German
           case $MONTH in
@@ -51,7 +52,7 @@ jobs:
           # Remove leading zero from day
           DAY=$(echo $DAY | sed 's/^0*//')
 
-          CURRENT_DATE_DE="$DAY. $MONTH_DE $YEAR"
+          CURRENT_DATE_DE="$DAY. $MONTH_DE $YEAR um $TIME"
 
           echo "English date: $CURRENT_DATE_EN"
           echo "German date: $CURRENT_DATE_DE"
