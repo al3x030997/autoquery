@@ -205,9 +205,34 @@
             .dimensions-section { padding: 40px 24px; }
             .dimension-item { grid-template-columns: 1fr; gap: 12px; }
 
+            /* Radar chart section - reduce padding */
+            section > div[style*="background: #292524"] {
+                padding: 32px 16px !important;
+                margin-bottom: 40px !important;
+            }
+
             /* Radar chart grid becomes single column */
             section div[style*="grid-template-columns: 1fr 1fr"] {
                 grid-template-columns: 1fr !important;
+                gap: 32px !important;
+            }
+
+            /* Make canvas responsive */
+            #radarChart {
+                max-width: 100% !important;
+                height: auto !important;
+                width: 100% !important;
+            }
+
+            /* Chart container height on mobile */
+            div[style*="position: relative; height: 400px"] {
+                height: 300px !important;
+                max-width: 300px !important;
+            }
+
+            /* Feedback items - reduce padding */
+            .feedback-item {
+                padding: 12px !important;
             }
 
             /* Case Study mobile */
@@ -223,7 +248,7 @@
 
             /* LLM Tools mobile */
             .dimensions-section > div {
-                padding: 32px 24px !important;
+                padding: 32px 16px !important;
             }
 
             /* Footer mobile */
@@ -258,6 +283,15 @@
 
             .hero a {
                 width: 100% !important;
+            }
+
+            /* Ensure all content boxes stay within viewport */
+            div[style*="padding: 60px"] {
+                padding: 24px 16px !important;
+            }
+
+            div[style*="padding: 40px"] {
+                padding: 24px 16px !important;
             }
         }
     </style>
@@ -304,7 +338,9 @@
                     <!-- Left: Radar Chart -->
                     <div>
                         <h3 style="font-size: 24px; font-weight: 700; font-family: 'Crimson Pro', serif; text-align: center; margin-bottom: 32px;">Your Manuscript DNA</h3>
-                        <canvas id="radarChart" width="400" height="400"></canvas>
+                        <div style="position: relative; height: 400px; max-width: 400px; margin: 0 auto;">
+                            <canvas id="radarChart"></canvas>
+                        </div>
                         <div style="display: flex; justify-content: center; gap: 24px; margin-top: 24px; font-size: 13px;">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <div style="width: 12px; height: 12px; background: #22c55e; border-radius: 50%;"></div>
@@ -560,7 +596,7 @@
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
+                maintainAspectRatio: false,
                 scales: {
                     r: {
                         beginAtZero: true,
