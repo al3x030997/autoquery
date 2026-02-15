@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manuskript-Analyse - AutoQuery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #1c1917;
+            color: #fafaf9;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+        header { padding: 24px 0; border-bottom: 1px solid #44403c; }
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Crimson Pro', serif;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+        .back-link { color: #4ade80; text-decoration: none; font-size: 14px; }
+        .back-link:hover { opacity: 0.8; }
+
+        .hero {
+            padding: 80px 0 60px;
+            text-align: center;
+        }
+        .hero h1 {
+            font-size: clamp(36px, 6vw, 56px);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 24px;
+            font-family: 'Crimson Pro', serif;
+        }
+        .hero p {
+            font-size: clamp(16px, 2.5vw, 20px);
+            color: #a8a29e;
+            margin-bottom: 40px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .upload-section {
+            background: #292524;
+            border: 2px dashed #4ade80;
+            border-radius: 16px;
+            padding: 60px 40px;
+            text-align: center;
+            margin: 0 auto 80px;
+            max-width: 600px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-section:hover {
+            background: #2f2a29;
+            border-color: #22c55e;
+        }
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .features-section {
+            padding: 60px 0;
+        }
+        .section-title {
+            font-size: 32px;
+            font-weight: 700;
+            font-family: 'Crimson Pro', serif;
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        .green { color: #4ade80; }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+            margin-bottom: 80px;
+        }
+
+        .feature-card {
+            background: #292524;
+            border: 1px solid #44403c;
+            border-radius: 12px;
+            padding: 32px;
+        }
+        .feature-card h3 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #4ade80;
+            margin-bottom: 16px;
+            font-family: 'Crimson Pro', serif;
+        }
+        .feature-card ul {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-card li {
+            padding: 8px 0;
+            color: #a8a29e;
+            line-height: 1.6;
+            display: flex;
+            gap: 12px;
+        }
+        .feature-card li:before {
+            content: "✓";
+            color: #4ade80;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .dimensions-section {
+            background: #292524;
+            border-radius: 16px;
+            padding: 60px 40px;
+            margin-bottom: 80px;
+        }
+
+        .dimension-item {
+            display: grid;
+            grid-template-columns: 40px 1fr;
+            gap: 20px;
+            margin-bottom: 32px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid #44403c;
+        }
+        .dimension-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        .dimension-number {
+            width: 40px;
+            height: 40px;
+            background: #4ade80;
+            color: #1c1917;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .dimension-content h4 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            font-family: 'Crimson Pro', serif;
+        }
+        .dimension-content p {
+            color: #a8a29e;
+            line-height: 1.7;
+        }
+
+        .cta-section {
+            text-align: center;
+            padding: 80px 0;
+        }
+        .btn {
+            padding: 18px 40px;
+            font-size: 18px;
+            font-weight: 700;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn-primary {
+            background: #4ade80;
+            color: #1c1917;
+            box-shadow: 0 4px 16px rgba(74, 222, 128, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 0 16px; }
+            .hero { padding: 40px 0 32px; }
+            .upload-section { padding: 40px 24px; }
+            .features-section { padding: 40px 0; }
+            .feature-grid { grid-template-columns: 1fr; gap: 24px; }
+            .dimensions-section { padding: 40px 24px; }
+            .dimension-item { grid-template-columns: 1fr; gap: 12px; }
+
+            /* Radar chart grid becomes single column */
+            section div[style*="grid-template-columns: 1fr 1fr"] {
+                grid-template-columns: 1fr !important;
+            }
+
+            /* Case Study mobile */
+            div[style*="grid-template-columns: repeat(3, 1fr)"] {
+                grid-template-columns: 1fr !important;
+                gap: 24px !important;
+            }
+
+            /* Dashboard table scroll */
+            div[style*="overflow-x: auto"] table {
+                font-size: 12px !important;
+            }
+
+            /* LLM Tools mobile */
+            .dimensions-section > div {
+                padding: 32px 24px !important;
+            }
+
+            /* Footer mobile */
+            footer div[style*="grid-template-columns: repeat(3, 1fr)"] {
+                grid-template-columns: 1fr !important;
+                gap: 32px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="index-de.html" style="text-decoration: none;">
+                <div class="logo">AutoQuery</div>
+            </a>
+            <div style="display: flex; align-items: center; gap: 24px;">
+                <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #292524; border-radius: 8px; border: 1px solid #44403c;">
+                    <a href="manuscript-feedback.html" style="color: #a8a29e; text-decoration: none; font-size: 14px;">EN</a>
+                    <span style="color: #44403c;">|</span>
+                    <a href="manuscript-feedback-de.html" style="color: #4ade80; text-decoration: none; font-size: 14px; font-weight: 600;">DE</a>
+                    <span style="color: #44403c;">|</span>
+                    <a href="#" style="color: #a8a29e; text-decoration: none; font-size: 14px;">FR</a>
+                </div>
+                <a href="index-de.html" class="back-link">← Zurück zur Startseite</a>
+            </div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Wir analysieren dein Manuskript wie <span class="green">Grammarly deine Grammatik</span></h1>
+            <p>Erhalte KI-gestützte Einblicke zu Tempo, Stimme, Charakterentwicklung und Prosa-Qualität – kostenlos.</p>
+
+            <!-- CTA Section -->
+            <div style="margin-top: 32px;">
+                <p style="font-size: 16px; color: #a8a29e; margin-bottom: 20px;">
+                    Unten analysieren wir dein Skript mit unserer fortschrittlichen KI-Engine
+                </p>
+                <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+                    <a href="coming-soon-de.html" style="padding: 16px 32px; background: #4ade80; color: #1c1917; border-radius: 10px; font-weight: 700; text-decoration: none; display: inline-block; transition: transform 0.2s; box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);">
+                        Kostenlos anmelden für Analyse
+                    </a>
+                    <a href="index-de.html" style="padding: 16px 32px; background: #292524; color: #fafaf9; border: 1px solid #44403c; border-radius: 10px; font-weight: 600; text-decoration: none; display: inline-block; transition: transform 0.2s;">
+                        ← Zurück zur Startseite
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="container">
+        <!-- Radar Chart Section -->
+        <section style="padding: 40px 0 60px 0;">
+
+            <div style="background: #292524; border-radius: 16px; padding: 60px 40px; margin-bottom: 60px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start;">
+                    <!-- Left: Radar Chart -->
+                    <div>
+                        <h3 style="font-size: 24px; font-weight: 700; font-family: 'Crimson Pro', serif; text-align: center; margin-bottom: 32px;">Deine Manuskript-DNA</h3>
+                        <canvas id="radarChart" width="400" height="400"></canvas>
+                        <div style="display: flex; justify-content: center; gap: 24px; margin-top: 24px; font-size: 13px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 12px; height: 12px; background: #22c55e; border-radius: 50%;"></div>
+                                <span style="color: #a8a29e;">Hoch</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 12px; height: 12px; background: #fbbf24; border-radius: 50%;"></div>
+                                <span style="color: #a8a29e;">Mittel</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 12px; height: 12px; background: #ef4444; border-radius: 50%;"></div>
+                                <span style="color: #a8a29e;">Niedrig</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Contextual Feedback -->
+                    <div>
+                        <h3 style="font-size: 24px; font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 24px;">KI-Feedback</h3>
+                        <div style="display: flex; flex-direction: column; gap: 16px;">
+                            <!-- Pacing Feedback -->
+                            <div class="feedback-item" style="background: #1c1917; border-left: 3px solid #22c55e; border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                    <h4 style="font-size: 16px; font-weight: 700; color: #fafaf9;">Tempo & Dynamik</h4>
+                                    <span style="padding: 4px 10px; background: rgba(34, 197, 94, 0.2); color: #22c55e; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Hoch</span>
+                                </div>
+                                <p style="color: #a8a29e; font-size: 14px; line-height: 1.6;">Dein Satzrhythmus fesselt die Leser. Starke Variation zwischen Action und Reflexion erzeugt natürliche Dynamik.</p>
+                                <button class="expand-btn" onclick="toggleFeedback(this)" style="margin-top: 12px; background: none; border: none; color: #4ade80; cursor: pointer; font-size: 13px; font-weight: 600; padding: 0;">+ Mehr lesen</button>
+                                <div class="expanded-feedback" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #44403c;">
+                                    <p style="color: #a8a29e; font-size: 13px; line-height: 1.6;">Kapitel 1-3 zeigen exzellentes Tempo mit 67% Satzvarianz. Erwäge, die Action-Verb-Dichte in den reflexiven Abschnitten von Kapitel 5 leicht zu erhöhen, um die Dynamik am Mittelpunkt zu bewahren.</p>
+                                </div>
+                            </div>
+
+                            <!-- Voice Feedback -->
+                            <div class="feedback-item" style="background: #1c1917; border-left: 3px solid #22c55e; border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                    <h4 style="font-size: 16px; font-weight: 700; color: #fafaf9;">Stimmcharakter</h4>
+                                    <span style="padding: 4px 10px; background: rgba(34, 197, 94, 0.2); color: #22c55e; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Hoch</span>
+                                </div>
+                                <p style="color: #a8a29e; font-size: 14px; line-height: 1.6;">Jeder Charakter hat eine eigene Stimme. Emmas Dialog zeigt 82% sprachliche Trennung vom übrigen Cast.</p>
+                                <button class="expand-btn" onclick="toggleFeedback(this)" style="margin-top: 12px; background: none; border: none; color: #4ade80; cursor: pointer; font-size: 13px; font-weight: 600; padding: 0;">+ Mehr lesen</button>
+                                <div class="expanded-feedback" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #44403c;">
+                                    <p style="color: #a8a29e; font-size: 13px; line-height: 1.6;">Emma verwendet 45% mehr juristische Fachbegriffe und formale Syntax als andere Charaktere. Die Stimme ihrer Kollegin Sarah überschneidet sich gelegentlich (Kapitel 7, Seite 142) - erwäge mehr Umgangssprache zur Differenzierung.</p>
+                                </div>
+                            </div>
+
+                            <!-- Tension Feedback -->
+                            <div class="feedback-item" style="background: #1c1917; border-left: 3px solid #22c55e; border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                    <h4 style="font-size: 16px; font-weight: 700; color: #fafaf9;">Spannungsdichte</h4>
+                                    <span style="padding: 4px 10px; background: rgba(34, 197, 94, 0.2); color: #22c55e; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Hoch</span>
+                                </div>
+                                <p style="color: #a8a29e; font-size: 14px; line-height: 1.6;">Emotionale Wendungen sind gut getaktet. Spannungsspitzen entsprechen den Genre-Erwartungen.</p>
+                                <button class="expand-btn" onclick="toggleFeedback(this)" style="margin-top: 12px; background: none; border: none; color: #4ade80; cursor: pointer; font-size: 13px; font-weight: 600; padding: 0;">+ Mehr lesen</button>
+                                <div class="expanded-feedback" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #44403c;">
+                                    <p style="color: #a8a29e; font-size: 13px; line-height: 1.6;">Die Sentiment-Valenz sinkt um 4,2 Punkte während Konfrontationsszenen. Die Gerichtssaal-Enthüllung (Kapitel 9) zeigt den stärksten emotionalen Wandel. Erwäge eine kurze Verschnaufpause vor dem finalen Akt-Höhepunkt.</p>
+                                </div>
+                            </div>
+
+                            <!-- Prose Feedback -->
+                            <div class="feedback-item" style="background: #1c1917; border-left: 3px solid #22c55e; border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                    <h4 style="font-size: 16px; font-weight: 700; color: #fafaf9;">Prosa-Klarheit</h4>
+                                    <span style="padding: 4px 10px; background: rgba(34, 197, 94, 0.2); color: #22c55e; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Hoch</span>
+                                </div>
+                                <p style="color: #a8a29e; font-size: 14px; line-height: 1.6;">Die Schreibweise ist prägnant und direkt. Minimale Filterwörter erkannt. Starke Nutzung des Aktivs.</p>
+                                <button class="expand-btn" onclick="toggleFeedback(this)" style="margin-top: 12px; background: none; border: none; color: #4ade80; cursor: pointer; font-size: 13px; font-weight: 600; padding: 0;">+ Mehr lesen</button>
+                                <div class="expanded-feedback" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #44403c;">
+                                    <p style="color: #a8a29e; font-size: 13px; line-height: 1.6;">Nur 8% Passiv (Branchendurchschnitt: 15%). 23 Vorkommen von "fühlte" und "sah" gefunden - erwäge Ersatz durch direkte sensorische Details. Besonders starke Prosa in Action-Sequenzen.</p>
+                                </div>
+                            </div>
+
+                            <!-- Character Network Feedback -->
+                            <div class="feedback-item" style="background: #1c1917; border-left: 3px solid #fbbf24; border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                    <h4 style="font-size: 16px; font-weight: 700; color: #fafaf9;">Charakter-Netzwerk</h4>
+                                    <span style="padding: 4px 10px; background: rgba(251, 191, 36, 0.2); color: #fbbf24; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Mittel</span>
+                                </div>
+                                <p style="color: #a8a29e; font-size: 14px; line-height: 1.6;">Nebencharaktere brauchen mehr Präsenz. Einige Beziehungen wirken unterentwickelt.</p>
+                                <button class="expand-btn" onclick="toggleFeedback(this)" style="margin-top: 12px; background: none; border: none; color: #4ade80; cursor: pointer; font-size: 13px; font-weight: 600; padding: 0;">+ Mehr lesen</button>
+                                <div class="expanded-feedback" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #44403c;">
+                                    <p style="color: #a8a29e; font-size: 13px; line-height: 1.6;">Emma erscheint in 89% der Szenen, Sarah jedoch nur in 23%. Die Mentor-Figur (David) hat minimale Interaktionskarte. Erwäge 2-3 Szenen mit Sarahs unabhängiger Perspektive, um die Ensemble-Dynamik zu stärken.</p>
+                                </div>
+                            </div>
+
+                            <!-- Structural Feedback -->
+                            <div class="feedback-item" style="background: #1c1917; border-left: 3px solid #ef4444; border-radius: 8px; padding: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                    <h4 style="font-size: 16px; font-weight: 700; color: #fafaf9;">Strukturelle Ausrichtung</h4>
+                                    <span style="padding: 4px 10px; background: rgba(239, 68, 68, 0.2); color: #ef4444; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase;">Niedrig</span>
+                                </div>
+                                <p style="color: #a8a29e; font-size: 14px; line-height: 1.6;">Handlungspunkte treffen später ein als Genre-Erwartungen. Wendepunkt bei 62% statt typisch 50%.</p>
+                                <button class="expand-btn" onclick="toggleFeedback(this)" style="margin-top: 12px; background: none; border: none; color: #4ade80; cursor: pointer; font-size: 13px; font-weight: 600; padding: 0;">+ Mehr lesen</button>
+                                <div class="expanded-feedback" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #44403c;">
+                                    <p style="color: #a8a29e; font-size: 13px; line-height: 1.6;">Auslösendes Ereignis bei 18% (Genre-Standard: 10-12%). Erster Wendepunkt verzögert auf 32%. Dies schafft einen langsameren ersten Akt. Erwäge, den zentralen Konflikt früher einzuführen oder Setup-Szenen in Kapiteln 1-2 zu kürzen.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <h2 style="font-size: 42px; font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 24px;">
+                Bereit, dein Manuskript zu verbessern?
+            </h2>
+            <p style="font-size: 18px; color: #a8a29e; margin-bottom: 32px;">
+                Lade deine Datei hoch und erhalte sofortiges KI-gestütztes Feedback
+            </p>
+
+            <div style="max-width: 500px; margin: 0 auto 32px;">
+                <input type="file" id="fileInput" accept=".docx,.rtf,.txt,.epub" style="display: none;" />
+                <div onclick="document.getElementById('fileInput').click()" style="background: #292524; border: 2px dashed #4ade80; border-radius: 12px; padding: 40px; text-align: center; cursor: pointer; transition: all 0.3s;">
+                    <div style="font-size: 40px; margin-bottom: 16px;">📄</div>
+                    <div style="font-weight: 600; margin-bottom: 8px;">Klicken zum Hochladen</div>
+                    <div style="font-size: 14px; color: #a8a29e;">Unterstützt .docx, .rtf, .txt, .epub</div>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                Jetzt kostenlos Feedback erhalten
+            </button>
+            <p style="margin-top: 16px; color: #a8a29e; font-size: 14px;">Keine Anmeldung erforderlich • 100% kostenlos</p>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer style="background: #0f0e0d; border-top: 1px solid #44403c; padding: 60px 0 40px;">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; margin-bottom: 48px;">
+                <div>
+                    <div style="font-size: 24px; font-weight: 700; font-family: 'Crimson Pro', serif; background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 16px;">
+                        AutoQuery
+                    </div>
+                    <p style="color: #a8a29e; font-size: 14px; line-height: 1.7;">
+                        Wir analysieren dein Manuskript wie Grammarly deine Grammatik.
+                    </p>
+                </div>
+                <div>
+                    <h4 style="color: #fafaf9; font-weight: 700; margin-bottom: 16px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Produkt</h4>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                        <li style="margin-bottom: 12px;"><a href="index-de.html" style="color: #a8a29e; text-decoration: none; font-size: 14px; transition: color 0.2s;">Startseite</a></li>
+                        <li style="margin-bottom: 12px;"><a href="manuscript-feedback-de.html" style="color: #a8a29e; text-decoration: none; font-size: 14px; transition: color 0.2s;">Manuskript-Analyse</a></li>
+                        <li style="margin-bottom: 12px;"><a href="coming-soon-de.html" style="color: #a8a29e; text-decoration: none; font-size: 14px; transition: color 0.2s;">Preise</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: #fafaf9; font-weight: 700; margin-bottom: 16px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Unternehmen</h4>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                        <li style="margin-bottom: 12px;"><a href="coming-soon-de.html" style="color: #a8a29e; text-decoration: none; font-size: 14px; transition: color 0.2s;">Über uns</a></li>
+                        <li style="margin-bottom: 12px;"><a href="coming-soon-de.html" style="color: #a8a29e; text-decoration: none; font-size: 14px; transition: color 0.2s;">Blog</a></li>
+                        <li style="margin-bottom: 12px;"><a href="coming-soon-de.html" style="color: #a8a29e; text-decoration: none; font-size: 14px; transition: color 0.2s;">Kontakt</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div style="border-top: 1px solid #44403c; padding-top: 32px; text-align: center;">
+                <p style="color: #a8a29e; font-size: 14px;">© 2026 AutoQuery. Alle Rechte vorbehalten.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                alert(`Datei "${file.name}" ausgewählt!\n\nUnsere Analyse-Engine wird bald verfügbar sein. Wir benachrichtigen dich, sobald sie bereit ist.`);
+            }
+        });
+    </script>
+
+    <script>
+        // Plot beat interaction
+        function showPlotBeat(act) {
+            const details = document.getElementById('plotBeatDetails');
+            const beats = {
+                setup: {
+                    title: 'Auslösendes Ereignis (18%)',
+                    description: 'Emma beobachtet den Belästigungsvorfall, der ihr moralisches Dilemma auslöst.',
+                    gap: 'Trifft bei 18% ein (Genre-Standard: 10-12%). Erwäge, den zentralen Konflikt früher einzuführen oder Setup-Szenen zu kürzen.',
+                    page: 'S. 42-45',
+                    color: '#4ade80'
+                },
+                confrontation: {
+                    title: 'Wendepunkt (62%)',
+                    description: 'Emma entdeckt, dass Beweise manipuliert wurden, was die Einsätze erheblich erhöht.',
+                    gap: 'Tritt bei 62% ein (Genre-Standard: 50%). Der verzögerte Wendepunkt erzeugt einen langsameren zweiten Akt. Erwäge, diese Enthüllung früher zu platzieren.',
+                    page: 'S. 187-192',
+                    color: '#fbbf24'
+                },
+                resolution: {
+                    title: 'Höhepunkt (88%)',
+                    description: 'Gerichtssaal-Konfrontation, in der Emma ihre Beweise präsentiert und den Konsequenzen gegenübertritt.',
+                    gap: 'Gut getaktet bei 88%. Starke Positionierung für maximale Wirkung.',
+                    page: 'S. 265-278',
+                    color: '#ef4444'
+                }
+            };
+
+            const beat = beats[act];
+            details.style.borderLeftColor = beat.color;
+            details.innerHTML = `
+                <div style="font-size: 12px; color: ${beat.color}; font-weight: 700; margin-bottom: 8px; text-transform: uppercase;">${beat.title}</div>
+                <p style="color: #a8a29e; font-size: 14px; line-height: 1.6; margin-bottom: 12px;">
+                    ${beat.description}
+                </p>
+                <div style="background: rgba(239, 68, 68, 0.1); border-left: 2px solid #ef4444; padding: 12px; border-radius: 6px; margin-top: 12px;">
+                    <div style="font-size: 11px; color: #ef4444; font-weight: 700; margin-bottom: 6px;">⚠️ STRUKTURELLE LÜCKE</div>
+                    <p style="font-size: 13px; color: #a8a29e; line-height: 1.5;">
+                        ${beat.gap}
+                    </p>
+                </div>
+                <button style="margin-top: 16px; padding: 8px 16px; background: #4ade80; color: #1c1917; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                    Im Manuskript verifizieren (${beat.page})
+                </button>
+            `;
+        }
+
+        // Toggle feedback expansion
+        function toggleFeedback(button) {
+            const expanded = button.parentElement.querySelector('.expanded-feedback');
+            if (expanded.style.display === 'none') {
+                expanded.style.display = 'block';
+                button.textContent = '- Weniger anzeigen';
+            } else {
+                expanded.style.display = 'none';
+                button.textContent = '+ Mehr lesen';
+            }
+        }
+
+        // Create Radar Chart
+        const ctx = document.getElementById('radarChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['Tempo', 'Stimme', 'Spannung', 'Prosa', 'Netzwerk', 'Struktur'],
+                datasets: [{
+                    label: 'Dein Manuskript',
+                    data: [3, 3, 3, 3, 2, 1], // 3=Hoch, 2=Mittel, 1=Niedrig
+                    fill: true,
+                    backgroundColor: 'rgba(74, 222, 128, 0.15)',
+                    borderColor: '#4ade80',
+                    pointBackgroundColor: function(context) {
+                        const value = context.parsed.r;
+                        if (value >= 2.5) return '#22c55e'; // Hoch = grün
+                        if (value >= 1.5) return '#fbbf24'; // Mittel = gelb
+                        return '#ef4444'; // Niedrig = rot
+                    },
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#4ade80',
+                    pointRadius: 6,
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        min: 0,
+                        max: 3,
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value) {
+                                if (value === 3) return 'Hoch';
+                                if (value === 2) return 'Mittel';
+                                if (value === 1) return 'Niedrig';
+                                return '';
+                            },
+                            color: '#a8a29e',
+                            backdropColor: 'transparent',
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: '#44403c'
+                        },
+                        pointLabels: {
+                            color: '#fafaf9',
+                            font: {
+                                size: 13,
+                                family: 'DM Sans',
+                                weight: '600'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.r;
+                                if (value >= 2.5) return 'Hoch';
+                                if (value >= 1.5) return 'Mittel';
+                                return 'Niedrig';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
