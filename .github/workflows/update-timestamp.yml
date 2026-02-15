@@ -24,6 +24,9 @@ jobs:
 
       - name: Update timestamps in HTML files
         run: |
+          # Set timezone to Berlin
+          export TZ='Europe/Berlin'
+
           # Get current date and time in English format
           CURRENT_DATE_EN=$(date '+%B %d, %Y at %H:%M')
 
