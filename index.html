@@ -20,18 +20,67 @@
         @media (max-width: 768px) {
             .container { padding: 0 16px; }
             body { font-size: 14px; }
+
+            /* Header mobile improvements */
+            header .container > div {
+                flex-direction: column !important;
+                gap: 16px !important;
+                align-items: flex-start !important;
+            }
+
+            header .container > div > div:last-child {
+                width: 100%;
+                flex-direction: column !important;
+                gap: 12px !important;
+            }
+
+            header .container a[href*="proofreading"] {
+                width: 100%;
+                text-align: center;
+                padding: 12px 16px !important;
+            }
+
+            /* Logo mobile size */
+            .logo { font-size: 24px; }
+
+            /* Touch-friendly buttons - minimum 44x44px */
+            .btn, button, a[class*="btn"] {
+                min-height: 44px;
+                padding: 12px 24px !important;
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+            }
         }
         
-        header { padding: 32px 0; }
-        .logo { 
-            font-size: 28px; 
-            font-weight: 700; 
+        header { padding: 32px 0; position: relative; }
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
             font-family: 'Crimson Pro', serif;
             background: linear-gradient(135deg, #4ade80, #22c55e);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             letter-spacing: -0.5px;
+        }
+        .last-updated {
+            position: absolute;
+            top: 8px;
+            right: 24px;
+            font-size: 11px;
+            color: #78716c;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .last-updated {
+                position: static;
+                text-align: center;
+                padding: 8px 0;
+                font-size: 10px;
+            }
         }
         
         .hero { padding: 48px 0 32px; text-align: center; max-width: 900px; margin: 0 auto; }
@@ -233,6 +282,7 @@
 </head>
 <body>
     <header>
+        <div class="last-updated">Last updated: February 15, 2026</div>
         <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
             <div class="logo">AutoQuery</div>
             <div style="display: flex; align-items: center; gap: 24px;">

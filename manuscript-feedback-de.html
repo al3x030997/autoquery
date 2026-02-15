@@ -17,7 +17,7 @@
         }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 
-        header { padding: 24px 0; border-bottom: 1px solid #44403c; }
+        header { padding: 24px 0; border-bottom: 1px solid #44403c; position: relative; }
         .logo {
             font-size: 28px;
             font-weight: 700;
@@ -27,6 +27,14 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             letter-spacing: -0.5px;
+        }
+        .last-updated {
+            position: absolute;
+            top: 8px;
+            right: 24px;
+            font-size: 11px;
+            color: #78716c;
+            font-weight: 500;
         }
         .back-link { color: #4ade80; text-decoration: none; font-size: 14px; }
         .back-link:hover { opacity: 0.8; }
@@ -223,11 +231,40 @@
                 grid-template-columns: 1fr !important;
                 gap: 32px !important;
             }
+
+            /* Touch-friendly buttons */
+            .btn, button, .expand-btn {
+                min-height: 44px;
+                padding: 12px 24px !important;
+            }
+
+            /* Language switcher mobile */
+            header div[style*="display: flex"] {
+                flex-wrap: wrap;
+                justify-content: center !important;
+            }
+
+            .last-updated {
+                position: static;
+                text-align: center;
+                padding: 8px 0;
+                font-size: 10px;
+            }
+
+            /* CTA section mobile stacking */
+            .hero div[style*="display: flex"] {
+                flex-direction: column !important;
+            }
+
+            .hero a {
+                width: 100% !important;
+            }
         }
     </style>
 </head>
 <body>
     <header>
+        <div class="last-updated">Zuletzt aktualisiert: 15. Februar 2026</div>
         <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
             <a href="index-de.html" style="text-decoration: none;">
                 <div class="logo">AutoQuery</div>

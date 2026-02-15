@@ -1,0 +1,93 @@
+name: Update Last Modified Timestamp
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.html'
+      - '**.css'
+      - '**.js'
+      - '!.github/**'
+
+jobs:
+  update-timestamp:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Update timestamps in HTML files
+        run: |
+          # Get current date in English format
+          CURRENT_DATE_EN=$(date '+%B %d, %Y')
+
+          # Get current date in German format
+          MONTH=$(date '+%m')
+          DAY=$(date '+%d')
+          YEAR=$(date '+%Y')
+
+          # Convert month to German
+          case $MONTH in
+            01) MONTH_DE="Januar" ;;
+            02) MONTH_DE="Februar" ;;
+            03) MONTH_DE="März" ;;
+            04) MONTH_DE="April" ;;
+            05) MONTH_DE="Mai" ;;
+            06) MONTH_DE="Juni" ;;
+            07) MONTH_DE="Juli" ;;
+            08) MONTH_DE="August" ;;
+            09) MONTH_DE="September" ;;
+            10) MONTH_DE="Oktober" ;;
+            11) MONTH_DE="November" ;;
+            12) MONTH_DE="Dezember" ;;
+          esac
+
+          # Remove leading zero from day
+          DAY=$(echo $DAY | sed 's/^0*//')
+
+          CURRENT_DATE_DE="$DAY. $MONTH_DE $YEAR"
+
+          echo "English date: $CURRENT_DATE_EN"
+          echo "German date: $CURRENT_DATE_DE"
+
+          # Update English files
+          for file in index.html coming-soon.html manuscript-feedback.html proofreading-community.html; do
+            if [ -f "$file" ]; then
+              sed -i "s/Last updated: [^<]*/Last updated: $CURRENT_DATE_EN/" "$file"
+              echo "Updated $file"
+            fi
+          done
+
+          # Update German files
+          for file in index-de.html coming-soon-de.html manuscript-feedback-de.html proofreading-community-de.html; do
+            if [ -f "$file" ]; then
+              sed -i "s/Zuletzt aktualisiert: [^<]*/Zuletzt aktualisiert: $CURRENT_DATE_DE/" "$file"
+              echo "Updated $file"
+            fi
+          done
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No timestamp changes detected"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Timestamp changes detected"
+          fi
+
+      - name: Commit and push changes
+        if: steps.check_changes.outputs.changed == 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add *.html
+          git commit -m "Auto-update: Last modified timestamp [skip ci]"
+          git push

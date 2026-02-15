@@ -17,16 +17,24 @@
         }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
         
-        header { padding: 24px 0; border-bottom: 1px solid #44403c; }
-        .logo { 
-            font-size: 28px; 
-            font-weight: 700; 
+        header { padding: 24px 0; border-bottom: 1px solid #44403c; position: relative; }
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
             font-family: 'Crimson Pro', serif;
             background: linear-gradient(135deg, #4ade80, #22c55e);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             letter-spacing: -0.5px;
+        }
+        .last-updated {
+            position: absolute;
+            top: 8px;
+            right: 24px;
+            font-size: 11px;
+            color: #78716c;
+            font-weight: 500;
         }
         .back-link { color: #4ade80; text-decoration: none; font-size: 14px; }
         .back-link:hover { opacity: 0.8; }
@@ -196,38 +204,67 @@
             .feature-grid { grid-template-columns: 1fr; gap: 24px; }
             .dimensions-section { padding: 40px 24px; }
             .dimension-item { grid-template-columns: 1fr; gap: 12px; }
-            
+
             /* Radar chart grid becomes single column */
             section div[style*="grid-template-columns: 1fr 1fr"] {
                 grid-template-columns: 1fr !important;
             }
-            
+
             /* Case Study mobile */
             div[style*="grid-template-columns: repeat(3, 1fr)"] {
                 grid-template-columns: 1fr !important;
                 gap: 24px !important;
             }
-            
+
             /* Dashboard table scroll */
             div[style*="overflow-x: auto"] table {
                 font-size: 12px !important;
             }
-            
+
             /* LLM Tools mobile */
             .dimensions-section > div {
                 padding: 32px 24px !important;
             }
-            
+
             /* Footer mobile */
             footer div[style*="grid-template-columns: repeat(3, 1fr)"] {
                 grid-template-columns: 1fr !important;
                 gap: 32px !important;
+            }
+
+            /* Touch-friendly buttons */
+            .btn, button, .expand-btn {
+                min-height: 44px;
+                padding: 12px 24px !important;
+            }
+
+            /* Language switcher mobile */
+            header div[style*="display: flex"] {
+                flex-wrap: wrap;
+                justify-content: center !important;
+            }
+
+            .last-updated {
+                position: static;
+                text-align: center;
+                padding: 8px 0;
+                font-size: 10px;
+            }
+
+            /* CTA section mobile stacking */
+            .hero div[style*="display: flex"] {
+                flex-direction: column !important;
+            }
+
+            .hero a {
+                width: 100% !important;
             }
         }
     </style>
 </head>
 <body>
     <header>
+        <div class="last-updated">Last updated: February 15, 2026</div>
         <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
             <a href="index.html" style="text-decoration: none;">
                 <div class="logo">AutoQuery</div>
