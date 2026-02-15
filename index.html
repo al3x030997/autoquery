@@ -1080,8 +1080,22 @@
             }, 2500);
         }
         
-        // Start Container 3 animation
-        runContainer3Animation();
+        // Start Container 3 animation when visible
+        let container3AnimationStarted = false;
+        const container3Observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && !container3AnimationStarted) {
+                    container3AnimationStarted = true;
+                    runContainer3Animation();
+                    container3Observer.disconnect();
+                }
+            });
+        }, { threshold: 0.2 });
+
+        const container3Element = document.getElementById('container3Content');
+        if (container3Element) {
+            container3Observer.observe(container3Element);
+        }
     </script>
 
     <!-- Footer -->
