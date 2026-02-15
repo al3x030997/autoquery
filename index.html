@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoQuery - Query Literary Agents in Minutes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'DM Sans', sans-serif; 
+            background-color: #1c1917; 
+            color: #fafaf9; 
+            min-height: 100vh;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+        
+        header { padding: 32px 0; }
+        .logo { font-size: 28px; font-weight: 700; font-family: 'Crimson Pro', serif; }
+        
+        .hero { padding: 48px 0 32px; text-align: center; max-width: 900px; margin: 0 auto; }
+        .badge { 
+            display: inline-block; padding: 8px 16px; background: #292524; 
+            border: 1px solid #44403c; border-radius: 24px; font-size: 12px; 
+            font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; 
+            color: #a8a29e; margin-bottom: 24px; 
+        }
+        h1 { 
+            font-size: clamp(42px, 6vw, 72px); font-weight: 700; line-height: 1.1; 
+            margin-bottom: 24px; font-family: 'Crimson Pro', serif; 
+        }
+        .green { color: #4ade80; }
+        .subtitle { font-size: clamp(18px, 2.5vw, 24px); color: #a8a29e; margin-bottom: 40px; line-height: 1.5; }
+        .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+        .btn {
+            padding: 16px 32px; font-size: 16px; font-weight: 600;
+            border-radius: 8px; border: none; cursor: pointer;
+        }
+        .btn-primary { background: #4ade80; color: #1c1917; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        .btn-secondary { background: #292524; color: #fafaf9; border: 1px solid #44403c; }
+        
+        .demo-section { padding: 32px 0; background: linear-gradient(to bottom, #1c1917, #292524); }
+        .demo-window {
+            background: #292524; border-radius: 16px; border: 1px solid #44403c;
+            overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        }
+        .browser-header {
+            background: #1c1917; padding: 16px 20px; display: flex;
+            align-items: center; gap: 16px; border-bottom: 1px solid #44403c;
+        }
+        .browser-dots { display: flex; gap: 8px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot.red { background: #ff5f56; }
+        .dot.yellow { background: #ffbd2e; }
+        .dot.green-dot { background: #4ade80; }
+        .browser-title { font-size: 14px; color: #a8a29e; font-weight: 500; }
+        .demo-content { padding: 40px; min-height: 500px; }
+        
+        .search-bar {
+            background: #1c1917; padding: 20px 24px; border-radius: 12px;
+            border: 2px solid #4ade80; display: flex; align-items: center;
+            gap: 12px; margin-bottom: 32px; box-shadow: 0 0 20px rgba(74, 222, 128, 0.2);
+        }
+        
+        .agent-card {
+            background: #1c1917; padding: 20px; border-radius: 12px;
+            border: 1px solid #44403c; display: grid;
+            grid-template-columns: 50px 1fr auto; gap: 16px;
+            align-items: center; margin-bottom: 16px; cursor: pointer;
+            transition: all 0.3s; opacity: 0; animation: fadeIn 0.6s ease forwards;
+        }
+        .agent-card:hover {
+            border-color: #4ade80; transform: translateX(8px) scale(1.02);
+            box-shadow: 0 8px 32px rgba(74, 222, 128, 0.4);
+        }
+        .agent-avatar { width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, #22c55e, #4ade80); }
+        .agent-name { font-weight: 600; }
+        .agent-agency { font-size: 14px; color: #a8a29e; margin-top: 4px; }
+        .agent-tags { display: flex; gap: 8px; margin-top: 8px; }
+        .tag {
+            padding: 4px 10px; background: rgba(74, 222, 128, 0.1);
+            border: 1px solid #4ade80; border-radius: 12px;
+            font-size: 11px; color: #4ade80; font-weight: 500;
+        }
+        .agent-response { font-size: 13px; color: #4ade80; font-weight: 600; }
+        
+        .loading-screen { text-align: center; padding: 120px 40px; }
+        .spinner {
+            width: 80px; height: 80px; margin: 0 auto 32px;
+            border: 4px solid #44403c; border-top: 4px solid #4ade80;
+            border-radius: 50%; animation: spin 1s linear infinite;
+        }
+        
+        .back-btn {
+            margin-bottom: 24px; color: #4ade80; background: none;
+            border: none; cursor: pointer; font-size: 14px;
+        }
+        
+        .profile-header {
+            padding: 32px; background: #292524;
+            border-bottom: 1px solid #44403c;
+        }
+        .autofill-btn {
+            width: 100%; padding: 16px 32px; background: #4ade80;
+            color: #1c1917; font-weight: 700; font-size: 18px;
+            border-radius: 12px; border: none; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+        }
+        
+        .section-title { font-size: 11px; font-weight: 700; color: #4ade80; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .hidden { display: none !important; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        .agent-card:nth-child(2) { animation-delay: 0.3s; }
+        .agent-card:nth-child(3) { animation-delay: 0.6s; }
+        .agent-card:nth-child(4) { animation-delay: 0.9s; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="logo">AutoQuery</div>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="badge">For Authors</div>
+            <h1>Query literary agents in minutes, <span class="green">now.</span></h1>
+            <p class="subtitle">
+                Search the right literary agents in seconds, automate formatting, and track submissions in real-time. Your manuscript deserves to be seen.
+            </p>
+            <div class="cta-buttons">
+                <button class="btn btn-primary" onclick="alert('Coming soon! Join our waitlist.')">Start Free Trial →</button>
+                <button class="btn btn-secondary" onclick="alert('How It Works section coming soon!')">See How It Works</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="demo-section">
+        <div class="container">
+            <div class="demo-window">
+                <div class="browser-header">
+                    <div class="browser-dots">
+                        <div class="dot red"></div>
+                        <div class="dot yellow"></div>
+                        <div class="dot green-dot"></div>
+                    </div>
+                    <div class="browser-title">AutoQuery Dashboard</div>
+                </div>
+                <div class="demo-content" id="demoContent">
+                    <!-- Agent List View -->
+                    <div id="agentList">
+                        <div class="search-bar">
+                            <span style="font-size: 20px;">🔍</span>
+                            <div style="font-size: 16px; font-weight: 500;">thriller and feminism</div>
+                        </div>
+                        
+                        <div class="agent-card" onclick="showAgentProfile('Rebecca Thompson', 'Verve Literary', '91%')">
+                            <div class="agent-avatar"></div>
+                            <div>
+                                <div class="agent-name">Rebecca Thompson</div>
+                                <div class="agent-agency">Verve Literary</div>
+                                <div class="agent-tags">
+                                    <span class="tag">Thriller</span>
+                                    <span class="tag">Feminism</span>
+                                </div>
+                            </div>
+                            <div class="agent-response">91% Response</div>
+                        </div>
+                        
+                        <div class="agent-card" onclick="showAgentProfile('Jessica Wu', 'The Bent Agency', '87%')">
+                            <div class="agent-avatar"></div>
+                            <div>
+                                <div class="agent-name">Jessica Wu</div>
+                                <div class="agent-agency">The Bent Agency</div>
+                                <div class="agent-tags">
+                                    <span class="tag">Thriller</span>
+                                    <span class="tag">Feminism</span>
+                                </div>
+                            </div>
+                            <div class="agent-response">87% Response</div>
+                        </div>
+                        
+                        <div class="agent-card" onclick="showAgentProfile('Diana Patel', 'Janklow & Nesbit', '94%')">
+                            <div class="agent-avatar"></div>
+                            <div>
+                                <div class="agent-name">Diana Patel</div>
+                                <div class="agent-agency">Janklow & Nesbit</div>
+                                <div class="agent-tags">
+                                    <span class="tag">Thriller</span>
+                                    <span class="tag">Feminism</span>
+                                </div>
+                            </div>
+                            <div class="agent-response">94% Response</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Agent Profile -->
+                    <div id="agentProfile" class="hidden">
+                        <button class="back-btn" onclick="backToList()">← Back to agents</button>
+                        <div style="background: #292524; border-radius: 16px; border: 1px solid #44403c; overflow: hidden;">
+                            <div class="profile-header">
+                                <button class="autofill-btn" onclick="showLoading()">Auto-Fill Query</button>
+                                <p style="text-align: center; font-size: 14px; color: #a8a29e; margin-top: 12px;">
+                                    We'll format your query to match their exact requirements
+                                </p>
+                            </div>
+                            <div style="padding: 32px;">
+                                <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 24px;">
+                                    <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #22c55e, #4ade80);"></div>
+                                    <div>
+                                        <h3 id="profileName" style="font-size: 32px; font-weight: 700; margin-bottom: 4px; font-family: 'Crimson Pro', serif;"></h3>
+                                        <p id="profileAgency" style="color: #a8a29e; font-size: 16px;"></p>
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 24px;">
+                                    <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 12px; font-family: 'Crimson Pro', serif;">About</h4>
+                                    <p style="color: #a8a29e; line-height: 1.7;">Passionate about feminist thrillers and stories with strong female protagonists.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Loading Screen -->
+                    <div id="loadingScreen" class="loading-screen hidden">
+                        <div class="spinner"></div>
+                        <h3 style="font-size: 28px; font-weight: 700; margin-bottom: 12px; font-family: 'Crimson Pro', serif;">
+                            Formatting your query...
+                        </h3>
+                        <p style="font-size: 16px; color: #a8a29e;">
+                            Tailoring to <span id="loadingAgent"></span>'s preferences
+                        </p>
+                    </div>
+                    
+                    <!-- Formatted Query -->
+                    <div id="formattedQuery" class="hidden">
+                        <button class="back-btn" onclick="backToList()">← Back to start</button>
+                        <div style="background: #292524; border-radius: 16px; border: 1px solid #44403c; overflow: hidden;">
+                            <div style="padding: 40px;">
+                                <div style="border-bottom: 1px solid #44403c; padding-bottom: 20px; margin-bottom: 28px;">
+                                    <div class="section-title">Title</div>
+                                    <p style="font-size: 24px; font-weight: 700; font-family: 'Crimson Pro', serif;">The Silent Witness</p>
+                                </div>
+                                <div style="border-bottom: 1px solid #44403c; padding-bottom: 20px; margin-bottom: 28px;">
+                                    <div class="section-title">Summary</div>
+                                    <p style="color: #a8a29e; line-height: 1.8;">
+                                        When corporate lawyer Emma Chen witnesses harassment, she faces an impossible choice: speak up and risk everything, or stay silent and become complicit...
+                                    </p>
+                                </div>
+                            </div>
+                            <div style="padding: 32px; background: #1c1917; border-top: 1px solid #44403c; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                                <button class="btn btn-primary">Download PDF</button>
+                                <button class="btn btn-secondary">Copy</button>
+                                <button class="btn" style="background: linear-gradient(135deg, #ff6b35, #f7931e); color: white; font-weight: 700;">Send to Agent</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        let currentAgent = '';
+        
+        function showAgentProfile(name, agency, response) {
+            currentAgent = name;
+            document.getElementById('agentList').classList.add('hidden');
+            document.getElementById('profileName').textContent = name;
+            document.getElementById('profileAgency').textContent = agency;
+            document.getElementById('agentProfile').classList.remove('hidden');
+        }
+        
+        function showLoading() {
+            document.getElementById('agentProfile').classList.add('hidden');
+            document.getElementById('loadingAgent').textContent = currentAgent;
+            document.getElementById('loadingScreen').classList.remove('hidden');
+            
+            setTimeout(() => {
+                document.getElementById('loadingScreen').classList.add('hidden');
+                document.getElementById('formattedQuery').classList.remove('hidden');
+            }, 2500);
+        }
+        
+        function backToList() {
+            document.getElementById('agentProfile').classList.add('hidden');
+            document.getElementById('formattedQuery').classList.add('hidden');
+            document.getElementById('agentList').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
