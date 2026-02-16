@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL to Database - AutoQuery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #1c1917;
+            color: #fafaf9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 24px;
+            width: 100%;
+        }
+
+        /* Header */
+        header {
+            padding: 24px 0;
+            border-bottom: 1px solid #44403c;
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Crimson Pro', serif;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            text-decoration: none;
+        }
+        .back-link {
+            color: #4ade80;
+            text-decoration: none;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+        .back-link:hover {
+            opacity: 0.8;
+        }
+
+        /* Main Content */
+        main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 60px 0;
+        }
+
+        .content {
+            width: 100%;
+        }
+
+        h1 {
+            font-size: clamp(32px, 6vw, 48px);
+            font-weight: 700;
+            font-family: 'Crimson Pro', serif;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .subtitle {
+            font-size: clamp(16px, 2.5vw, 20px);
+            color: #a8a29e;
+            text-align: center;
+            margin-bottom: 48px;
+            line-height: 1.5;
+        }
+
+        .green {
+            color: #4ade80;
+        }
+
+        /* URL Input Form */
+        .url-form {
+            background: #292524;
+            border-radius: 16px;
+            padding: 48px;
+            border: 1px solid #44403c;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fafaf9;
+            margin-bottom: 8px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        input[type="url"] {
+            width: 100%;
+            padding: 16px 20px;
+            font-size: 16px;
+            background: #1c1917;
+            border: 2px solid #44403c;
+            border-radius: 12px;
+            color: #fafaf9;
+            font-family: 'DM Sans', sans-serif;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input[type="url"]:focus {
+            outline: none;
+            border-color: #4ade80;
+            box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1);
+        }
+
+        input[type="url"]::placeholder {
+            color: #78716c;
+        }
+
+        .url-icon {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #78716c;
+            font-size: 20px;
+        }
+
+        button[type="submit"] {
+            width: 100%;
+            padding: 18px 32px;
+            font-size: 18px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: #1c1917;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 16px rgba(74, 222, 128, 0.3);
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
+        }
+
+        button[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        button[type="submit"]:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Status Messages */
+        .status-message {
+            margin-top: 24px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status-message.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid #22c55e;
+            color: #22c55e;
+        }
+
+        .status-message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid #ef4444;
+            color: #ef4444;
+        }
+
+        .status-message.loading {
+            background: rgba(251, 191, 36, 0.1);
+            border: 1px solid #fbbf24;
+            color: #fbbf24;
+        }
+
+        /* History Section */
+        .history-section {
+            margin-top: 48px;
+        }
+
+        .history-title {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'Crimson Pro', serif;
+            margin-bottom: 20px;
+        }
+
+        .history-list {
+            background: #292524;
+            border-radius: 12px;
+            border: 1px solid #44403c;
+            overflow: hidden;
+        }
+
+        .history-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid #44403c;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-url {
+            color: #fafaf9;
+            font-size: 14px;
+            word-break: break-all;
+            flex: 1;
+        }
+
+        .history-time {
+            color: #78716c;
+            font-size: 12px;
+            margin-left: 16px;
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            padding: 48px 20px;
+            text-align: center;
+            color: #78716c;
+        }
+
+        /* Mobile Optimization */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 16px;
+            }
+
+            main {
+                padding: 40px 0;
+            }
+
+            .url-form {
+                padding: 32px 20px;
+            }
+
+            h1 {
+                font-size: 32px;
+            }
+
+            .subtitle {
+                font-size: 16px;
+                margin-bottom: 32px;
+            }
+
+            .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .history-time {
+                margin-left: 0;
+            }
+
+            button[type="submit"] {
+                font-size: 16px;
+                padding: 16px 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <a href="../index.html" class="logo">AutoQuery</a>
+                <a href="../index.html" class="back-link">← Back to Home</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <div class="content">
+                <h1>URL to <span class="green">Database</span></h1>
+                <p class="subtitle">Submit a URL to store and process in our database</p>
+
+                <form class="url-form" id="urlForm">
+                    <div class="form-group">
+                        <label for="urlInput">Enter URL</label>
+                        <div class="input-wrapper">
+                            <input
+                                type="url"
+                                id="urlInput"
+                                name="url"
+                                placeholder="https://example.com"
+                                required
+                                pattern="https?://.+"
+                            />
+                            <span class="url-icon">🔗</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="submitBtn">Submit URL</button>
+
+                    <div class="status-message" id="statusMessage"></div>
+                </form>
+
+                <div class="history-section">
+                    <h2 class="history-title">Recent Submissions</h2>
+                    <div class="history-list" id="historyList">
+                        <div class="empty-state">
+                            No submissions yet. Submit your first URL above!
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Get form elements
+        const form = document.getElementById('urlForm');
+        const urlInput = document.getElementById('urlInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const statusMessage = document.getElementById('statusMessage');
+        const historyList = document.getElementById('historyList');
+
+        // Load history from localStorage
+        let urlHistory = JSON.parse(localStorage.getItem('urlHistory') || '[]');
+
+        // Display history
+        function displayHistory() {
+            if (urlHistory.length === 0) {
+                historyList.innerHTML = '<div class="empty-state">No submissions yet. Submit your first URL above!</div>';
+                return;
+            }
+
+            historyList.innerHTML = urlHistory.map(item => `
+                <div class="history-item">
+                    <div class="history-url">${item.url}</div>
+                    <div class="history-time">${item.time}</div>
+                </div>
+            `).join('');
+        }
+
+        // Show status message
+        function showStatus(type, message) {
+            statusMessage.className = `status-message ${type}`;
+            statusMessage.textContent = message;
+            statusMessage.style.display = 'block';
+
+            if (type !== 'loading') {
+                setTimeout(() => {
+                    statusMessage.style.display = 'none';
+                }, 5000);
+            }
+        }
+
+        // Handle form submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const url = urlInput.value.trim();
+
+            if (!url) {
+                showStatus('error', 'Please enter a valid URL');
+                return;
+            }
+
+            // Disable button and show loading
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Submitting...';
+            showStatus('loading', 'Processing your URL...');
+
+            try {
+                // TODO: Replace with actual backend API call
+                // Simulate API call for now
+                await new Promise(resolve => setTimeout(resolve, 1500));
+
+                // Add to history
+                const timestamp = new Date().toLocaleString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                urlHistory.unshift({
+                    url: url,
+                    time: timestamp
+                });
+
+                // Keep only last 10 submissions
+                if (urlHistory.length > 10) {
+                    urlHistory = urlHistory.slice(0, 10);
+                }
+
+                // Save to localStorage
+                localStorage.setItem('urlHistory', JSON.stringify(urlHistory));
+
+                // Show success
+                showStatus('success', '✓ URL submitted successfully!');
+
+                // Clear input
+                urlInput.value = '';
+
+                // Update history display
+                displayHistory();
+
+            } catch (error) {
+                showStatus('error', '✗ Failed to submit URL. Please try again.');
+                console.error('Error:', error);
+            } finally {
+                // Re-enable button
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit URL';
+            }
+        });
+
+        // Initial display
+        displayHistory();
+    </script>
+</body>
+</html>
