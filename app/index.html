@@ -394,9 +394,21 @@
             showStatus('loading', 'Processing your URL...');
 
             try {
-                // TODO: Replace with actual backend API call
-                // Simulate API call for now
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                // Call backend API
+                const response = await fetch('http://localhost:3000/api/submit-url', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ url })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to submit URL');
+                }
+
+                const result = await response.json();
 
                 // Add to history
                 const timestamp = new Date().toLocaleString('en-US', {
