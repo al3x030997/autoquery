@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>URL to Database - AutoQuery</title>
+    <title>Agent Finder - AutoQuery</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -15,18 +15,11 @@
             display: flex;
             flex-direction: column;
         }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 0 24px;
-            width: 100%;
-        }
+        .container { max-width: 800px; margin: 0 auto; padding: 0 24px; width: 100%; }
+        .green { color: #4ade80; }
 
         /* Header */
-        header {
-            padding: 24px 0;
-            border-bottom: 1px solid #44403c;
-        }
+        header { padding: 32px 0; }
         .header-content {
             display: flex;
             justify-content: space-between;
@@ -44,13 +37,18 @@
             text-decoration: none;
         }
         .back-link {
-            color: #4ade80;
+            color: #a8a29e;
             text-decoration: none;
             font-size: 14px;
-            transition: opacity 0.2s;
+            padding: 8px 16px;
+            background: #292524;
+            border: 1px solid #44403c;
+            border-radius: 8px;
+            transition: all 0.2s;
         }
         .back-link:hover {
-            opacity: 0.8;
+            border-color: #4ade80;
+            color: #4ade80;
         }
 
         /* Main Content */
@@ -60,10 +58,7 @@
             align-items: center;
             padding: 60px 0;
         }
-
-        .content {
-            width: 100%;
-        }
+        .content { width: 100%; }
 
         h1 {
             font-size: clamp(32px, 6vw, 48px);
@@ -72,7 +67,6 @@
             margin-bottom: 16px;
             text-align: center;
         }
-
         .subtitle {
             font-size: clamp(16px, 2.5vw, 20px);
             color: #a8a29e;
@@ -81,9 +75,21 @@
             line-height: 1.5;
         }
 
-        .green {
-            color: #4ade80;
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #292524;
+            border: 1px solid #44403c;
+            border-radius: 24px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #fbbf24;
+            margin-bottom: 24px;
         }
+        .hero-badge { text-align: center; }
 
         /* URL Input Form */
         .url-form {
@@ -93,11 +99,7 @@
             border: 1px solid #44403c;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         }
-
-        .form-group {
-            margin-bottom: 24px;
-        }
-
+        .form-group { margin-bottom: 24px; }
         label {
             display: block;
             font-size: 14px;
@@ -106,42 +108,81 @@
             margin-bottom: 8px;
         }
 
-        .input-wrapper {
+        /* Mode selector */
+        .mode-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .mode-option {
+            flex: 1;
             position: relative;
         }
+        .mode-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .mode-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 16px;
+            background: #1c1917;
+            border: 2px solid #44403c;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        .mode-label:hover {
+            border-color: #78716c;
+        }
+        .mode-option input:checked + .mode-label {
+            border-color: #4ade80;
+            background: rgba(74, 222, 128, 0.05);
+        }
+        .mode-label-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+        .mode-label-desc {
+            font-size: 12px;
+            color: #78716c;
+            line-height: 1.4;
+        }
 
-        input[type="url"] {
+        /* Textarea */
+        textarea {
             width: 100%;
             padding: 16px 20px;
-            font-size: 16px;
             background: #1c1917;
             border: 2px solid #44403c;
             border-radius: 12px;
             color: #fafaf9;
+            font-size: 15px;
             font-family: 'DM Sans', sans-serif;
+            resize: vertical;
+            min-height: 100px;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
-
-        input[type="url"]:focus {
+        textarea:focus {
             outline: none;
             border-color: #4ade80;
             box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1);
         }
+        textarea::placeholder { color: #78716c; }
 
-        input[type="url"]::placeholder {
+        .input-hint {
+            font-size: 13px;
             color: #78716c;
+            margin-top: 8px;
         }
 
-        .url-icon {
-            position: absolute;
-            right: 16px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #78716c;
-            font-size: 20px;
-        }
-
-        button[type="submit"] {
+        /* Submit button */
+        .btn-submit {
             width: 100%;
             padding: 18px 32px;
             font-size: 18px;
@@ -155,17 +196,12 @@
             box-shadow: 0 4px 16px rgba(74, 222, 128, 0.3);
             font-family: 'DM Sans', sans-serif;
         }
-
-        button[type="submit"]:hover {
+        .btn-submit:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
         }
-
-        button[type="submit"]:active {
-            transform: translateY(0);
-        }
-
-        button[type="submit"]:disabled {
+        .btn-submit:active { transform: translateY(0); }
+        .btn-submit:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
@@ -178,20 +214,18 @@
             border-radius: 12px;
             font-size: 14px;
             display: none;
+            line-height: 1.5;
         }
-
         .status-message.success {
             background: rgba(34, 197, 94, 0.1);
             border: 1px solid #22c55e;
             color: #22c55e;
         }
-
         .status-message.error {
             background: rgba(239, 68, 68, 0.1);
             border: 1px solid #ef4444;
             color: #ef4444;
         }
-
         .status-message.loading {
             background: rgba(251, 191, 36, 0.1);
             border: 1px solid #fbbf24;
@@ -199,24 +233,19 @@
         }
 
         /* History Section */
-        .history-section {
-            margin-top: 48px;
-        }
-
+        .history-section { margin-top: 48px; }
         .history-title {
             font-size: 20px;
             font-weight: 700;
             font-family: 'Crimson Pro', serif;
             margin-bottom: 20px;
         }
-
         .history-list {
             background: #292524;
             border-radius: 12px;
             border: 1px solid #44403c;
             overflow: hidden;
         }
-
         .history-item {
             padding: 16px 20px;
             border-bottom: 1px solid #44403c;
@@ -224,68 +253,67 @@
             justify-content: space-between;
             align-items: center;
         }
-
-        .history-item:last-child {
-            border-bottom: none;
-        }
-
+        .history-item:last-child { border-bottom: none; }
         .history-url {
             color: #fafaf9;
             font-size: 14px;
             word-break: break-all;
             flex: 1;
         }
-
+        .history-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 12px;
+            white-space: nowrap;
+        }
+        .history-badge.single {
+            background: rgba(74, 222, 128, 0.1);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+        .history-badge.dynamic {
+            background: rgba(251, 191, 36, 0.1);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
         .history-time {
             color: #78716c;
             font-size: 12px;
             margin-left: 16px;
             white-space: nowrap;
         }
-
         .empty-state {
             padding: 48px 20px;
             text-align: center;
             color: #78716c;
         }
 
-        /* Mobile Optimization */
+        /* Footer */
+        footer {
+            padding: 32px 0;
+            text-align: center;
+            border-top: 1px solid #292524;
+        }
+        footer p {
+            color: #78716c;
+            font-size: 13px;
+        }
+
+        /* Mobile */
         @media (max-width: 768px) {
-            .container {
-                padding: 0 16px;
-            }
-
-            main {
-                padding: 40px 0;
-            }
-
-            .url-form {
-                padding: 32px 20px;
-            }
-
-            h1 {
-                font-size: 32px;
-            }
-
-            .subtitle {
-                font-size: 16px;
-                margin-bottom: 32px;
-            }
-
+            .container { padding: 0 16px; }
+            main { padding: 40px 0; }
+            .url-form { padding: 32px 20px; }
+            .mode-selector { flex-direction: column; }
             .history-item {
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 8px;
             }
-
-            .history-time {
-                margin-left: 0;
-            }
-
-            button[type="submit"] {
-                font-size: 16px;
-                padding: 16px 24px;
-            }
+            .history-time, .history-badge { margin-left: 0; }
+            .btn-submit { font-size: 16px; padding: 16px 24px; }
         }
     </style>
 </head>
@@ -294,7 +322,7 @@
         <div class="container">
             <div class="header-content">
                 <a href="../index.html" class="logo">AutoQuery</a>
-                <a href="../index.html" class="back-link">← Back to Home</a>
+                <a href="../index.html" class="back-link">Back to Home</a>
             </div>
         </div>
     </header>
@@ -302,54 +330,76 @@
     <main>
         <div class="container">
             <div class="content">
-                <h1>URL to <span class="green">Database</span></h1>
-                <p class="subtitle">Submit a URL to store and process in our database</p>
+                <div class="hero-badge">
+                    <div class="badge">Internal Tool</div>
+                </div>
+                <h1>Agent <span class="green">Finder</span></h1>
+                <p class="subtitle">Extract key info from literary agent pages — genres, wishlist, submission guidelines — to simplify your agent search</p>
 
-                <form class="url-form" id="urlForm">
+                <div class="url-form" id="urlForm">
+                    <!-- Crawl Mode Selection -->
                     <div class="form-group">
-                        <label for="urlInput">Enter URL</label>
-                        <div class="input-wrapper">
-                            <input
-                                type="url"
-                                id="urlInput"
-                                name="url"
-                                placeholder="https://example.com"
-                                required
-                                pattern="https?://.+"
-                            />
-                            <span class="url-icon">🔗</span>
+                        <label>Crawl Mode</label>
+                        <div class="mode-selector">
+                            <div class="mode-option">
+                                <input type="radio" name="crawlMode" value="single" id="modeSingle" checked>
+                                <label for="modeSingle" class="mode-label">
+                                    <span class="mode-label-title">Single URL</span>
+                                    <span class="mode-label-desc">Crawl only the exact URLs you provide</span>
+                                </label>
+                            </div>
+                            <div class="mode-option">
+                                <input type="radio" name="crawlMode" value="dynamic" id="modeDynamic">
+                                <label for="modeDynamic" class="mode-label">
+                                    <span class="mode-label-title">Dynamic Crawl</span>
+                                    <span class="mode-label-desc">Auto-discover agent pages from the website</span>
+                                </label>
+                            </div>
                         </div>
                     </div>
 
-                    <button type="submit" id="submitBtn">Submit URL</button>
+                    <!-- URL Input -->
+                    <div class="form-group">
+                        <label>Enter URL(s)</label>
+                        <textarea
+                            id="urlInput"
+                            placeholder="https://example.com/agents/jane-doe&#10;https://example.com/agents/john-smith&#10;https://example.com/team"
+                            rows="4"
+                        ></textarea>
+                        <p class="input-hint">One URL per line. Protocol (https://) is added automatically if missing.</p>
+                    </div>
+
+                    <button type="button" class="btn-submit" id="submitBtn" onclick="startCrawl()">Start Crawling</button>
 
                     <div class="status-message" id="statusMessage"></div>
-                </form>
+                </div>
 
                 <div class="history-section">
                     <h2 class="history-title">Recent Submissions</h2>
                     <div class="history-list" id="historyList">
-                        <div class="empty-state">
-                            No submissions yet. Submit your first URL above!
-                        </div>
+                        <div class="empty-state">No submissions yet. Submit your first URL above!</div>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 AutoQuery. All rights reserved.</p>
+        </div>
+    </footer>
+
     <script>
-        // Get form elements
-        const form = document.getElementById('urlForm');
         const urlInput = document.getElementById('urlInput');
         const submitBtn = document.getElementById('submitBtn');
         const statusMessage = document.getElementById('statusMessage');
         const historyList = document.getElementById('historyList');
+        const modeSingle = document.getElementById('modeSingle');
+        const modeDynamic = document.getElementById('modeDynamic');
 
-        // Load history from localStorage
         let urlHistory = JSON.parse(localStorage.getItem('urlHistory') || '[]');
 
-        // Display history
         function displayHistory() {
             if (urlHistory.length === 0) {
                 historyList.innerHTML = '<div class="empty-state">No submissions yet. Submit your first URL above!</div>';
@@ -359,49 +409,53 @@
             historyList.innerHTML = urlHistory.map(item => `
                 <div class="history-item">
                     <div class="history-url">${item.url}</div>
+                    <span class="history-badge ${item.mode}">${item.mode}</span>
                     <div class="history-time">${item.time}</div>
                 </div>
             `).join('');
         }
 
-        // Show status message
         function showStatus(type, message) {
             statusMessage.className = `status-message ${type}`;
             statusMessage.textContent = message;
             statusMessage.style.display = 'block';
 
             if (type !== 'loading') {
-                setTimeout(() => {
-                    statusMessage.style.display = 'none';
-                }, 5000);
+                setTimeout(() => { statusMessage.style.display = 'none'; }, 5000);
             }
         }
 
-        // Handle form submission
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const url = urlInput.value.trim();
-
-            if (!url) {
-                showStatus('error', 'Please enter a valid URL');
+        async function startCrawl() {
+            const urlsText = urlInput.value.trim();
+            if (!urlsText) {
+                showStatus('error', 'Please enter at least one URL');
                 return;
             }
 
-            // Disable button and show loading
+            const urls = urlsText.split('\n').map(u => u.trim()).filter(u => u.length > 0);
+            if (urls.length === 0) {
+                showStatus('error', 'Please enter at least one valid URL');
+                return;
+            }
+
+            const mode = modeSingle.checked ? 'single' : 'dynamic';
+
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Submitting...';
-            showStatus('loading', 'Processing your URL...');
+            submitBtn.textContent = 'Crawling...';
+            const modeText = mode === 'single' ? `${urls.length} URL(s)` : `website (dynamic)`;
+            showStatus('loading', `Processing ${modeText}... This may take a minute.`);
 
             try {
-                // Call backend API
-                const response = await fetch('http://localhost:3000/api/submit-url', {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 5 * 60 * 1000); // 5 min timeout
+
+                const response = await fetch('/api/crawl', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ url })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ urls, mode }),
+                    signal: controller.signal
                 });
+                clearTimeout(timeoutId);
 
                 if (!response.ok) {
                     const error = await response.json();
@@ -409,48 +463,44 @@
                 }
 
                 const result = await response.json();
-
-                // Add to history
                 const timestamp = new Date().toLocaleString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
+                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
                 });
 
-                urlHistory.unshift({
-                    url: url,
-                    time: timestamp
+                urls.forEach(url => {
+                    urlHistory.unshift({ url, mode, time: timestamp });
                 });
 
-                // Keep only last 10 submissions
-                if (urlHistory.length > 10) {
-                    urlHistory = urlHistory.slice(0, 10);
-                }
-
-                // Save to localStorage
+                if (urlHistory.length > 20) urlHistory = urlHistory.slice(0, 20);
                 localStorage.setItem('urlHistory', JSON.stringify(urlHistory));
 
-                // Show success
-                showStatus('success', '✓ URL submitted successfully!');
+                const agentCount = result.agents?.length || 0;
 
-                // Clear input
+                if (agentCount > 0) {
+                    // Store agents and redirect to review page
+                    localStorage.setItem('pendingAgents', JSON.stringify(result.agents));
+                    window.location.href = '/review.html';
+                    return;
+                }
+
+                showStatus('error', 'No agents found on this page.');
                 urlInput.value = '';
-
-                // Update history display
                 displayHistory();
 
             } catch (error) {
-                showStatus('error', '✗ Failed to submit URL. Please try again.');
-                console.error('Error:', error);
+                if (error.name === 'AbortError') {
+                    showStatus('error', 'Request timed out after 5 minutes. The page may be too large or the server is busy.');
+                } else if (error.message === 'Load failed' || error.message === 'Failed to fetch') {
+                    showStatus('error', 'Connection to server failed. Make sure the server is running on localhost:3000.');
+                } else {
+                    showStatus('error', error.message || 'Failed to crawl URL(s). Please try again.');
+                }
             } finally {
-                // Re-enable button
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Submit URL';
+                submitBtn.textContent = 'Start Crawling';
             }
-        });
+        }
 
-        // Initial display
         displayHistory();
     </script>
 </body>

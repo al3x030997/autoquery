@@ -1,5 +1,8 @@
 import { google } from 'googleapis';
 import fs from 'fs';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
 const CREDENTIALS_PATH = process.env.GOOGLE_CREDENTIALS_PATH || './google-credentials.json';
@@ -30,23 +33,46 @@ export async function saveToGoogleSheets(data) {
 
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Prepare row data
+        // Prepare row data for literary agent information
         const row = [
             new Date(data.timestamp).toLocaleString('de-DE'),
-            data.url,
-            data.title,
-            data.category || '',
-            data.summary || '',
-            (data.mainTopics || []).join(', '),
-            data.sentiment || '',
-            data.language || '',
-            data.wordCount || 0
+            data.url || data.source_url || '',
+            data.agent_name || '',
+            data.agency_name || '',
+            data.country || '',
+            data.website || '',
+            data.email || '',
+            data.is_open_to_submissions ? 'Ja' : 'Nein',
+            data.requires_bio ? 'Ja' : 'Nein',
+            data.requires_expose ? 'Ja' : 'Nein',
+            data.requires_project_plan ? 'Ja' : 'Nein',
+            data.genre_thriller ? 'Ja' : 'Nein',
+            data.genre_krimi ? 'Ja' : 'Nein',
+            data.genre_romance ? 'Ja' : 'Nein',
+            data.genre_fantasy ? 'Ja' : 'Nein',
+            data.genre_scifi ? 'Ja' : 'Nein',
+            data.genre_historical ? 'Ja' : 'Nein',
+            data.genre_contemporary ? 'Ja' : 'Nein',
+            data.genre_literary ? 'Ja' : 'Nein',
+            data.genre_ya ? 'Ja' : 'Nein',
+            data.genre_mg ? 'Ja' : 'Nein',
+            data.genre_children ? 'Ja' : 'Nein',
+            data.genre_horror ? 'Ja' : 'Nein',
+            data.genre_womens_fiction ? 'Ja' : 'Nein',
+            data.genre_lgbtq ? 'Ja' : 'Nein',
+            data.genre_dystopian ? 'Ja' : 'Nein',
+            data.genre_memoir ? 'Ja' : 'Nein',
+            data.genre_biography ? 'Ja' : 'Nein',
+            data.genre_selfhelp ? 'Ja' : 'Nein',
+            data.genre_business ? 'Ja' : 'Nein',
+            data.genre_truecrime ? 'Ja' : 'Nein',
+            data.confidence_score ? `${data.confidence_score}%` : '0%'
         ];
 
         // Append to sheet
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-            range: 'Sheet1!A:I', // Adjust if your sheet has a different name
+            range: 'Sheet1!A:AF', // Updated range for 32 columns
             valueInputOption: 'USER_ENTERED',
             requestBody: {
                 values: [row]
@@ -77,22 +103,45 @@ export async function initializeSheet() {
 
         const sheets = google.sheets({ version: 'v4', auth });
 
-        // Create headers
+        // Create headers for literary agent data
         const headers = [
             'Timestamp',
-            'URL',
-            'Title',
-            'Category',
-            'Summary',
-            'Main Topics',
-            'Sentiment',
-            'Language',
-            'Word Count'
+            'Source URL',
+            'Agent Name',
+            'Agency Name',
+            'Country',
+            'Website',
+            'Email',
+            'Open for Submission',
+            'Bio/Vita required',
+            'Exposé required',
+            'Project Plan required',
+            'Thriller',
+            'Krimi',
+            'Romance',
+            'Fantasy',
+            'Sci-Fi',
+            'Historical',
+            'Contemporary',
+            'Literary Fiction',
+            'Young Adult',
+            'Middle Grade',
+            'Children',
+            'Horror',
+            'Women\'s Fiction',
+            'LGBTQ+',
+            'Dystopian',
+            'Memoir',
+            'Biography',
+            'Self-Help',
+            'Business',
+            'True Crime',
+            'Confidence Score'
         ];
 
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
-            range: 'Sheet1!A1:I1',
+            range: 'Sheet1!A1:AF1',
             valueInputOption: 'USER_ENTERED',
             requestBody: {
                 values: [headers]

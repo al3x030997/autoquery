@@ -19,39 +19,18 @@ export async function scrapeUrl(url) {
         const html = response.data;
         const $ = cheerio.load(html);
 
-        // Remove script and style tags
-        $('script, style, nav, footer, header').remove();
+        // Remove script and style tags (keep header/nav/footer as they may contain important content)
+        $('script, style').remove();
 
         // Extract title
         const title = $('title').text().trim() ||
                      $('h1').first().text().trim() ||
                      'No title found';
 
-        // Extract main content
-        // Try common content containers
-        let text = '';
-        const contentSelectors = [
-            'article',
-            'main',
-            '.content',
-            '.post-content',
-            '.article-content',
-            '#content',
-            'body'
-        ];
-
-        for (const selector of contentSelectors) {
-            const content = $(selector).first().text();
-            if (content && content.length > 100) {
-                text = content;
-                break;
-            }
-        }
-
-        // Fallback to body if no content found
-        if (!text) {
-            text = $('body').text();
-        }
+        // Extract main content — use body to capture everything including sidebars
+        // Sidebars often contain genre tags, submission info, and other metadata
+        // that would be missed by narrow selectors like 'article' or 'main'
+        let text = $('body').text();
 
         // Clean up the text
         text = text
@@ -60,16 +39,57 @@ export async function scrapeUrl(url) {
             .trim();
 
         // Limit text length (to avoid overloading LLM)
-        const maxLength = 8000;
+        // Increased to 50000 to match LLM context window
+        const maxLength = 50000;
         if (text.length > maxLength) {
             text = text.substring(0, maxLength) + '...';
         }
 
+        // Extract all links from the page
+        const links = [];
+        $('a[href]').each((i, elem) => {
+            const href = $(elem).attr('href');
+            if (href) {
+                try {
+                    // Convert relative URLs to absolute
+                    const absoluteUrl = new URL(href, url).href;
+                    // Only include same-domain links
+                    const baseUrl = new URL(url);
+                    const linkUrl = new URL(absoluteUrl);
+                    if (linkUrl.hostname === baseUrl.hostname) {
+                        links.push(absoluteUrl);
+                    }
+                } catch (e) {
+                    // Skip invalid URLs
+                }
+            }
+        });
+
+        // Keep original text snippet for preview (first 1500 chars)
+        const textSnippet = text.substring(0, 1500);
+
+        // Extract all emails for suggestions
+        const emailRegex = /[\w.-]+@[\w.-]+\.\w+/g;
+        const allEmails = [...new Set((text.match(emailRegex) || []).filter(email =>
+            !email.includes('example.com') &&
+            !email.includes('sentry.io') &&
+            !email.includes('placeholder')
+        ))];
+
+        // Extract all URLs for suggestions
+        const urlRegex = /https?:\/\/[^\s<>"]+/g;
+        const allUrls = [...new Set((text.match(urlRegex) || []))];
+
         return {
             title,
             text,
-            wordCount: text.split(/\s+/).length
+            textSnippet,  // For Quick Preview in UI
+            wordCount: text.split(/\s+/).length,
+            links: [...new Set(links)], // Remove duplicates
+            allEmails,  // For Field Suggestions
+            allUrls     // For Field Suggestions
         };
+
 
     } catch (error) {
         throw new Error(`Failed to scrape URL: ${error.message}`);

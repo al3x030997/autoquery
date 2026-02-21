@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Results - AutoQuery Agent Finder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #1c1917;
+            color: #fafaf9;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .green { color: #4ade80; }
+
+        /* Header */
+        header {
+            padding: 16px 0 24px;
+        }
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Crimson Pro', serif;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+            text-decoration: none;
+        }
+        .back-link {
+            color: #a8a29e;
+            text-decoration: none;
+            font-size: 14px;
+            padding: 8px 16px;
+            background: #292524;
+            border: 1px solid #44403c;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .back-link:hover {
+            border-color: #4ade80;
+            color: #4ade80;
+        }
+
+        /* Extract Form */
+        .extract-form {
+            background: #292524;
+            border: 1px solid #44403c;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+        }
+        .extract-form input {
+            flex: 1;
+            padding: 12px 16px;
+            background: #1c1917;
+            border: 2px solid #44403c;
+            border-radius: 8px;
+            color: #fafaf9;
+            font-size: 14px;
+            font-family: 'DM Sans', sans-serif;
+            transition: border-color 0.2s;
+        }
+        .extract-form input:focus {
+            outline: none;
+            border-color: #4ade80;
+        }
+        .extract-form input::placeholder { color: #78716c; }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: #1c1917;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+        }
+        .btn-success {
+            background: rgba(74, 222, 128, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+        .btn-success:hover {
+            background: rgba(74, 222, 128, 0.25);
+        }
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+        .btn-secondary {
+            background: #44403c;
+            color: #a8a29e;
+        }
+        .btn-secondary:hover {
+            background: #57534e;
+            color: #fafaf9;
+        }
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading */
+        .loading {
+            background: #292524;
+            border: 1px solid #44403c;
+            padding: 48px;
+            border-radius: 12px;
+            text-align: center;
+            color: #a8a29e;
+        }
+        .spinner {
+            border: 3px solid #44403c;
+            border-top: 3px solid #4ade80;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Results Header */
+        .results-header {
+            background: #292524;
+            border: 1px solid #44403c;
+            padding: 16px 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .results-header strong {
+            color: #fafaf9;
+            font-family: 'Crimson Pro', serif;
+            font-size: 18px;
+        }
+
+        /* Agent Cards */
+        .agent-card {
+            background: #292524;
+            border: 1px solid #44403c;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            transition: border-color 0.2s;
+        }
+        .agent-card:hover {
+            border-color: #57534e;
+        }
+        .agent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #44403c;
+        }
+        .agent-name {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: 'Crimson Pro', serif;
+            color: #fafaf9;
+        }
+        .agent-agency {
+            font-size: 14px;
+            color: #a8a29e;
+            margin-top: 2px;
+        }
+        .agent-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .agent-actions .btn {
+            padding: 8px 16px;
+            font-size: 12px;
+        }
+
+        /* Agent Fields Grid */
+        .agent-fields {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+        }
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .field-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #78716c;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .field-value {
+            font-size: 13px;
+            color: #d6d3d1;
+            padding: 10px 12px;
+            background: #1c1917;
+            border: 1px solid #44403c;
+            border-radius: 8px;
+            min-height: 36px;
+            line-height: 1.5;
+        }
+        .field-value[contenteditable="true"] {
+            cursor: text;
+            transition: border-color 0.2s;
+        }
+        .field-value[contenteditable="true"]:focus {
+            outline: none;
+            border-color: #4ade80;
+            background: #292524;
+        }
+        .field-value.empty {
+            color: #57534e;
+            font-style: italic;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .status-pending {
+            background: rgba(251, 191, 36, 0.1);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+        .status-approved {
+            background: rgba(74, 222, 128, 0.1);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+        }
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* Confidence */
+        .confidence-score {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #a8a29e;
+        }
+        .confidence-bar {
+            flex: 1;
+            height: 6px;
+            background: #44403c;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444, #fbbf24, #4ade80);
+            transition: width 0.3s;
+        }
+
+        .hidden { display: none; }
+
+        /* Success Message */
+        .success-message {
+            background: rgba(74, 222, 128, 0.1);
+            color: #4ade80;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            font-size: 14px;
+        }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal.hidden { display: none; }
+        .modal-content {
+            background: #292524;
+            border: 1px solid #44403c;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #44403c;
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: #4ade80;
+            font-size: 18px;
+            font-family: 'Crimson Pro', serif;
+        }
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #78716c;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        .modal-close:hover {
+            background: #44403c;
+            color: #fafaf9;
+        }
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* Source Modal */
+        .source-meta {
+            background: #1c1917;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.6;
+            border: 1px solid #44403c;
+            color: #d6d3d1;
+        }
+        .source-meta strong { color: #fafaf9; }
+        .source-meta a {
+            color: #4ade80;
+            word-break: break-all;
+        }
+        .source-snippet h3 {
+            color: #fafaf9;
+            font-size: 15px;
+            font-family: 'Crimson Pro', serif;
+            margin-bottom: 10px;
+        }
+        .source-snippet pre {
+            background: #1c1917;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 3px solid #4ade80;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: 'DM Sans', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            color: #a8a29e;
+        }
+
+        /* Field Suggestions */
+        .field-suggestions {
+            margin-top: 8px;
+            padding: 10px 12px;
+            background: rgba(251, 191, 36, 0.05);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            border-radius: 8px;
+        }
+        .field-suggestions-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #fbbf24;
+            margin-bottom: 6px;
+        }
+        .suggestion-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+        .suggestion-item:last-child { margin-bottom: 0; }
+        .suggestion-value {
+            flex: 1;
+            font-size: 12px;
+            color: #d6d3d1;
+            word-break: break-all;
+        }
+        .suggestion-btn {
+            padding: 4px 10px;
+            background: rgba(74, 222, 128, 0.15);
+            color: #4ade80;
+            border: 1px solid rgba(74, 222, 128, 0.3);
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+        }
+        .suggestion-btn:hover {
+            background: rgba(74, 222, 128, 0.25);
+        }
+
+        .field-warning {
+            margin-top: 6px;
+            padding: 6px 10px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 6px;
+            font-size: 11px;
+            color: #ef4444;
+        }
+
+        /* Warning Modal */
+        .warning-info {
+            background: rgba(251, 191, 36, 0.05);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            margin-bottom: 20px;
+        }
+        .warning-info p {
+            margin: 8px 0;
+            font-size: 14px;
+            color: #d6d3d1;
+        }
+        .warning-info strong { color: #fbbf24; }
+        .warning-message {
+            background: rgba(239, 68, 68, 0.05);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            margin-bottom: 20px;
+        }
+        .warning-message p {
+            margin: 8px 0;
+            font-size: 14px;
+            color: #fca5a5;
+        }
+        .warning-samples h3 {
+            font-size: 14px;
+            color: #fafaf9;
+            margin-bottom: 10px;
+        }
+        .warning-samples ul {
+            background: #1c1917;
+            padding: 15px 15px 15px 35px;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #44403c;
+        }
+        .warning-samples li {
+            margin: 5px 0;
+            font-size: 13px;
+            color: #a8a29e;
+            word-break: break-all;
+        }
+
+        /* Evidence Modal */
+        .evidence-value {
+            background: rgba(74, 222, 128, 0.05);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(74, 222, 128, 0.2);
+            margin-bottom: 20px;
+        }
+        .evidence-value strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #4ade80;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        #evidenceValue {
+            font-size: 16px;
+            font-weight: 600;
+            color: #fafaf9;
+        }
+        .evidence-source strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #a8a29e;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        #evidenceQuote {
+            background: #1c1917;
+            padding: 16px 20px;
+            border-left: 3px solid #4ade80;
+            border-radius: 8px;
+            font-style: italic;
+            color: #a8a29e;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        /* Clickable field values */
+        .field-value-clickable {
+            cursor: pointer;
+            text-decoration: underline;
+            text-decoration-style: dotted;
+            text-decoration-color: #4ade80;
+        }
+        .field-value-clickable:hover {
+            background: rgba(74, 222, 128, 0.05);
+            text-decoration-style: solid;
+        }
+
+        /* Clickable array items */
+        .array-item {
+            display: inline;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: background 0.2s;
+        }
+        .array-item:hover {
+            background: rgba(74, 222, 128, 0.1);
+            text-decoration: underline;
+            text-decoration-color: #4ade80;
+        }
+
+        /* Mobile */
+        @media (max-width: 1024px) {
+            .agent-fields { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            body { padding: 12px; }
+            .agent-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .extract-form { flex-direction: column; }
+            .results-header { flex-direction: column; gap: 12px; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="header-content">
+                <a href="/index.html" class="logo">AutoQuery</a>
+                <a href="/index.html" class="back-link">Back to Crawl</a>
+            </div>
+        </header>
+
+        <!-- Extract Form -->
+        <div class="extract-form">
+            <input type="url" id="urlInput" placeholder="https://agency.com/team">
+            <button class="btn btn-primary" id="extractBtn">Extract Agents</button>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p style="color: #fafaf9;">Crawling und Extraktion läuft...</p>
+            <small>Dies kann einige Minuten dauern</small>
+        </div>
+
+        <!-- Success Message -->
+        <div id="successMessage" class="success-message hidden"></div>
+
+        <!-- Results Header -->
+        <div id="resultsHeader" class="results-header hidden">
+            <div>
+                <strong id="agentCount">0 Agenten gefunden</strong>
+                <span id="approvedCount" style="margin-left: 15px; color: #78716c; font-size: 14px;"></span>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-success" id="approveAllBtn">Alle bestätigen</button>
+                <button class="btn btn-primary" id="saveBtn" disabled>In Google Sheets speichern</button>
+            </div>
+        </div>
+
+        <!-- Agent Cards -->
+        <div id="agentsList"></div>
+    </div>
+
+    <!-- Source Preview Modal -->
+    <div id="sourceModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Original Page Content</h2>
+                <button class="modal-close" onclick="closeSourceModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="source-meta">
+                    <strong>Page Title:</strong> <span id="sourceTitle"></span><br>
+                    <strong>URL:</strong> <a id="sourceUrl" href="" target="_blank"></a>
+                </div>
+                <div class="source-snippet">
+                    <h3>Text Snippet (First 1500 characters)</h3>
+                    <pre id="sourceText"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warning Modal (Too Many Links) -->
+    <div id="warningModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Too Many Agent Pages Found</h2>
+                <button class="modal-close" onclick="closeWarningModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="warning-info">
+                    <p><strong>Found:</strong> <span id="warningFoundLinks"></span> potential agent pages</p>
+                    <p><strong>Limit:</strong> <span id="warningLimit"></span> pages</p>
+                    <p><strong>Estimated time:</strong> ~<span id="warningTime"></span> minutes</p>
+                </div>
+                <div class="warning-message">
+                    <p>Crawling this many pages will take a long time and use significant resources.</p>
+                    <p>Please review your URL or consider providing a more specific page (e.g., /team or /agents).</p>
+                </div>
+                <div class="warning-samples">
+                    <h3>Sample URLs that will be crawled:</h3>
+                    <ul id="warningSampleList"></ul>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="closeWarningModal()">OK, Understood</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Evidence Modal -->
+    <div id="evidenceModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2><span id="evidenceFieldLabel"></span></h2>
+                <button class="modal-close" onclick="closeEvidenceModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="evidence-value">
+                    <strong>Extracted Value:</strong>
+                    <div id="evidenceValue"></div>
+                </div>
+                <div class="evidence-source">
+                    <strong>Source Quote:</strong>
+                    <blockquote id="evidenceQuote"></blockquote>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let agents = [];
+        let approvedAgents = new Set();
+
+        const elements = {
+            urlInput: document.getElementById('urlInput'),
+            extractBtn: document.getElementById('extractBtn'),
+            loading: document.getElementById('loading'),
+            successMessage: document.getElementById('successMessage'),
+            resultsHeader: document.getElementById('resultsHeader'),
+            agentsList: document.getElementById('agentsList'),
+            agentCount: document.getElementById('agentCount'),
+            approvedCount: document.getElementById('approvedCount'),
+            approveAllBtn: document.getElementById('approveAllBtn'),
+            saveBtn: document.getElementById('saveBtn')
+        };
+
+        // Check for pending agents from localStorage (redirected from index.html)
+        (function loadPendingAgents() {
+            const pending = localStorage.getItem('pendingAgents');
+            if (pending) {
+                try {
+                    const parsed = JSON.parse(pending);
+                    if (Array.isArray(parsed) && parsed.length > 0) {
+                        console.log(`Loaded ${parsed.length} agents from localStorage`);
+                        agents = parsed;
+                        approvedAgents.clear();
+                        displayAgents();
+                        localStorage.removeItem('pendingAgents');
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Failed to parse pendingAgents:', e);
+                }
+                localStorage.removeItem('pendingAgents');
+            }
+        })();
+
+        // Extract agents
+        elements.extractBtn.addEventListener('click', async () => {
+            const url = elements.urlInput.value.trim();
+            if (!url) return;
+
+            elements.extractBtn.disabled = true;
+            elements.extractBtn.textContent = 'Crawling...';
+            elements.urlInput.disabled = true;
+
+            elements.loading.classList.remove('hidden');
+            elements.resultsHeader.classList.add('hidden');
+            elements.agentsList.innerHTML = '';
+            elements.successMessage.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/extract', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url })
+                });
+
+                const data = await response.json();
+
+                if (data.warning) {
+                    showWarningModal(data);
+                    return;
+                }
+
+                if (data.success && data.agents && data.agents.length > 0) {
+                    agents = data.agents;
+                    approvedAgents.clear();
+                    displayAgents();
+                } else {
+                    alert(`Keine Agenten gefunden.\n\nDebug: Success=${data.success}, Agents=${data.agents?.length || 0}`);
+                }
+            } catch (error) {
+                alert('Fehler: ' + error.message);
+            } finally {
+                elements.loading.classList.add('hidden');
+                elements.extractBtn.disabled = false;
+                elements.extractBtn.textContent = 'Extract Agents';
+                elements.urlInput.disabled = false;
+            }
+        });
+
+        // Display agents
+        function displayAgents() {
+            elements.resultsHeader.classList.remove('hidden');
+            elements.agentCount.textContent = `${agents.length} Agent(en) gefunden`;
+            updateApprovedCount();
+
+            elements.agentsList.innerHTML = agents.map((agent, index) => `
+                <div class="agent-card" data-index="${index}">
+                    <div class="agent-header">
+                        <div>
+                            <div class="agent-name">${agent.agent_name || 'Unknown'}</div>
+                            <div class="agent-agency">${agent.agency_name || 'Unknown'}</div>
+                            <small style="color: #57534e; font-size: 12px;">${agent.source_url}</small>
+                        </div>
+                        <div class="agent-actions">
+                            <button class="btn btn-secondary" onclick="showSource(${index})">Source</button>
+                            <span class="status-badge status-pending" data-status="${index}">Pending</span>
+                            <button class="btn btn-success" onclick="approveAgent(${index})">Bestätigen</button>
+                            <button class="btn btn-danger" onclick="rejectAgent(${index})">Ablehnen</button>
+                        </div>
+                    </div>
+                    <div class="agent-fields">
+                        ${renderField(index, 'agent_role', 'Position', agent.agent_role, agent)}
+                        ${renderField(index, 'contact_email', 'Email', agent.contact_email, agent)}
+                        ${renderField(index, 'submission_url', 'Submission URL', agent.submission_url, agent)}
+                        ${renderField(index, 'is_open_to_submissions', 'Offen für Submissions', agent.is_open_to_submissions ? 'Ja' : 'Nein', agent)}
+                        ${renderField(index, 'status_notice', 'Status', agent.status_notice, agent)}
+                        ${renderField(index, 'estimated_response_time', 'Antwortzeit', agent.estimated_response_time, agent)}
+                        ${renderField(index, 'accepted_genres_fiction', 'Fiction Genres', safeArrayToString(agent.accepted_genres_fiction), agent)}
+                        ${renderField(index, 'accepted_genres_nonfiction', 'Nonfiction Genres', safeArrayToString(agent.accepted_genres_nonfiction), agent)}
+                        ${renderField(index, 'manuscript_wishlist_summary', 'Wishlist', agent.manuscript_wishlist_summary, agent)}
+                        ${renderField(index, 'target_audience', 'Zielgruppe', agent.target_audience, agent)}
+                        ${renderField(index, 'specific_keywords', 'Keywords', safeArrayToString(agent.specific_keywords), agent)}
+                        ${renderField(index, 'hard_nos', 'Hard Nos', safeArrayToString(agent.hard_nos), agent)}
+                        ${renderField(index, 'audience', 'Audience / Age Groups', safeArrayToString(agent.audience), agent)}
+                        ${renderField(index, 'requires_expose', 'Exposé', agent.requires_expose ? 'Ja' : 'Nein', agent)}
+                        ${renderField(index, 'requires_bio', 'Bio', agent.requires_bio ? 'Ja' : 'Nein', agent)}
+                        ${renderField(index, 'requires_manuscript', 'Manuskript', agent.requires_manuscript ? 'Ja' : 'Nein', agent)}
+                        ${renderField(index, 'confidence_score', 'Confidence', renderConfidence(agent.confidence_score), agent)}
+                    </div>
+                </div>
+            `).join('');
+
+            document.querySelectorAll('.field-value[contenteditable]').forEach(el => {
+                el.addEventListener('blur', function() {
+                    const index = parseInt(this.dataset.index);
+                    const field = this.dataset.field;
+                    agents[index][field] = this.textContent.trim();
+                });
+            });
+        }
+
+        function safeArrayToString(value) {
+            if (!value) return '';
+            if (Array.isArray(value)) return value.join(', ');
+            if (typeof value === 'string') return value;
+            return String(value);
+        }
+
+        function renderField(index, field, label, value, agent) {
+            const isEmpty = !value || value === 'Unknown' || value === '';
+
+            let suggestions = [];
+            if (agent && agent.suggestions) {
+                if (field === 'contact_email') suggestions = agent.suggestions.emails || [];
+                else if (field === 'submission_url') suggestions = agent.suggestions.websites || [];
+            }
+
+            const evidenceField = field + '_evidence';
+            const evidence = agent[evidenceField];
+            const hasEvidence = evidence && evidence !== 'Not found in text';
+
+            let fieldContent = '';
+
+            if (isEmpty) {
+                fieldContent = 'Keine Daten';
+            } else if (Array.isArray(agent[field])) {
+                const items = agent[field];
+                const evidences = Array.isArray(evidence) ? evidence : [];
+                fieldContent = items.map((item, i) => {
+                    const itemEvidence = evidences[i] || 'No evidence';
+                    return `<span class="array-item" onclick="showEvidence(${index}, '${field}', '${item.replace(/'/g, "\\'")}', '${itemEvidence.replace(/'/g, "\\'")}')">${item}</span>`;
+                }).join(', ');
+            } else if (hasEvidence) {
+                const escapedValue = String(value).replace(/'/g, "\\'");
+                const escapedEvidence = String(evidence).replace(/'/g, "\\'");
+                fieldContent = `<span class="field-value-clickable" onclick="showEvidence(${index}, '${field}', '${escapedValue}', '${escapedEvidence}')">${value}</span>`;
+            } else {
+                fieldContent = value;
+            }
+
+            return `
+                <div class="field">
+                    <div class="field-label">${label}${hasEvidence ? ' *' : ''}</div>
+                    <div class="field-value ${isEmpty ? 'empty' : ''}"
+                         ${!hasEvidence ? 'contenteditable="true"' : ''}
+                         data-index="${index}"
+                         data-field="${field}">${fieldContent}</div>
+                    ${renderSuggestions(index, field, value, suggestions)}
+                    ${renderFieldWarning(field, value)}
+                </div>
+            `;
+        }
+
+        function renderConfidence(score) {
+            const percent = (score || 0) * 10;
+            return `
+                <div class="confidence-score">
+                    <span>${score || 0}/10</span>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: ${percent}%"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function approveAgent(index) {
+            approvedAgents.add(index);
+            document.querySelector(`[data-status="${index}"]`).className = 'status-badge status-approved';
+            document.querySelector(`[data-status="${index}"]`).textContent = 'Approved';
+            updateApprovedCount();
+        }
+
+        function rejectAgent(index) {
+            approvedAgents.delete(index);
+            document.querySelector(`[data-index="${index}"]`).remove();
+            agents.splice(index, 1);
+            updateApprovedCount();
+            displayAgents();
+        }
+
+        function updateApprovedCount() {
+            elements.approvedCount.textContent = `${approvedAgents.size} bestätigt`;
+            elements.saveBtn.disabled = approvedAgents.size === 0;
+        }
+
+        elements.approveAllBtn.addEventListener('click', () => {
+            agents.forEach((_, index) => approveAgent(index));
+        });
+
+        elements.saveBtn.addEventListener('click', async () => {
+            const approved = Array.from(approvedAgents).map(index => agents[index]);
+
+            elements.saveBtn.disabled = true;
+            elements.saveBtn.textContent = 'Speichern...';
+
+            try {
+                const response = await fetch('/api/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ agents: approved })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    elements.successMessage.textContent = `${data.saved} Agent(en) erfolgreich in Google Sheets gespeichert!`;
+                    elements.successMessage.classList.remove('hidden');
+                    elements.agentsList.innerHTML = '';
+                    elements.resultsHeader.classList.add('hidden');
+                    agents = [];
+                    approvedAgents.clear();
+                }
+            } catch (error) {
+                alert('Fehler beim Speichern: ' + error.message);
+            } finally {
+                elements.saveBtn.disabled = false;
+                elements.saveBtn.textContent = 'In Google Sheets speichern';
+            }
+        });
+
+        function showSource(index) {
+            const agent = agents[index];
+            document.getElementById('sourceTitle').textContent = agent.source_title || 'No title';
+            document.getElementById('sourceUrl').textContent = agent.source_url;
+            document.getElementById('sourceUrl').href = agent.source_url;
+            document.getElementById('sourceText').textContent = agent.source_snippet || 'No preview available';
+            document.getElementById('sourceModal').classList.remove('hidden');
+        }
+
+        function closeSourceModal() {
+            document.getElementById('sourceModal').classList.add('hidden');
+        }
+
+        function showWarningModal(data) {
+            document.getElementById('warningFoundLinks').textContent = data.foundLinks;
+            document.getElementById('warningLimit').textContent = data.limit;
+            document.getElementById('warningTime').textContent = data.estimatedTime;
+            document.getElementById('warningSampleList').innerHTML = data.sampleUrls.map(url => `<li>${url}</li>`).join('');
+            document.getElementById('warningModal').classList.remove('hidden');
+        }
+
+        function closeWarningModal() {
+            document.getElementById('warningModal').classList.add('hidden');
+        }
+
+        function showEvidence(agentIndex, fieldName, value, evidence) {
+            const readableLabel = fieldName.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            document.getElementById('evidenceFieldLabel').textContent = readableLabel;
+            document.getElementById('evidenceValue').textContent = value || 'No value';
+            document.getElementById('evidenceQuote').textContent = evidence || 'No evidence found in source text';
+            document.getElementById('evidenceModal').classList.remove('hidden');
+        }
+
+        function closeEvidenceModal() {
+            document.getElementById('evidenceModal').classList.add('hidden');
+        }
+
+        // Close modals on backdrop click
+        ['sourceModal', 'warningModal', 'evidenceModal'].forEach(id => {
+            document.getElementById(id)?.addEventListener('click', function(e) {
+                if (e.target === this) this.classList.add('hidden');
+            });
+        });
+
+        // Close modals with Escape
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') {
+                closeSourceModal();
+                closeWarningModal();
+                closeEvidenceModal();
+            }
+        });
+
+        function renderSuggestions(agentIndex, fieldName, currentValue, suggestions) {
+            if (!suggestions || suggestions.length === 0) return '';
+
+            const alternatives = suggestions.filter(s =>
+                s && s !== currentValue && s.trim() !== ''
+            ).slice(0, 3);
+
+            if (alternatives.length === 0) return '';
+
+            return `
+                <div class="field-suggestions">
+                    <div class="field-suggestions-title">Found on page:</div>
+                    ${alternatives.map(alt => {
+                        const escapedValue = alt.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                        const escapedForJs = alt.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+                        return `
+                        <div class="suggestion-item">
+                            <span class="suggestion-value">${escapedValue}</span>
+                            <button class="suggestion-btn" onclick="useSuggestion(${agentIndex}, '${fieldName}', '${escapedForJs}')">Use This</button>
+                        </div>`;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function useSuggestion(agentIndex, fieldName, newValue) {
+            agents[agentIndex][fieldName] = newValue;
+            const card = document.querySelector(`[data-index="${agentIndex}"]`);
+            const field = card.querySelector(`[data-field="${fieldName}"]`);
+            if (field) {
+                field.textContent = newValue;
+                field.classList.remove('empty');
+                field.style.background = 'rgba(74, 222, 128, 0.1)';
+                field.style.borderColor = 'rgba(74, 222, 128, 0.3)';
+                setTimeout(() => {
+                    field.style.background = '';
+                    field.style.borderColor = '';
+                }, 600);
+                const suggestionsBox = field.closest('.field').querySelector('.field-suggestions');
+                if (suggestionsBox) {
+                    suggestionsBox.style.opacity = '0';
+                    suggestionsBox.style.transition = 'opacity 0.3s';
+                    setTimeout(() => suggestionsBox.remove(), 300);
+                }
+            }
+        }
+
+        function isGenericEmail(email) {
+            const genericPrefixes = ['info@', 'contact@', 'office@', 'hello@', 'mail@'];
+            return genericPrefixes.some(prefix => email.toLowerCase().startsWith(prefix));
+        }
+
+        function renderFieldWarning(fieldName, value) {
+            if (fieldName === 'email' && value && isGenericEmail(value)) {
+                return `<div class="field-warning">This looks like a generic email address</div>`;
+            }
+            return '';
+        }
+    </script>
+</body>
+</html>
