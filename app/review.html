@@ -575,6 +575,88 @@
             text-decoration-color: #4ade80;
         }
 
+        /* Unmatched Genres */
+        .unmatched-genres {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(251, 191, 36, 0.05);
+            border: 1px solid rgba(251, 191, 36, 0.2);
+            border-radius: 8px;
+        }
+        .unmatched-genres-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #fbbf24;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .unmatched-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(251, 191, 36, 0.1);
+        }
+        .unmatched-item:last-child { border-bottom: none; }
+        .unmatched-raw {
+            font-size: 13px;
+            color: #fafaf9;
+            font-weight: 600;
+            min-width: 120px;
+        }
+        .unmatched-match {
+            font-size: 12px;
+            color: #a8a29e;
+            flex: 1;
+        }
+        .unmatched-similarity {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+        .sim-low {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+        .sim-mid {
+            background: rgba(251, 191, 36, 0.15);
+            color: #fbbf24;
+        }
+        .unmatched-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .unmatched-btn {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.2s;
+        }
+        .unmatched-btn-map {
+            background: rgba(74, 222, 128, 0.15);
+            color: #4ade80;
+            border-color: rgba(74, 222, 128, 0.3);
+        }
+        .unmatched-btn-map:hover { background: rgba(74, 222, 128, 0.25); }
+        .unmatched-btn-new {
+            background: rgba(96, 165, 250, 0.15);
+            color: #60a5fa;
+            border-color: rgba(96, 165, 250, 0.3);
+        }
+        .unmatched-btn-new:hover { background: rgba(96, 165, 250, 0.25); }
+        .unmatched-btn-ignore {
+            background: rgba(120, 113, 108, 0.15);
+            color: #a8a29e;
+            border-color: rgba(120, 113, 108, 0.3);
+        }
+        .unmatched-btn-ignore:hover { background: rgba(120, 113, 108, 0.25); }
+
         /* Mobile */
         @media (max-width: 1024px) {
             .agent-fields { grid-template-columns: 1fr; }
@@ -592,8 +674,8 @@
         <!-- Header -->
         <header>
             <div class="header-content">
-                <a href="/index.html" class="logo">AutoQuery</a>
-                <a href="/index.html" class="back-link">Back to Crawl</a>
+                <a href="/" class="logo">AutoQuery</a>
+                <a href="/app/index.html" class="back-link">Back to Crawl</a>
             </div>
         </header>
 
@@ -820,6 +902,7 @@
                         ${renderField(index, 'requires_manuscript', 'Manuskript', agent.requires_manuscript ? 'Ja' : 'Nein', agent)}
                         ${renderField(index, 'confidence_score', 'Confidence', renderConfidence(agent.confidence_score), agent)}
                     </div>
+                    ${renderUnmatchedGenres(index, agent)}
                 </div>
             `).join('');
 
@@ -1003,6 +1086,100 @@
                 closeEvidenceModal();
             }
         });
+
+        function renderUnmatchedGenres(index, agent) {
+            const unmatched = agent.unmatched_genres;
+            if (!unmatched || unmatched.length === 0) return '';
+
+            return `
+                <div class="unmatched-genres" id="unmatched-${index}">
+                    <div class="unmatched-genres-title">New Genres Detected</div>
+                    ${unmatched.map((u, i) => {
+                        const simClass = u.similarity < 0.7 ? 'sim-low' : 'sim-mid';
+                        const simPct = Math.round(u.similarity * 100);
+                        const escaped = u.raw.replace(/'/g, "\\'");
+                        const bestEscaped = (u.bestMatch || '').replace(/'/g, "\\'");
+                        return `
+                        <div class="unmatched-item" id="unmatched-${index}-${i}">
+                            <span class="unmatched-raw">"${u.raw}"</span>
+                            <span class="unmatched-match">closest: ${u.bestMatch || 'none'}</span>
+                            <span class="unmatched-similarity ${simClass}">${simPct}%</span>
+                            <div class="unmatched-actions">
+                                ${u.bestMatch ? `<button class="unmatched-btn unmatched-btn-map" onclick="mapToExisting(${index}, ${i}, '${escaped}', '${bestEscaped}', '${u.bestCategory}')">Map to ${u.bestMatch}</button>` : ''}
+                                <button class="unmatched-btn unmatched-btn-new" onclick="approveNewGenre(${index}, ${i}, '${escaped}', 'fiction')">+ Fiction</button>
+                                <button class="unmatched-btn unmatched-btn-new" onclick="approveNewGenre(${index}, ${i}, '${escaped}', 'nonfiction')">+ Nonfiction</button>
+                                <button class="unmatched-btn unmatched-btn-ignore" onclick="ignoreGenre(${index}, ${i})">Ignore</button>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        function mapToExisting(agentIndex, unmatchedIndex, rawGenre, existingGenre, category) {
+            // Add existing genre to agent's classified list
+            const field = category === 'fiction' ? 'accepted_genres_fiction' : 'accepted_genres_nonfiction';
+            if (!agents[agentIndex][field]) agents[agentIndex][field] = [];
+            if (!agents[agentIndex][field].includes(existingGenre)) {
+                agents[agentIndex][field].push(existingGenre);
+            }
+            // Remove from unmatched
+            removeUnmatchedItem(agentIndex, unmatchedIndex);
+        }
+
+        async function approveNewGenre(agentIndex, unmatchedIndex, genreName, category) {
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = '...';
+
+            try {
+                const response = await fetch('/api/genres/approve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ genreName, category })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    // Add to agent's classified list
+                    const field = category === 'fiction' ? 'accepted_genres_fiction' : 'accepted_genres_nonfiction';
+                    if (!agents[agentIndex][field]) agents[agentIndex][field] = [];
+                    agents[agentIndex][field].push(genreName);
+                    removeUnmatchedItem(agentIndex, unmatchedIndex);
+                } else {
+                    alert('Failed to approve genre: ' + (data.error || 'Unknown error'));
+                    btn.disabled = false;
+                    btn.textContent = `+ ${category === 'fiction' ? 'Fiction' : 'Nonfiction'}`;
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+                btn.disabled = false;
+                btn.textContent = `+ ${category === 'fiction' ? 'Fiction' : 'Nonfiction'}`;
+            }
+        }
+
+        function ignoreGenre(agentIndex, unmatchedIndex) {
+            removeUnmatchedItem(agentIndex, unmatchedIndex);
+        }
+
+        function removeUnmatchedItem(agentIndex, unmatchedIndex) {
+            const item = document.getElementById(`unmatched-${agentIndex}-${unmatchedIndex}`);
+            if (item) {
+                item.style.opacity = '0';
+                item.style.transition = 'opacity 0.3s';
+                setTimeout(() => {
+                    item.remove();
+                    // Remove container if empty
+                    const container = document.getElementById(`unmatched-${agentIndex}`);
+                    if (container && container.querySelectorAll('.unmatched-item').length === 0) {
+                        container.remove();
+                    }
+                }, 300);
+            }
+            // Update agent data
+            if (agents[agentIndex].unmatched_genres) {
+                agents[agentIndex].unmatched_genres.splice(unmatchedIndex, 1);
+            }
+        }
 
         function renderSuggestions(agentIndex, fieldName, currentValue, suggestions) {
             if (!suggestions || suggestions.length === 0) return '';

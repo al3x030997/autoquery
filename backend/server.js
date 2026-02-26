@@ -5,6 +5,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { crawlForAgents } from './crawler.js';
 import { saveToGoogleSheets } from './sheets.js';
+import { loadRegistry, addGenreToRegistry, checkEmbeddingModel } from './genre-registry.js';
+import { invalidateGenreCache } from './ollama.js';
 
 dotenv.config();
 
@@ -19,7 +21,10 @@ app.use(cors());
 app.use(express.json());
 
 // Serve frontend files
-app.use(express.static(path.join(__dirname, '..', 'app')));
+// Root serves the landing page (index.html from project root)
+// App files (agent finder, review) are under /app/
+app.use('/app', express.static(path.join(__dirname, '..', 'app')));
+app.use(express.static(path.join(__dirname, '..')));
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -199,6 +204,57 @@ app.post('/api/save', async (req, res) => {
     }
 });
 
+// Endpoint 4: Get current genre registry
+app.get('/api/genres', async (req, res) => {
+    try {
+        const registry = loadRegistry();
+        if (!registry) {
+            return res.json({ fiction: [], nonfiction: [], total: 0, initialized: false });
+        }
+        res.json({
+            fiction: registry.genres.fiction.map(g => ({ name: g.name, source: g.source, added: g.added })),
+            nonfiction: registry.genres.nonfiction.map(g => ({ name: g.name, source: g.source, added: g.added })),
+            total: registry.genres.fiction.length + registry.genres.nonfiction.length,
+            initialized: true
+        });
+    } catch (error) {
+        console.error('❌ Error:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Endpoint 5: Approve a new genre (add to registry)
+app.post('/api/genres/approve', async (req, res) => {
+    try {
+        const { genreName, category } = req.body;
+        if (!genreName || !['fiction', 'nonfiction'].includes(category)) {
+            return res.status(400).json({ error: 'genreName and category (fiction/nonfiction) required' });
+        }
+
+        let registry = loadRegistry();
+        if (!registry) {
+            return res.status(400).json({ error: 'Genre registry not initialized yet' });
+        }
+
+        // Check for duplicates
+        const exists = registry.genres[category].some(
+            g => g.name.toLowerCase() === genreName.toLowerCase()
+        );
+        if (exists) {
+            return res.json({ success: true, message: 'Genre already exists', genre: genreName });
+        }
+
+        registry = await addGenreToRegistry(registry, genreName, category);
+        invalidateGenreCache();
+
+        console.log(`✅ New genre approved: "${genreName}" (${category})`);
+        res.json({ success: true, genre: genreName, category });
+    } catch (error) {
+        console.error('❌ Error:', error.message);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Start server
 app.listen(PORT, () => {
     console.log(`\n🚀 Backend server running on http://localhost:${PORT}`);
@@ -206,13 +262,14 @@ app.listen(PORT, () => {
     console.log(`\n🔧 Make sure:`);
     console.log(`   - Ollama is running (ollama serve)`);
     console.log(`   - Google Sheets credentials are configured`);
-    console.log(`\n✨ NEW Features (v2.0):`);
-    console.log(`   - 🧠 Chain of Thought: Step-by-step reasoning for better extraction`);
-    console.log(`   - 📚 Adaptive Extraction: Reuses agency-wide fields (50% faster!)`);
-    console.log(`   - 🎯 Evidence Tracking: Shows source quotes for all extracted fields`);
-    console.log(`   - 🔍 No URL filtering: Crawls first 25 pages from sitemap/links`);
-    console.log(`   - 📊 Self-Consistency: 2x extraction per page (cost-optimized)`);
-    console.log(`   - 🌍 Auto-detect country from Impressum`);
-    console.log(`   - 🇩🇪 German genre mapping & negative formulations`);
-    console.log(`\n💡 Ready to crawl agent websites!\n`);
+
+    // Check embedding model availability
+    checkEmbeddingModel().then(available => {
+        if (available) {
+            console.log(`   - Embedding model ready`);
+        } else {
+            console.log(`   ⚠️  Embedding model not found. Run: ollama pull nomic-embed-text`);
+        }
+        console.log(`\n💡 Ready to crawl agent websites!\n`);
+    });
 });

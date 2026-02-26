@@ -1,8 +1,7 @@
 import { scrapeUrl } from './scraper.js';
-import { extractWithOllama, triagePages } from './ollama.js';
+import { extractWithOllama, triagePages, prioritizeUrlsWithLLM } from './ollama.js';
 import { validateAgent, removeDuplicates, meetsQualityStandards } from './validator.js';
 import { extractCountry } from './impressum.js';
-import { prioritizeUrlsWithLLM } from './ollama.js';
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 

@@ -321,8 +321,8 @@
     <header>
         <div class="container">
             <div class="header-content">
-                <a href="../index.html" class="logo">AutoQuery</a>
-                <a href="../index.html" class="back-link">Back to Home</a>
+                <a href="/" class="logo">AutoQuery</a>
+                <a href="/" class="back-link">Back to Home</a>
             </div>
         </div>
     </header>
@@ -479,7 +479,7 @@
                 if (agentCount > 0) {
                     // Store agents and redirect to review page
                     localStorage.setItem('pendingAgents', JSON.stringify(result.agents));
-                    window.location.href = '/review.html';
+                    window.location.href = '/app/review.html';
                     return;
                 }
 

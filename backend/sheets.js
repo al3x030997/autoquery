@@ -8,75 +8,60 @@ const SPREADSHEET_ID = process.env.GOOGLE_SHEET_ID;
 const CREDENTIALS_PATH = process.env.GOOGLE_CREDENTIALS_PATH || './google-credentials.json';
 
 /**
+ * Get authenticated Google Sheets client
+ */
+function getSheetsClient() {
+    if (!fs.existsSync(CREDENTIALS_PATH)) {
+        throw new Error(`Google credentials not found at ${CREDENTIALS_PATH}`);
+    }
+    if (!SPREADSHEET_ID) {
+        throw new Error('GOOGLE_SHEET_ID not set in .env file');
+    }
+
+    const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
+    const auth = new google.auth.GoogleAuth({
+        credentials,
+        scopes: ['https://www.googleapis.com/auth/spreadsheets']
+    });
+
+    return google.sheets({ version: 'v4', auth });
+}
+
+/**
  * Save data to Google Sheets
- * @param {Object} data - Data to save
  */
 export async function saveToGoogleSheets(data) {
     try {
-        // Check if credentials exist
-        if (!fs.existsSync(CREDENTIALS_PATH)) {
-            throw new Error(`Google credentials not found at ${CREDENTIALS_PATH}`);
-        }
+        const sheets = getSheetsClient();
 
-        if (!SPREADSHEET_ID) {
-            throw new Error('GOOGLE_SHEET_ID not set in .env file');
-        }
-
-        // Load credentials
-        const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
-
-        // Authenticate
-        const auth = new google.auth.GoogleAuth({
-            credentials,
-            scopes: ['https://www.googleapis.com/auth/spreadsheets']
-        });
-
-        const sheets = google.sheets({ version: 'v4', auth });
-
-        // Prepare row data for literary agent information
         const row = [
             new Date(data.timestamp).toLocaleString('de-DE'),
             data.url || data.source_url || '',
             data.agent_name || '',
             data.agency_name || '',
+            data.agent_role || '',
             data.country || '',
-            data.website || '',
             data.email || '',
+            data.submission_url || '',
             data.is_open_to_submissions ? 'Ja' : 'Nein',
+            (data.accepted_genres_fiction || []).join(', '),
+            (data.accepted_genres_nonfiction || []).join(', '),
+            (data.hard_nos || []).join(', '),
+            (data.audience || []).join(', '),
+            data.manuscript_wishlist_summary || '',
+            (data.specific_keywords || []).join(', '),
             data.requires_bio ? 'Ja' : 'Nein',
             data.requires_expose ? 'Ja' : 'Nein',
-            data.requires_project_plan ? 'Ja' : 'Nein',
-            data.genre_thriller ? 'Ja' : 'Nein',
-            data.genre_krimi ? 'Ja' : 'Nein',
-            data.genre_romance ? 'Ja' : 'Nein',
-            data.genre_fantasy ? 'Ja' : 'Nein',
-            data.genre_scifi ? 'Ja' : 'Nein',
-            data.genre_historical ? 'Ja' : 'Nein',
-            data.genre_contemporary ? 'Ja' : 'Nein',
-            data.genre_literary ? 'Ja' : 'Nein',
-            data.genre_ya ? 'Ja' : 'Nein',
-            data.genre_mg ? 'Ja' : 'Nein',
-            data.genre_children ? 'Ja' : 'Nein',
-            data.genre_horror ? 'Ja' : 'Nein',
-            data.genre_womens_fiction ? 'Ja' : 'Nein',
-            data.genre_lgbtq ? 'Ja' : 'Nein',
-            data.genre_dystopian ? 'Ja' : 'Nein',
-            data.genre_memoir ? 'Ja' : 'Nein',
-            data.genre_biography ? 'Ja' : 'Nein',
-            data.genre_selfhelp ? 'Ja' : 'Nein',
-            data.genre_business ? 'Ja' : 'Nein',
-            data.genre_truecrime ? 'Ja' : 'Nein',
+            data.requires_manuscript ? 'Ja' : 'Nein',
+            data.estimated_response_time || '',
             data.confidence_score ? `${data.confidence_score}%` : '0%'
         ];
 
-        // Append to sheet
         await sheets.spreadsheets.values.append({
             spreadsheetId: SPREADSHEET_ID,
-            range: 'Sheet1!A:AF', // Updated range for 32 columns
+            range: 'Sheet1!A:T',
             valueInputOption: 'USER_ENTERED',
-            requestBody: {
-                values: [row]
-            }
+            requestBody: { values: [row] }
         });
 
         console.log('✅ Successfully saved to Google Sheets');
@@ -91,61 +76,36 @@ export async function saveToGoogleSheets(data) {
  */
 export async function initializeSheet() {
     try {
-        if (!fs.existsSync(CREDENTIALS_PATH)) {
-            throw new Error(`Google credentials not found at ${CREDENTIALS_PATH}`);
-        }
+        const sheets = getSheetsClient();
 
-        const credentials = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8'));
-        const auth = new google.auth.GoogleAuth({
-            credentials,
-            scopes: ['https://www.googleapis.com/auth/spreadsheets']
-        });
-
-        const sheets = google.sheets({ version: 'v4', auth });
-
-        // Create headers for literary agent data
         const headers = [
             'Timestamp',
             'Source URL',
             'Agent Name',
             'Agency Name',
+            'Role',
             'Country',
-            'Website',
             'Email',
-            'Open for Submission',
-            'Bio/Vita required',
-            'Exposé required',
-            'Project Plan required',
-            'Thriller',
-            'Krimi',
-            'Romance',
-            'Fantasy',
-            'Sci-Fi',
-            'Historical',
-            'Contemporary',
-            'Literary Fiction',
-            'Young Adult',
-            'Middle Grade',
-            'Children',
-            'Horror',
-            'Women\'s Fiction',
-            'LGBTQ+',
-            'Dystopian',
-            'Memoir',
-            'Biography',
-            'Self-Help',
-            'Business',
-            'True Crime',
+            'Submission URL',
+            'Open for Submissions',
+            'Fiction Genres',
+            'Nonfiction Genres',
+            'Hard Nos',
+            'Audience',
+            'Wishlist Summary',
+            'Keywords',
+            'Bio required',
+            'Expose required',
+            'Manuscript required',
+            'Response Time',
             'Confidence Score'
         ];
 
         await sheets.spreadsheets.values.update({
             spreadsheetId: SPREADSHEET_ID,
-            range: 'Sheet1!A1:AF1',
+            range: 'Sheet1!A1:T1',
             valueInputOption: 'USER_ENTERED',
-            requestBody: {
-                values: [headers]
-            }
+            requestBody: { values: [headers] }
         });
 
         console.log('✅ Sheet initialized with headers');

@@ -1,10 +1,14 @@
 import axios from 'axios';
+import {
+    loadRegistry, initializeRegistry, classifyGenresWithEmbeddings,
+    getRegistryCategories, getEmbedding
+} from './genre-registry.js';
 
 const OLLAMA_URL = process.env.OLLAMA_URL || 'http://localhost:11434';
 const MODEL = process.env.OLLAMA_MODEL || 'llama3.2';
 
-// Genre categories matching manuscriptwishlist.com exactly
-const GENRE_CATEGORIES = {
+// Seed genres (used only for initial registry creation)
+const SEED_GENRE_CATEGORIES = {
     fiction: [
         'Action/Adventure', 'BIPOC Crime Fiction', 'BIPOC Literature', 'BIPOC Mystery',
         'BIPOC Thriller', 'Bookclub', 'Caribbean Literature', 'Children\'s',
@@ -38,9 +42,53 @@ const AUDIENCE_CATEGORIES = [
     'Adult', 'Middle Grade', 'New Adult', 'Other Children\'s', 'Picture Book', 'Young Adult'
 ];
 
+// Cached registry categories (invalidated when registry changes)
+let _cachedCategories = null;
+
+/**
+ * Get genre categories from registry (lazy-loads and initializes if needed)
+ */
+async function getGenreCategories() {
+    if (_cachedCategories) return _cachedCategories;
+    let registry = loadRegistry();
+    if (!registry) {
+        registry = await initializeRegistry(SEED_GENRE_CATEGORIES);
+    }
+    _cachedCategories = getRegistryCategories(registry);
+    return _cachedCategories;
+}
+
+/**
+ * Invalidate cached categories (call after registry changes)
+ */
+export function invalidateGenreCache() {
+    _cachedCategories = null;
+}
+
+/**
+ * Shared helper: call Ollama and return raw response text
+ */
+async function callOllama(prompt, { num_predict = 500, num_ctx = 4096, temperature = 0.0, timeout = 30000, keep_alive = 0 } = {}) {
+    const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
+        model: MODEL,
+        prompt,
+        stream: false,
+        options: { temperature, num_predict, top_p: 0.1, num_ctx },
+        keep_alive
+    }, { timeout });
+    return response.data.response;
+}
+
+/**
+ * Shared helper: extract JSON object from LLM response text
+ */
+function extractJson(text) {
+    const match = text.match(/\{[\s\S]*\}/);
+    return match ? JSON.parse(match[0]) : null;
+}
+
 /**
  * Phase 1: Extract agent info + free-text genres, hard_nos, audience from content
- * Lean prompt — no genre list, no classification
  */
 async function extractAgentInfo(content, temperature = 0.0, knownFields = null) {
     const submissionUrls = (content.links || [])
@@ -84,7 +132,7 @@ Output ONLY this JSON:
   "agent_name_evidence": "exact quote",
   "agency_name": "agency name",
   "agency_name_evidence": "exact quote",
-  "agent_role": "role/title (e.g. Agent, Literary Agent, Associate Literary Agent)",
+  "agent_role": "role/title (e.g. Agent, Literary Agent, Associate Literary Agent, Editor)",
   "contact_email": "email address for submissions",
   "submission_url": "URL for submissions",
   "is_open_to_submissions": true/false,
@@ -107,23 +155,9 @@ START with { and END with }. No explanations.`;
     console.log(`\n📄 Phase 1: Extracting agent info...`);
     console.log(`   Text length: ${content.text.length} chars`);
 
-    const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
-        model: MODEL,
-        prompt: prompt,
-        stream: false,
-        options: {
-            temperature: temperature,
-            num_predict: 4000,
-            top_p: 0.1,
-            repeat_penalty: 1.2,
-            num_ctx: 16384
-        },
-        keep_alive: 0
-    }, {
-        timeout: 120000
+    const result = await callOllama(prompt, {
+        num_predict: 4000, num_ctx: 16384, temperature, timeout: 120000
     });
-
-    const result = response.data.response;
     console.log(`   Raw response (first 500 chars): ${result.substring(0, 500)}`);
 
     const jsonMatch = result.match(/\{[\s\S]*\}/);
@@ -136,17 +170,17 @@ START with { and END with }. No explanations.`;
         data = JSON.parse(jsonMatch[0]);
     } catch (parseError) {
         let fixed = jsonMatch[0];
-        // Fix arrays where strings were expected
+        fixed = fixed.replace(/:\s*(Unknown|None|N\/A|undefined)\s*([,\n\r}])/gi, ': "Unknown"$2');
         fixed = fixed.replace(/"(genres_raw|hard_nos_raw|audience_raw)"\s*:\s*\[([^\]]*)\]/g, (_match, key, items) => {
             const flat = items.replace(/"/g, '').trim();
             return `"${key}": "${flat.replace(/\n/g, ' ')}"`;
         });
-        fixed = fixed.replace(/,\s*}/g, '}');
+        fixed = fixed.replace(/,\s*([}\]])/g, '$1');
         try {
             data = JSON.parse(fixed);
             console.log(`   Fixed malformed JSON from LLM`);
         } catch (e) {
-            throw new Error(`Phase 1: Failed to parse LLM JSON: ${parseError.message}`);
+            throw new Error(`Phase 1: Failed to parse LLM JSON: ${parseError.message}\nRaw: ${fixed.substring(0, 500)}`);
         }
     }
 
@@ -167,73 +201,32 @@ START with { and END with }. No explanations.`;
 }
 
 /**
- * Phase 2a: Classify free-text genres into standard categories
- * Focused LLM call — only genres, nothing else
+ * Phase 2a: Classify genres using embedding similarity (no LLM call)
  */
 async function classifyGenres(genresRaw) {
     if (!genresRaw || genresRaw === 'Unknown' || genresRaw.trim() === '') {
         console.log(`   Phase 2a: No genres to classify`);
-        return { fiction: [], nonfiction: [] };
+        return { fiction: [], nonfiction: [], unmatched: [] };
     }
 
-    const prompt = `Classify these literary genres into our standard categories. Be thorough — match as many as apply.
-
-Agent's genres (raw text): "${genresRaw}"
-
-Available FICTION categories:
-${GENRE_CATEGORIES.fiction.join(', ')}
-
-Available NONFICTION categories:
-${GENRE_CATEGORIES.nonfiction.join(', ')}
-
-Rules:
-- Match each mentioned genre to the CLOSEST category from our lists. Include ALL that apply.
-- Map terms: "Thriller" → Thriller, "Crime Fiction" → Crime, "Romantic Comedy" → Romcom, "Sci-Fi" → Science Fiction, "MG" → Middle Grade, "YA" → Young Adult, "PB" → Picture Books, "GN" → Graphic Novel, "Kidlit" → Children's
-- Map German: Krimi → Crime, Liebesroman → Romance, Ratgeber → Self-help, Biografie → Biography, Historischer Roman → Historical
-- "BIPOC" genres: map specific ones (e.g. "Caribbean Literature" → Caribbean Literature), general "BIPOC" → BIPOC Literature
-- Only use exact category names from the lists above
-- Skip overly generic terms (Fiction, Nonfiction, Books)
-
-Output ONLY this JSON:
-{"fiction": ["Category1", "Category2"], "nonfiction": ["Category1"]}`;
-
-    console.log(`\n   Phase 2a: Classifying genres...`);
-
-    const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
-        model: MODEL,
-        prompt: prompt,
-        stream: false,
-        options: {
-            temperature: 0.0,
-            num_predict: 800,
-            top_p: 0.1,
-            num_ctx: 4096
-        },
-        keep_alive: 0
-    }, {
-        timeout: 30000
-    });
-
-    const result = response.data.response;
-    const jsonMatch = result.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-        console.log(`   Phase 2a: Failed to parse, returning empty`);
-        return { fiction: [], nonfiction: [] };
+    console.log(`\n   Phase 2a: Classifying genres via embeddings...`);
+    let registry = loadRegistry();
+    if (!registry) {
+        registry = await initializeRegistry(SEED_GENRE_CATEGORIES);
     }
 
-    const classified = JSON.parse(jsonMatch[0]);
-    classified.fiction = (classified.fiction || []).filter(g => GENRE_CATEGORIES.fiction.includes(g));
-    classified.nonfiction = (classified.nonfiction || []).filter(g => GENRE_CATEGORIES.nonfiction.includes(g));
+    const result = await classifyGenresWithEmbeddings(genresRaw, registry);
 
-    console.log(`   Fiction: ${JSON.stringify(classified.fiction)}`);
-    console.log(`   Nonfiction: ${JSON.stringify(classified.nonfiction)}`);
-
-    return classified;
+    console.log(`   Fiction: ${JSON.stringify(result.fiction)}`);
+    console.log(`   Nonfiction: ${JSON.stringify(result.nonfiction)}`);
+    if (result.unmatched.length > 0) {
+        console.log(`   Unmatched: ${result.unmatched.map(u => `"${u.raw}" (best: ${u.bestMatch} @ ${u.similarity})`).join(', ')}`);
+    }
+    return result;
 }
 
 /**
- * Phase 2b: Classify hard_nos into standard categories
- * Focused LLM call — only rejections, nothing else
+ * Phase 2b: Classify hard_nos into standard categories (LLM-based, uses dynamic registry)
  */
 async function classifyHardNos(hardNosRaw) {
     if (!hardNosRaw || hardNosRaw === 'Unknown' || hardNosRaw.trim() === '') {
@@ -241,14 +234,15 @@ async function classifyHardNos(hardNosRaw) {
         return [];
     }
 
-    const allCategories = [...GENRE_CATEGORIES.fiction, ...GENRE_CATEGORIES.nonfiction];
+    const categories = await getGenreCategories();
+    const allGenres = [...categories.fiction, ...categories.nonfiction];
 
     const prompt = `Classify these REJECTED/EXCLUDED genres into our standard categories.
 
 Agent does NOT want (raw text): "${hardNosRaw}"
 
 Available categories:
-${allCategories.join(', ')}
+${allGenres.join(', ')}
 
 Rules:
 - Match each rejected item to the CLOSEST category. Include ALL that apply.
@@ -261,43 +255,23 @@ Output ONLY this JSON:
 {"hard_nos": ["Category1", "Category2"]}`;
 
     console.log(`\n   Phase 2b: Classifying hard_nos...`);
+    const result = await callOllama(prompt, { num_ctx: 2048 });
+    const classified = extractJson(result);
 
-    const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
-        model: MODEL,
-        prompt: prompt,
-        stream: false,
-        options: {
-            temperature: 0.0,
-            num_predict: 500,
-            top_p: 0.1,
-            num_ctx: 2048
-        },
-        keep_alive: 0
-    }, {
-        timeout: 30000
-    });
-
-    const result = response.data.response;
-    const jsonMatch = result.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
+    if (!classified) {
         console.log(`   Phase 2b: Failed to parse, returning empty`);
         return [];
     }
 
-    const classified = JSON.parse(jsonMatch[0]);
-    const hardNos = classified.hard_nos || [];
-    const validHardNos = hardNos.filter(g => allCategories.includes(g));
-
+    const validHardNos = (classified.hard_nos || []).filter(g => allGenres.includes(g));
     console.log(`   Hard nos: ${JSON.stringify(validHardNos)}`);
     return validHardNos;
 }
 
 /**
  * Phase 2c: Classify audience/age groups
- * Focused LLM call — only audience, nothing else
  */
 async function classifyAudience(audienceRaw, genresRaw) {
-    // Combine both sources for better audience detection
     const combined = [audienceRaw, genresRaw].filter(Boolean).join(', ');
     if (!combined || combined.trim() === '') {
         console.log(`   Phase 2c: No audience info to classify`);
@@ -322,103 +296,67 @@ Output ONLY this JSON:
 {"audience": ["Category1", "Category2"]}`;
 
     console.log(`\n   Phase 2c: Classifying audience...`);
+    const result = await callOllama(prompt, { num_predict: 300, num_ctx: 2048 });
+    const classified = extractJson(result);
 
-    const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
-        model: MODEL,
-        prompt: prompt,
-        stream: false,
-        options: {
-            temperature: 0.0,
-            num_predict: 300,
-            top_p: 0.1,
-            num_ctx: 2048
-        },
-        keep_alive: 0
-    }, {
-        timeout: 30000
-    });
-
-    const result = response.data.response;
-    const jsonMatch = result.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
+    if (!classified) {
         console.log(`   Phase 2c: Failed to parse, returning empty`);
         return [];
     }
 
-    const classified = JSON.parse(jsonMatch[0]);
-    const audience = classified.audience || [];
-    const validAudience = audience.filter(a => AUDIENCE_CATEGORIES.includes(a));
-
+    const validAudience = (classified.audience || []).filter(a => AUDIENCE_CATEGORIES.includes(a));
     console.log(`   Audience: ${JSON.stringify(validAudience)}`);
     return validAudience;
 }
 
 /**
- * Map classified genres to boolean fields for Google Sheets
+ * Compute agent profile embedding from their combined genre/wishlist/keywords text.
+ * This embedding represents "what the agent is looking for" and can be compared
+ * against a manuscript embedding to find the best matching agents.
  */
-function genresToBooleans(classifiedGenres) {
-    const genreMap = {};
+async function computeProfileEmbedding(agentInfo, audience) {
+    const parts = [
+        agentInfo.genres_raw,
+        agentInfo.manuscript_wishlist_summary,
+        (agentInfo.specific_keywords || []).join(', '),
+        audience.join(', '),
+        agentInfo.target_audience
+    ].filter(Boolean);
 
-    // Build fiction mappings
-    for (const genre of GENRE_CATEGORIES.fiction) {
-        const key = 'genre_fiction_' + genre.toLowerCase()
-            .replace(/[^a-z0-9]+/g, '_')
-            .replace(/_+/g, '_')
-            .replace(/^_|_$/g, '');
-        genreMap[genre] = key;
+    const profileText = parts.join('. ');
+    if (!profileText.trim()) return null;
+
+    try {
+        console.log(`   Computing profile embedding (${profileText.length} chars)...`);
+        return await getEmbedding(profileText);
+    } catch (error) {
+        console.log(`   Failed to compute profile embedding: ${error.message}`);
+        return null;
     }
-
-    // Build nonfiction mappings
-    for (const genre of GENRE_CATEGORIES.nonfiction) {
-        const key = 'genre_nonfiction_' + genre.toLowerCase()
-            .replace(/[^a-z0-9]+/g, '_')
-            .replace(/_+/g, '_')
-            .replace(/^_|_$/g, '');
-        genreMap[genre] = key;
-    }
-
-    // Start with all false
-    const booleans = {};
-    for (const field of Object.values(genreMap)) {
-        booleans[field] = false;
-    }
-
-    // Set true for accepted genres
-    const allAccepted = [...(classifiedGenres.fiction || []), ...(classifiedGenres.nonfiction || [])];
-    for (const genre of allAccepted) {
-        const field = genreMap[genre];
-        if (field) {
-            booleans[field] = true;
-        }
-    }
-
-    return booleans;
 }
 
 /**
  * Full 2-phase extraction pipeline
  * Phase 1: Agent info + raw genres/hard_nos/audience (1 LLM call)
- * Phase 2a: Genre classification (1 focused LLM call)
- * Phase 2b: Hard_nos classification (1 focused LLM call)
- * Phase 2c: Audience classification (1 focused LLM call)
- * Phase 2a, 2b, 2c run in parallel
+ * Phase 2a: Genre classification via embeddings (no LLM)
+ * Phase 2b+2c: Hard_nos + audience classification (2 parallel LLM calls)
+ * Phase 3: Profile embedding for manuscript matching
  */
 export async function extractWithOllama(content, temperature = 0.0, knownFields = null) {
     try {
-        // Phase 1: Extract agent info + free-text genres/hard_nos/audience
         const agentInfo = await extractAgentInfo(content, temperature, knownFields);
 
-        // Phase 2a + 2b + 2c: Classify genres, hard_nos, audience IN PARALLEL
         const [classifiedGenres, classifiedHardNos, classifiedAudience] = await Promise.all([
             classifyGenres(agentInfo.genres_raw),
             classifyHardNos(agentInfo.hard_nos_raw),
             classifyAudience(agentInfo.audience_raw, agentInfo.genres_raw)
         ]);
 
-        // Map to boolean fields
-        const genreBooleans = genresToBooleans(classifiedGenres);
+        // Compute profile embedding for future manuscript matching
+        const profileEmbedding = await computeProfileEmbedding(
+            agentInfo, classifiedAudience
+        );
 
-        // Merge everything into final result
         const result = {
             agent_name: agentInfo.agent_name || 'Unknown',
             agent_name_evidence: agentInfo.agent_name_evidence || 'Not found',
@@ -439,16 +377,16 @@ export async function extractWithOllama(content, temperature = 0.0, knownFields 
             hard_nos_raw: agentInfo.hard_nos_raw || '',
             audience: classifiedAudience,
             audience_raw: agentInfo.audience_raw || '',
+            unmatched_genres: classifiedGenres.unmatched || [],
             manuscript_wishlist_summary: agentInfo.manuscript_wishlist_summary || '',
             target_audience: agentInfo.target_audience || '',
             specific_keywords: agentInfo.specific_keywords || [],
             requires_bio: agentInfo.requires_bio || false,
             requires_expose: agentInfo.requires_expose || false,
             requires_manuscript: agentInfo.requires_manuscript || false,
-            ...genreBooleans
+            profile_embedding: profileEmbedding
         };
 
-        // Merge with known fields
         if (knownFields) {
             Object.entries(knownFields).forEach(([key, value]) => {
                 if (value && value !== 'Unknown' && value !== '') {
@@ -457,20 +395,19 @@ export async function extractWithOllama(content, temperature = 0.0, knownFields 
             });
         }
 
-        console.log(`\n2-Phase extraction complete for: ${result.agent_name}`);
+        console.log(`\nExtraction complete for: ${result.agent_name}`);
         console.log(`   Genres: ${[...classifiedGenres.fiction, ...classifiedGenres.nonfiction].join(', ') || 'none'}`);
         console.log(`   Hard nos: ${classifiedHardNos.join(', ') || 'none'}`);
         console.log(`   Audience: ${classifiedAudience.join(', ') || 'none'}`);
+        if (classifiedGenres.unmatched?.length > 0) {
+            console.log(`   Unmatched genres for review: ${classifiedGenres.unmatched.map(u => u.raw).join(', ')}`);
+        }
+        console.log(`   Profile embedding: ${profileEmbedding ? 'computed' : 'skipped'}`);
 
         return result;
 
     } catch (error) {
         console.error('Extraction error:', error.message);
-
-        const errorGenres = {};
-        const tempBooleans = genresToBooleans({ fiction: [], nonfiction: [] });
-        Object.keys(tempBooleans).forEach(key => { errorGenres[key] = false; });
-
         return {
             agent_name: 'Error',
             agency_name: 'Error',
@@ -482,29 +419,8 @@ export async function extractWithOllama(content, temperature = 0.0, knownFields 
             requires_expose: false,
             requires_manuscript: false,
             audience: [],
-            ...errorGenres,
-            error: error.message
-        };
-    }
-}
-
-/**
- * Check if Ollama is running and the model is available
- */
-export async function checkOllama() {
-    try {
-        const response = await axios.get(`${OLLAMA_URL}/api/tags`);
-        const models = response.data.models || [];
-        const modelExists = models.some(m => m.name.includes(MODEL));
-
-        return {
-            running: true,
-            modelAvailable: modelExists,
-            availableModels: models.map(m => m.name)
-        };
-    } catch (error) {
-        return {
-            running: false,
+            unmatched_genres: [],
+            profile_embedding: null,
             error: error.message
         };
     }
@@ -512,17 +428,11 @@ export async function checkOllama() {
 
 /**
  * Triage: Identify which pages contain agent info from snippets
- * 1 LLM call for all pages instead of 25 individual calls
  */
 export async function triagePages(pageSnippets, baseUrl) {
     try {
-        if (!pageSnippets || pageSnippets.length === 0) {
-            return [];
-        }
-
-        if (pageSnippets.length <= 2) {
-            return pageSnippets.map((_, i) => i);
-        }
+        if (!pageSnippets || pageSnippets.length === 0) return [];
+        if (pageSnippets.length <= 2) return pageSnippets.map((_, i) => i);
 
         console.log(`\nTriage: Analyzing ${pageSnippets.length} page snippets...`);
 
@@ -546,36 +456,18 @@ Rules:
 - Skip pages that are just lists/directories without detailed agent info
 - START with { and END with }`;
 
-        const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
-            model: MODEL,
-            prompt: prompt,
-            stream: false,
-            options: {
-                temperature: 0.0,
-                num_predict: 500,
-                top_p: 0.1,
-                num_ctx: 4096
-            },
-            keep_alive: 0
-        }, {
-            timeout: 30000
-        });
+        const result = await callOllama(prompt);
+        const parsed = extractJson(result);
 
-        const result = response.data.response;
-        const jsonMatch = result.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
+        if (!parsed) {
             console.log(`   Triage: Failed to parse, using all pages`);
             return pageSnippets.map((_, i) => i);
         }
 
-        const parsed = JSON.parse(jsonMatch[0]);
         const relevant = parsed.relevant || [];
-
         console.log(`   Triage: ${relevant.length}/${pageSnippets.length} pages are relevant`);
         relevant.forEach(i => {
-            if (pageSnippets[i]) {
-                console.log(`      [${i}] ${pageSnippets[i].url}`);
-            }
+            if (pageSnippets[i]) console.log(`      [${i}] ${pageSnippets[i].url}`);
         });
 
         return relevant;
@@ -591,13 +483,8 @@ Rules:
  */
 export async function prioritizeUrlsWithLLM(urls, baseUrl) {
     try {
-        if (!urls || urls.length === 0) {
-            return [];
-        }
-
-        if (urls.length <= 3) {
-            return urls;
-        }
+        if (!urls || urls.length === 0) return [];
+        if (urls.length <= 3) return urls;
 
         console.log(`\nUsing LLM to prioritize ${urls.length} URLs...`);
 
@@ -618,21 +505,7 @@ Scoring: 5=agent pages, 4=likely agent, 3=maybe, 2=unlikely, 1=irrelevant
 
 CRITICAL: Output ONLY the JSON array. START with [ and END with ]`;
 
-        const response = await axios.post(`${OLLAMA_URL}/api/generate`, {
-            model: MODEL,
-            prompt: prompt,
-            stream: false,
-            options: {
-                temperature: 0.0,
-                num_predict: 2000,
-                top_p: 0.1,
-                num_ctx: 4096
-            }
-        }, {
-            timeout: 30000
-        });
-
-        const rawResponse = response.data.response;
+        const rawResponse = await callOllama(prompt, { num_predict: 2000 });
 
         let rankings = [];
         try {
@@ -642,7 +515,7 @@ CRITICAL: Output ONLY the JSON array. START with [ and END with ]`;
             } else {
                 return urls;
             }
-        } catch (parseError) {
+        } catch {
             return urls;
         }
 
