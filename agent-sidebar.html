@@ -65,157 +65,142 @@
             color: #a78bfa; margin-bottom: 24px;
         }
 
-        /* Outlook mockup - authentic Microsoft style */
+        /* Outlook mockup - New Outlook (2024+) style */
         .outlook-window {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
             background: #ffffff;
-            border-radius: 8px;
+            border-radius: 12px;
             border: 1px solid #d1d1d1;
             overflow: hidden;
             box-shadow: 0 12px 60px rgba(0,0,0,0.4);
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
             color: #323130;
+            transform: scale(0.82);
+            transform-origin: top center;
+            margin-bottom: -80px;
         }
-        /* Titlebar - Outlook blue */
+        /* Titlebar - New Outlook uses subtle grey */
         .outlook-titlebar {
-            height: 32px;
-            background: #0078d4;
+            height: 36px;
+            background: #f3f2f1;
             display: flex;
             align-items: center;
             padding: 0 12px;
             gap: 8px;
+            border-bottom: 1px solid #e1dfdd;
         }
         .titlebar-dot {
             width: 12px; height: 12px; border-radius: 50%;
         }
-        /* Ribbon tabs */
-        .outlook-ribbon-tabs {
-            height: 36px;
-            background: #f3f2f1;
-            display: flex;
-            align-items: stretch;
-            padding: 0;
-            border-bottom: 1px solid #e1dfdd;
-            font-size: 13px;
-        }
-        .ribbon-tab {
-            padding: 0 16px;
+        /* New Outlook top bar with search */
+        .outlook-topbar {
+            height: 48px;
+            background: #0f6cbd;
             display: flex;
             align-items: center;
-            cursor: default;
-            color: #323130;
-            font-size: 13px;
-            border-bottom: 2px solid transparent;
-            transition: background 0.1s;
+            padding: 0 16px;
+            gap: 12px;
         }
-        .ribbon-tab:hover { background: #e1dfdd; }
-        .ribbon-tab.active { border-bottom: 2px solid #0078d4; color: #0078d4; font-weight: 600; background: #ffffff; }
-        /* Ribbon toolbar */
-        .outlook-toolbar {
-            height: 80px;
+        /* New Outlook command bar (replaces ribbon) */
+        .outlook-commandbar {
+            height: 44px;
             background: #ffffff;
             display: flex;
             align-items: center;
-            padding: 8px 16px;
+            padding: 0 16px;
             gap: 4px;
             border-bottom: 1px solid #e1dfdd;
-            font-size: 12px;
-            color: #323130;
+            font-size: 13px;
+            color: #242424;
         }
-        .toolbar-group {
+        .cmd-btn {
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 2px;
-            padding: 4px 10px;
-            border-radius: 4px;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
             cursor: default;
             transition: background 0.1s;
-            min-width: 56px;
+            font-size: 13px;
+            color: #242424;
+            white-space: nowrap;
         }
-        .toolbar-group:hover { background: #f3f2f1; }
-        .toolbar-group .tg-icon { font-size: 22px; line-height: 1; }
-        .toolbar-group .tg-label { font-size: 11px; color: #605e5c; white-space: nowrap; }
-        .toolbar-sep {
-            width: 1px; height: 48px; background: #e1dfdd; margin: 0 6px; flex-shrink: 0;
+        .cmd-btn:hover { background: #f5f5f5; }
+        .cmd-btn .cmd-icon { font-size: 16px; line-height: 1; }
+        .cmd-sep {
+            width: 1px; height: 24px; background: #e1dfdd; margin: 0 4px; flex-shrink: 0;
         }
         .outlook-body {
             display: flex;
-            height: 560px;
+            height: 680px;
         }
         @media (max-width: 768px) {
             .outlook-body { height: auto; flex-direction: column; }
         }
-        /* Outlook folder nav - left rail */
+        /* New Outlook folder sidebar */
         .outlook-nav {
-            width: 48px;
-            background: #f3f2f1;
+            width: 200px;
+            background: #faf9f8;
             border-right: 1px solid #e1dfdd;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 8px 0;
+            padding: 8px;
             gap: 2px;
             flex-shrink: 0;
+            overflow-y: auto;
         }
         @media (max-width: 768px) { .outlook-nav { display: none; } }
-        .nav-icon {
-            width: 36px; height: 36px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 6px; cursor: default; font-size: 18px;
-            color: #605e5c; transition: background 0.1s;
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 12px;
+            border-radius: 6px;
+            cursor: default;
+            font-size: 13px;
+            color: #242424;
+            transition: background 0.1s;
         }
-        .nav-icon:hover { background: #e1dfdd; }
-        .nav-icon.active { background: #e1dfdd; color: #0078d4; }
-        /* Email list */
+        .nav-item:hover { background: #e8e6e3; }
+        .nav-item.active { background: #e8e6e3; font-weight: 600; }
+        .nav-item .nav-count { margin-left: auto; font-size: 12px; color: #616161; font-weight: 600; }
+        /* Email list - New Outlook */
         .outlook-list {
-            width: 320px;
+            width: 360px;
             background: #ffffff;
             border-right: 1px solid #e1dfdd;
             overflow-y: auto;
             flex-shrink: 0;
         }
-        @media (max-width: 900px) { .outlook-list { width: 240px; } }
+        @media (max-width: 900px) { .outlook-list { width: 280px; } }
         @media (max-width: 768px) { .outlook-list { width: 100%; height: 200px; border-right: none; border-bottom: 1px solid #e1dfdd; } }
         .list-header {
             padding: 12px 16px;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
-            color: #323130;
-            border-bottom: 1px solid #e1dfdd;
+            color: #242424;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #faf9f8;
-        }
-        .list-search {
-            margin: 8px 12px;
-            padding: 6px 12px 6px 32px;
-            background: #f3f2f1;
-            border: 1px solid #e1dfdd;
-            border-radius: 4px;
-            font-size: 13px;
-            color: #605e5c;
-            width: calc(100% - 24px);
-            position: relative;
         }
         .email-item {
             padding: 10px 16px;
-            border-bottom: 1px solid #f3f2f1;
             cursor: default;
             transition: background 0.1s;
             border-left: 3px solid transparent;
+            border-radius: 4px;
+            margin: 0 4px;
         }
-        .email-item:hover { background: #f3f2f1; }
-        .email-item.selected { background: #e8f0fe; border-left: 3px solid #0078d4; }
-        .email-item.unread { border-left: 3px solid #0078d4; }
-        .email-item.unread.selected { border-left: 3px solid #0078d4; }
-        .email-item.unread .email-sender { font-weight: 600; color: #323130; }
-        .email-sender { font-size: 13px; color: #605e5c; margin-bottom: 2px; }
-        .email-subject { font-size: 12px; color: #323130; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .email-preview { font-size: 12px; color: #a19f9d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-        .email-time { font-size: 11px; color: #a19f9d; }
+        .email-item:hover { background: #f5f5f5; }
+        .email-item.selected { background: #ebebeb; border-left: 3px solid #0f6cbd; }
+        .email-item.unread { border-left: 3px solid #0f6cbd; }
+        .email-item.unread.selected { border-left: 3px solid #0f6cbd; }
+        .email-item.unread .email-sender { font-weight: 600; color: #242424; }
+        .email-sender { font-size: 13px; color: #616161; margin-bottom: 2px; }
+        .email-subject { font-size: 13px; color: #242424; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .email-preview { font-size: 12px; color: #9e9e9e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .email-time { font-size: 11px; color: #9e9e9e; }
         /* Email reading pane */
         .outlook-reading {
             flex: 1;
@@ -235,17 +220,17 @@
         }
         /* Agent Sidebar taskpane - light theme to match email client */
         .sidebar-taskpane {
-            width: 340px;
+            width: 300px;
             background: #faf9f8;
-            border-left: 2px solid #0078d4;
+            border-left: 2px solid #0f6cbd;
             overflow-y: auto;
             flex-shrink: 0;
             position: relative;
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
-            color: #323130;
+            color: #242424;
         }
-        @media (max-width: 900px) { .sidebar-taskpane { width: 300px; } }
-        @media (max-width: 768px) { .sidebar-taskpane { width: 100%; height: 500px; border-left: none; border-top: 2px solid #0078d4; } }
+        @media (max-width: 900px) { .sidebar-taskpane { width: 260px; } }
+        @media (max-width: 768px) { .sidebar-taskpane { width: 100%; height: 500px; border-left: none; border-top: 2px solid #0f6cbd; } }
         .taskpane-header {
             padding: 12px 16px;
             background: #ffffff;
@@ -484,7 +469,7 @@
 
     <!-- Client Toggle + Mockups -->
     <section style="padding: 0 0 80px;">
-        <div class="container" id="sidebarMockup">
+        <div class="container" id="sidebarMockup" style="max-width: 1400px;">
             <!-- Toggle Buttons -->
             <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 32px;">
                 <button id="toggleOutlook" onclick="showClient('outlook')" style="padding: 10px 24px; background: #0078d4; color: #ffffff; border: 2px solid #0078d4; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
@@ -494,175 +479,213 @@
                     &#9993; Gmail
                 </button>
             </div>
-            <!-- OUTLOOK MOCKUP -->
+            <!-- OUTLOOK MOCKUP (New Outlook 2024+) -->
             <div id="outlookMockup" class="outlook-window animate-in">
-                <!-- Titlebar - Microsoft Blue -->
+                <!-- Window Chrome -->
                 <div class="outlook-titlebar">
-                    <div class="titlebar-dot" style="background: rgba(255,255,255,0.3);"></div>
-                    <div class="titlebar-dot" style="background: rgba(255,255,255,0.3);"></div>
-                    <div class="titlebar-dot" style="background: rgba(255,255,255,0.3);"></div>
-                    <span style="flex: 1; text-align: center; font-size: 12px; color: rgba(255,255,255,0.9); font-weight: 600;">
-                        &#128233; Mail &mdash; agent@literaturagentur.de &mdash; Outlook
-                    </span>
+                    <div class="titlebar-dot" style="background: #ff5f56;"></div>
+                    <div class="titlebar-dot" style="background: #ffbd2e;"></div>
+                    <div class="titlebar-dot" style="background: #27c93f;"></div>
+                    <span style="flex: 1;"></span>
                     <div style="display: flex; gap: 0;">
-                        <div style="width: 46px; height: 32px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.7); font-size: 10px; cursor: default;">&#9644;</div>
-                        <div style="width: 46px; height: 32px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.7); font-size: 10px; cursor: default;">&#9723;</div>
-                        <div style="width: 46px; height: 32px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.7); font-size: 14px; cursor: default;">&times;</div>
+                        <div style="width: 46px; height: 36px; display: flex; align-items: center; justify-content: center; color: #616161; font-size: 10px; cursor: default;">&#9644;</div>
+                        <div style="width: 46px; height: 36px; display: flex; align-items: center; justify-content: center; color: #616161; font-size: 10px; cursor: default;">&#9723;</div>
+                        <div style="width: 46px; height: 36px; display: flex; align-items: center; justify-content: center; color: #616161; font-size: 14px; cursor: default;">&times;</div>
                     </div>
                 </div>
-                <!-- Ribbon Tabs -->
-                <div class="outlook-ribbon-tabs">
-                    <div class="ribbon-tab" style="padding: 0 12px; font-size: 12px; color: #605e5c;">Datei</div>
-                    <div class="ribbon-tab active">Start</div>
-                    <div class="ribbon-tab">Senden/Empfangen</div>
-                    <div class="ribbon-tab">Ansicht</div>
+                <!-- Top Bar with Search - New Outlook signature blue bar -->
+                <div class="outlook-topbar">
+                    <span style="font-size: 18px; color: rgba(255,255,255,0.9); margin-right: 4px;">&#128233;</span>
+                    <span style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600;">Mail</span>
+                    <div style="flex: 1; max-width: 680px; margin: 0 auto; background: rgba(255,255,255,0.15); border-radius: 6px; padding: 7px 14px; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 14px; color: rgba(255,255,255,0.7);">&#128269;</span>
+                        <span style="font-size: 13px; color: rgba(255,255,255,0.6);">Suchen in Mail</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
+                        <span style="font-size: 16px; color: rgba(255,255,255,0.7);">&#9881;</span>
+                        <span style="font-size: 16px; color: rgba(255,255,255,0.7);">&#10067;</span>
+                        <div style="width: 28px; height: 28px; border-radius: 50%; background: #8764b8; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff;">A</div>
+                    </div>
+                </div>
+                <!-- Command Bar (replaces classic ribbon) -->
+                <div class="outlook-commandbar">
+                    <div class="cmd-btn" style="background: #0f6cbd; color: #ffffff; border-radius: 6px; padding: 6px 16px; font-weight: 600;">
+                        <span class="cmd-icon">&#9993;</span> Neue E-Mail
+                    </div>
+                    <div class="cmd-sep"></div>
+                    <div class="cmd-btn"><span class="cmd-icon">&#8617;</span> Antworten</div>
+                    <div class="cmd-btn"><span class="cmd-icon">&#8618;</span> Weiterleiten</div>
+                    <div class="cmd-sep"></div>
+                    <div class="cmd-btn"><span class="cmd-icon">&#128451;</span> Archivieren</div>
+                    <div class="cmd-btn"><span class="cmd-icon" style="color: #c4314b;">&#128465;</span> L&ouml;schen</div>
+                    <div class="cmd-sep"></div>
+                    <div class="cmd-btn"><span class="cmd-icon">&#128196;</span> Verschieben</div>
                     <div style="flex: 1;"></div>
-                    <div style="padding: 0 12px; display: flex; align-items: center; gap: 6px; font-size: 12px; color: #0078d4; font-weight: 600; cursor: default;">
-                        &#9670; AutoQuery
+                    <!-- AutoQuery toggle in command bar -->
+                    <div class="cmd-btn" style="background: rgba(15,108,189,0.08); border: 1px solid rgba(15,108,189,0.3); border-radius: 6px; padding: 6px 14px; font-weight: 600; color: #0f6cbd;">
+                        <span class="cmd-icon" style="color: #4ade80;">&#9670;</span> AutoQuery Sidebar
                     </div>
                 </div>
-                <!-- Ribbon Toolbar -->
-                <div class="outlook-toolbar">
-                    <div class="toolbar-group">
-                        <div class="tg-icon" style="color: #0078d4;">&#9993;</div>
-                        <div class="tg-label">Neue<br>E-Mail</div>
-                    </div>
-                    <div class="toolbar-sep"></div>
-                    <div class="toolbar-group">
-                        <div class="tg-icon">&#8617;</div>
-                        <div class="tg-label">Antworten</div>
-                    </div>
-                    <div class="toolbar-group">
-                        <div class="tg-icon">&#8618;</div>
-                        <div class="tg-label">Weiterleiten</div>
-                    </div>
-                    <div class="toolbar-sep"></div>
-                    <div class="toolbar-group">
-                        <div class="tg-icon">&#128451;</div>
-                        <div class="tg-label">Archivieren</div>
-                    </div>
-                    <div class="toolbar-group">
-                        <div class="tg-icon" style="color: #d13438;">&#128465;</div>
-                        <div class="tg-label">Loschen</div>
-                    </div>
-                    <div class="toolbar-sep"></div>
-                    <div class="toolbar-group">
-                        <div class="tg-icon">&#128196;</div>
-                        <div class="tg-label">Verschieben</div>
-                    </div>
-                    <div class="toolbar-group">
-                        <div class="tg-icon">&#127991;</div>
-                        <div class="tg-label">Kategorien</div>
-                    </div>
-                    <div style="flex: 1;"></div>
-                    <!-- AutoQuery toggle button in ribbon -->
-                    <div class="toolbar-group" style="background: rgba(0,120,212,0.08); border: 1px solid rgba(0,120,212,0.3); border-radius: 6px; padding: 6px 14px;">
-                        <div class="tg-icon" style="color: #4ade80; font-size: 20px;">&#9670;</div>
-                        <div class="tg-label" style="color: #0078d4; font-weight: 600;">AutoQuery<br>Sidebar</div>
-                    </div>
-                </div>
-                <!-- Body: Nav + List + Reading Pane + Sidebar -->
+                <!-- Body: Folder Nav + List + Reading Pane + Sidebar -->
                 <div class="outlook-body">
-                    <!-- Folder Navigation Rail -->
+                    <!-- Folder Navigation (New Outlook style) -->
                     <div class="outlook-nav">
-                        <div class="nav-icon active" title="Posteingang">&#128229;</div>
-                        <div class="nav-icon" title="Gesendet">&#128228;</div>
-                        <div class="nav-icon" title="Entwuerfe">&#128221;</div>
-                        <div class="nav-icon" title="Archiv">&#128451;</div>
+                        <button style="width: 100%; padding: 10px 16px; background: #0f6cbd; color: #ffffff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                            <span style="font-size: 16px;">&#9998;</span> Neue Nachricht
+                        </button>
+                        <div class="nav-item active">
+                            <span style="font-size: 16px;">&#128229;</span> Posteingang
+                            <span class="nav-count">24</span>
+                        </div>
+                        <div class="nav-item">
+                            <span style="font-size: 16px;">&#128228;</span> Gesendet
+                        </div>
+                        <div class="nav-item">
+                            <span style="font-size: 16px;">&#128221;</span> Entw&uuml;rfe
+                            <span class="nav-count">2</span>
+                        </div>
+                        <div class="nav-item">
+                            <span style="font-size: 16px;">&#128451;</span> Archiv
+                        </div>
+                        <div class="nav-item">
+                            <span style="font-size: 16px;">&#128465;</span> Gel&ouml;scht
+                        </div>
+                        <div class="nav-item">
+                            <span style="font-size: 16px;">&#9888;</span> Junk-E-Mail
+                        </div>
+                        <div style="border-top: 1px solid #e1dfdd; margin: 12px 0; padding-top: 12px;">
+                            <div style="font-size: 11px; font-weight: 600; color: #616161; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 12px; margin-bottom: 4px;">Favoriten</div>
+                            <div class="nav-item">
+                                <span style="font-size: 16px;">&#11088;</span> Markiert
+                            </div>
+                            <div class="nav-item">
+                                <span style="font-size: 16px; color: #c4314b;">&#9679;</span> Submissions
+                                <span class="nav-count">6</span>
+                            </div>
+                            <div class="nav-item">
+                                <span style="font-size: 16px; color: #0f6cbd;">&#9679;</span> Verlage
+                            </div>
+                            <div class="nav-item">
+                                <span style="font-size: 16px; color: #107c10;">&#9679;</span> Verhandlungen
+                            </div>
+                        </div>
                         <div style="flex: 1;"></div>
-                        <div class="nav-icon" title="Kalender">&#128197;</div>
-                        <div class="nav-icon" title="Kontakte">&#128101;</div>
+                        <div style="border-top: 1px solid #e1dfdd; padding-top: 8px; display: flex; justify-content: space-around;">
+                            <span style="font-size: 20px; color: #616161; cursor: default; padding: 8px;" title="Mail">&#128233;</span>
+                            <span style="font-size: 20px; color: #616161; cursor: default; padding: 8px;" title="Kalender">&#128197;</span>
+                            <span style="font-size: 20px; color: #616161; cursor: default; padding: 8px;" title="Kontakte">&#128101;</span>
+                        </div>
                     </div>
                     <!-- Email List -->
                     <div class="outlook-list">
                         <div class="list-header">
                             <span>Posteingang</span>
-                            <span style="font-size: 11px; color: #0078d4; font-weight: 600;">3 ungelesen</span>
-                        </div>
-                        <!-- Search -->
-                        <div style="padding: 8px 12px;">
-                            <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: #f3f2f1; border: 1px solid #e1dfdd; border-radius: 4px; font-size: 13px; color: #a19f9d;">
-                                <span style="font-size: 14px;">&#128269;</span> Suchen...
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 11px; color: #0f6cbd; font-weight: 600;">Alle</span>
+                                <span style="font-size: 11px; color: #616161;">Ungelesen</span>
+                                <span style="font-size: 16px; color: #616161;">&#9782;</span>
                             </div>
                         </div>
                         <!-- Selected email -->
                         <div class="email-item selected unread">
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div style="width: 28px; height: 28px; border-radius: 50%; background: #8764b8; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;">SM</div>
-                                    <span class="email-sender">Sarah Martinez</span>
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #8764b8; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">SM</div>
+                                    <span class="email-sender" style="font-weight: 600; color: #242424;">Sarah Martinez</span>
                                 </div>
                                 <span class="email-time">10:23</span>
                             </div>
-                            <div class="email-subject" style="font-weight: 600; margin-left: 36px;">Query: The Silent Witness</div>
-                            <div class="email-preview" style="margin-left: 36px;">Historical Fiction, 85.000 Worter, New Adult...</div>
-                            <div style="display: flex; gap: 4px; margin-top: 6px; margin-left: 36px;">
-                                <span style="padding: 1px 6px; background: #dff6dd; border-radius: 3px; font-size: 9px; color: #107c10; font-weight: 600;">PORTAL</span>
-                                <span style="padding: 1px 6px; background: #e8daef; border-radius: 3px; font-size: 9px; color: #8764b8; font-weight: 600;">92% MATCH</span>
+                            <div class="email-subject" style="font-weight: 600; margin-left: 40px;">Query: The Silent Witness</div>
+                            <div class="email-preview" style="margin-left: 40px;">Historical Fiction, 85.000 W&ouml;rter, New Adult...</div>
+                            <div style="display: flex; gap: 4px; margin-top: 6px; margin-left: 40px;">
+                                <span style="padding: 1px 6px; background: #dff6dd; border-radius: 4px; font-size: 9px; color: #107c10; font-weight: 600;">PORTAL</span>
+                                <span style="padding: 1px 6px; background: #e8daef; border-radius: 4px; font-size: 9px; color: #8764b8; font-weight: 600;">92% MATCH</span>
                             </div>
                         </div>
                         <!-- Other emails -->
                         <div class="email-item unread">
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div style="width: 28px; height: 28px; border-radius: 50%; background: #0078d4; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;">JO</div>
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #0f6cbd; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">JO</div>
                                     <span class="email-sender">James O'Connor</span>
                                 </div>
                                 <span class="email-time">09:14</span>
                             </div>
-                            <div class="email-subject" style="font-weight: 600; margin-left: 36px;">Query: Midnight Protocol</div>
-                            <div class="email-preview" style="margin-left: 36px;">Thriller, 92.000 Worter...</div>
-                            <div style="display: flex; gap: 4px; margin-top: 4px; margin-left: 36px;">
-                                <span style="padding: 1px 6px; background: #dff6dd; border-radius: 3px; font-size: 9px; color: #107c10; font-weight: 600;">PORTAL</span>
-                                <span style="padding: 1px 6px; background: #fff4ce; border-radius: 3px; font-size: 9px; color: #986f0b; font-weight: 600;">74% MATCH</span>
+                            <div class="email-subject" style="font-weight: 600; margin-left: 40px;">Query: Midnight Protocol</div>
+                            <div class="email-preview" style="margin-left: 40px;">Thriller, 92.000 W&ouml;rter...</div>
+                            <div style="display: flex; gap: 4px; margin-top: 4px; margin-left: 40px;">
+                                <span style="padding: 1px 6px; background: #dff6dd; border-radius: 4px; font-size: 9px; color: #107c10; font-weight: 600;">PORTAL</span>
+                                <span style="padding: 1px 6px; background: #fff4ce; border-radius: 4px; font-size: 9px; color: #986f0b; font-weight: 600;">74% MATCH</span>
                             </div>
                         </div>
                         <div class="email-item unread">
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div style="width: 28px; height: 28px; border-radius: 50%; background: #ca5010; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;">LK</div>
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #ca5010; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">LK</div>
                                     <span class="email-sender">Lena Kowalski</span>
                                 </div>
                                 <span class="email-time">Gestern</span>
                             </div>
-                            <div class="email-subject" style="font-weight: 600; margin-left: 36px;">Query: The Garden of Lost Things</div>
-                            <div class="email-preview" style="margin-left: 36px;">Literary Fiction, 78.000 Worter...</div>
-                            <div style="display: flex; gap: 4px; margin-top: 4px; margin-left: 36px;">
-                                <span style="padding: 1px 6px; background: #dff6dd; border-radius: 3px; font-size: 9px; color: #107c10; font-weight: 600;">PORTAL</span>
+                            <div class="email-subject" style="font-weight: 600; margin-left: 40px;">Query: The Garden of Lost Things</div>
+                            <div class="email-preview" style="margin-left: 40px;">Literary Fiction, 78.000 W&ouml;rter...</div>
+                            <div style="display: flex; gap: 4px; margin-top: 4px; margin-left: 40px;">
+                                <span style="padding: 1px 6px; background: #dff6dd; border-radius: 4px; font-size: 9px; color: #107c10; font-weight: 600;">PORTAL</span>
                             </div>
                         </div>
                         <div class="email-item">
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div style="width: 28px; height: 28px; border-radius: 50%; background: #498205; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;">VT</div>
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #498205; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">VT</div>
                                     <span class="email-sender">Verlagstreffen</span>
                                 </div>
                                 <span class="email-time">Gestern</span>
                             </div>
-                            <div class="email-subject" style="margin-left: 36px;">Einladung: Frankfurter Buchmesse</div>
-                            <div class="email-preview" style="margin-left: 36px;">Vorab-Meeting am 15. Marz...</div>
+                            <div class="email-subject" style="margin-left: 40px;">Einladung: Frankfurter Buchmesse</div>
+                            <div class="email-preview" style="margin-left: 40px;">Vorab-Meeting am 15. M&auml;rz...</div>
                         </div>
                         <div class="email-item">
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div style="width: 28px; height: 28px; border-radius: 50%; background: #323130; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;">HC</div>
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #242424; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">HC</div>
                                     <span class="email-sender">HarperCollins</span>
                                 </div>
                                 <span class="email-time">Mo</span>
                             </div>
-                            <div class="email-subject" style="margin-left: 36px;">Re: Vertragsentwurf &mdash; "The Silent Shore"</div>
-                            <div class="email-preview" style="margin-left: 36px;">Anbei der uberarbeitete Entwurf...</div>
+                            <div class="email-subject" style="margin-left: 40px;">Re: Vertragsentwurf &mdash; "The Silent Shore"</div>
+                            <div class="email-preview" style="margin-left: 40px;">Anbei der &uuml;berarbeitete Entwurf...</div>
                         </div>
                         <div class="email-item">
                             <div style="display: flex; justify-content: space-between; align-items: start;">
                                 <div style="display: flex; align-items: center; gap: 8px;">
-                                    <div style="width: 28px; height: 28px; border-radius: 50%; background: #881798; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;">TR</div>
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #881798; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">TR</div>
                                     <span class="email-sender">Tom Reichert</span>
                                 </div>
                                 <span class="email-time">Mo</span>
                             </div>
-                            <div class="email-subject" style="margin-left: 36px;">Query: Bone River</div>
-                            <div class="email-preview" style="margin-left: 36px;">Sehr geehrte Frau Agentin...</div>
+                            <div class="email-subject" style="margin-left: 40px;">Query: Bone River</div>
+                            <div class="email-preview" style="margin-left: 40px;">Sehr geehrte Frau Agentin...</div>
+                        </div>
+                        <div class="email-item">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #da3b01; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">AV</div>
+                                    <span class="email-sender">Anna Vogt</span>
+                                </div>
+                                <span class="email-time">Fr</span>
+                            </div>
+                            <div class="email-subject" style="margin-left: 40px;">Re: Lektorat Feedback</div>
+                            <div class="email-preview" style="margin-left: 40px;">Vielen Dank f&uuml;r Ihre Anmerkungen...</div>
+                        </div>
+                        <div class="email-item">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #107c10; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">RP</div>
+                                    <span class="email-sender">Rowohlt Press</span>
+                                </div>
+                                <span class="email-time">Fr</span>
+                            </div>
+                            <div class="email-subject" style="margin-left: 40px;">Vorschau Fr&uuml;hjahrsprogramm 2026</div>
+                            <div class="email-preview" style="margin-left: 40px;">Im Anhang finden Sie...</div>
                         </div>
                     </div>
                     <!-- Reading Pane -->
@@ -683,7 +706,7 @@
                             </div>
                             <div style="display: flex; gap: 6px;">
                                 <span style="padding: 2px 8px; background: #dff6dd; border: 1px solid #a7e3a5; border-radius: 3px; font-size: 10px; color: #107c10; font-weight: 600;">Via AutoQuery Portal</span>
-                                <span style="padding: 2px 8px; background: #deecf9; border: 1px solid #a4c8e8; border-radius: 3px; font-size: 10px; color: #0078d4; font-weight: 600;">Verifizierte Einreichung</span>
+                                <span style="padding: 2px 8px; background: #deecf9; border: 1px solid #a4c8e8; border-radius: 3px; font-size: 10px; color: #0f6cbd; font-weight: 600;">Verifizierte Einreichung</span>
                             </div>
                         </div>
                         <div class="reading-body">
@@ -705,121 +728,95 @@
                     </div>
                     <!-- Agent Sidebar Taskpane -->
                     <div class="sidebar-taskpane">
-                        <div class="taskpane-header">
+                        <!-- Header -->
+                        <div class="taskpane-header" style="padding: 10px 14px; border-bottom: 1px solid #edebe9;">
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <div style="width: 20px; height: 20px; background: linear-gradient(135deg, #4ade80, #22c55e); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
-                                    <span style="font-size: 11px; color: #1c1917; font-weight: 900;">A</span>
+                                <div style="width: 22px; height: 22px; background: linear-gradient(135deg, #0f6cbd, #2899f5); border-radius: 5px; display: flex; align-items: center; justify-content: center;">
+                                    <span style="font-size: 12px; color: #fff; font-weight: 800;">A</span>
                                 </div>
-                                <span style="font-size: 13px; font-weight: 700; color: #323130;">AutoQuery Sidebar</span>
+                                <span style="font-size: 13px; font-weight: 600; color: #242424;">AutoQuery</span>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 4px;">
-                                <span style="font-size: 10px; color: #107c10; animation: pulse 2s infinite;">&#9679;</span>
-                                <span style="font-size: 10px; color: #a19f9d;">Live</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 9px; color: #107c10; background: #dff6dd; padding: 2px 6px; border-radius: 4px; font-weight: 600; display: flex; align-items: center; gap: 3px;"><span style="animation: pulse 2s infinite;">&#9679;</span> Sync</span>
+                                <span style="font-size: 14px; color: #616161; cursor: pointer;">&#8943;</span>
                             </div>
                         </div>
-                        <!-- Quick Look -->
-                        <div class="sidebar-header">
-                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                                <div>
-                                    <h2 style="font-size: 17px; font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 2px; color: #323130;">The Silent Witness</h2>
-                                    <p style="font-size: 12px; color: #605e5c;">by Sarah Martinez</p>
+                        <!-- Submission Card -->
+                        <div style="padding: 14px;">
+                            <!-- Title & Status -->
+                            <div style="background: #ffffff; border: 1px solid #edebe9; border-radius: 8px; padding: 14px; margin-bottom: 10px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                    <div>
+                                        <h2 style="font-size: 15px; font-weight: 700; color: #242424; margin-bottom: 3px; letter-spacing: -0.2px;">The Silent Witness</h2>
+                                        <p style="font-size: 12px; color: #616161;">Sarah Martinez</p>
+                                    </div>
+                                    <span style="padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: #e8daef; color: #5c2d91;">New</span>
                                 </div>
-                                <span style="display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #e8daef; color: #8764b8; border: 1px solid #c5b4d6;">NEU</span>
-                            </div>
-                            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
-                                <span style="padding: 2px 8px; background: #dff6dd; border: 1px solid #a7e3a5; border-radius: 8px; font-size: 10px; color: #107c10; font-weight: 500;">Portal</span>
-                                <span style="padding: 2px 8px; background: #dff6dd; border: 1px solid #a7e3a5; border-radius: 8px; font-size: 10px; color: #107c10; font-weight: 500;">Verified</span>
-                            </div>
-                        </div>
-                        <div class="sidebar-body">
-                            <!-- Metadata -->
-                            <div class="sidebar-section">
-                                <div style="font-size: 10px; font-weight: 700; color: #0078d4; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Die harten Fakten</div>
-                                <div class="meta-grid" style="gap: 8px;">
-                                    <div class="meta-item" style="font-size: 12px; color: #605e5c;">
-                                        <span style="font-size: 14px;">&#128214;</span>
-                                        <div>
-                                            <div style="font-size: 9px; color: #a19f9d; text-transform: uppercase; letter-spacing: 0.5px;">Genre</div>
-                                            <div style="font-size: 12px; color: #323130; font-weight: 500;">Historical Fiction</div>
-                                        </div>
-                                    </div>
-                                    <div class="meta-item" style="font-size: 12px; color: #605e5c;">
-                                        <span style="font-size: 14px;">&#128207;</span>
-                                        <div>
-                                            <div style="font-size: 9px; color: #a19f9d; text-transform: uppercase; letter-spacing: 0.5px;">Wortzahl</div>
-                                            <div style="font-size: 12px; color: #323130; font-weight: 500;">85.000</div>
-                                        </div>
-                                    </div>
-                                    <div class="meta-item" style="font-size: 12px; color: #605e5c;">
-                                        <span style="font-size: 14px;">&#127919;</span>
-                                        <div>
-                                            <div style="font-size: 9px; color: #a19f9d; text-transform: uppercase; letter-spacing: 0.5px;">Zielgruppe</div>
-                                            <div style="font-size: 12px; color: #323130; font-weight: 500;">New Adult</div>
-                                        </div>
-                                    </div>
-                                    <div class="meta-item" style="font-size: 12px; color: #605e5c;">
-                                        <span style="font-size: 14px;">&#128293;</span>
-                                        <div>
-                                            <div style="font-size: 9px; color: #a19f9d; text-transform: uppercase; letter-spacing: 0.5px;">Comps</div>
-                                            <div style="font-size: 12px; color: #323130; font-weight: 500;">Babel, Piranesi</div>
-                                        </div>
-                                    </div>
+                                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                    <span style="padding: 3px 8px; background: #f3f2f1; border-radius: 4px; font-size: 10px; color: #242424; font-weight: 500;">Historical Fiction</span>
+                                    <span style="padding: 3px 8px; background: #f3f2f1; border-radius: 4px; font-size: 10px; color: #242424; font-weight: 500;">85k words</span>
+                                    <span style="padding: 3px 8px; background: #f3f2f1; border-radius: 4px; font-size: 10px; color: #242424; font-weight: 500;">New Adult</span>
                                 </div>
                             </div>
-                            <!-- Pitch Snippet -->
-                            <div class="sidebar-section">
-                                <div style="font-size: 10px; font-weight: 700; color: #0078d4; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Pitch Snippet</div>
-                                <p style="font-size: 12px; color: #605e5c; line-height: 1.5; font-style: italic;">
-                                    "When a young linguist discovers that the ancient manuscript she's been translating contains a spell that could rewrite history, she must choose between..."
-                                </p>
+                            <!-- Match Score -->
+                            <div style="background: #ffffff; border: 1px solid #edebe9; border-radius: 8px; padding: 14px; margin-bottom: 10px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 12px; font-weight: 600; color: #242424;">Match Score</span>
+                                    <span style="font-size: 20px; font-weight: 700; color: #107c10;" id="pulseValue">92%</span>
+                                </div>
+                                <div style="height: 6px; background: #edebe9; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+                                    <div id="pulseBar" style="width: 0%; height: 100%; background: linear-gradient(to right, #107c10, #54b054); border-radius: 3px; transition: width 1.5s ease;"></div>
+                                </div>
+                                <div style="display: flex; gap: 6px;">
+                                    <span style="padding: 2px 8px; background: #dff6dd; border-radius: 4px; font-size: 9px; color: #107c10; font-weight: 600;">Portal Verified</span>
+                                    <span style="padding: 2px 8px; background: #deecf9; border-radius: 4px; font-size: 9px; color: #0f6cbd; font-weight: 600;">AI-Analyzed</span>
+                                </div>
                             </div>
-                            <!-- Intelligence Layer -->
-                            <div class="sidebar-section">
-                                <div style="font-size: 10px; font-weight: 700; color: #0078d4; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Intelligence Layer</div>
-                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-                                    <span style="font-size: 12px; font-weight: 600; color: #323130;">Pulse-Score</span>
-                                    <div style="display: flex; align-items: center; gap: 4px;">
-                                        <span style="font-size: 13px; font-weight: 700; color: #107c10;" id="pulseValue">92%</span>
-                                        <span style="color: #107c10; font-size: 12px;" title="Human-Verified">&#10004;</span>
+                            <!-- Metadata Grid -->
+                            <div style="background: #ffffff; border: 1px solid #edebe9; border-radius: 8px; padding: 14px; margin-bottom: 10px;">
+                                <div style="font-size: 11px; font-weight: 600; color: #242424; margin-bottom: 10px;">Details</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <div>
+                                        <div style="font-size: 10px; color: #9e9e9e; margin-bottom: 2px;">Zielgruppe</div>
+                                        <div style="font-size: 12px; color: #242424; font-weight: 500;">New Adult</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 10px; color: #9e9e9e; margin-bottom: 2px;">Comps</div>
+                                        <div style="font-size: 12px; color: #242424; font-weight: 500;">Babel &times; Piranesi</div>
+                                    </div>
+                                    <div style="grid-column: span 2;">
+                                        <div style="font-size: 10px; color: #9e9e9e; margin-bottom: 4px;">Pitch</div>
+                                        <p style="font-size: 11px; color: #424242; line-height: 1.5; margin: 0;">Eine junge Linguistin entdeckt im Berlin der 1920er ein verschollenes Manuskript, das die Geschichte neu schreiben k&ouml;nnte.</p>
                                     </div>
                                 </div>
-                                <div class="pulse-bar-track" style="height: 8px; background: #e1dfdd;">
-                                    <div class="pulse-bar-fill" id="pulseBar" style="width: 0%; background: linear-gradient(to right, #107c10, #4ade80);"></div>
-                                </div>
                             </div>
-                            <!-- Reader Mode -->
-                            <div class="sidebar-section">
-                                <button style="width: 100%; padding: 8px; background: #ffffff; border: 1px solid #e1dfdd; border-radius: 6px; color: #323130; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                                    &#128214; Leseprobe offnen
+                            <!-- Sample & Notes -->
+                            <div style="background: #ffffff; border: 1px solid #edebe9; border-radius: 8px; padding: 14px; margin-bottom: 10px;">
+                                <button style="width: 100%; padding: 9px; background: #f3f2f1; border: 1px solid #d2d0ce; border-radius: 6px; color: #242424; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 500; margin-bottom: 10px;">
+                                    &#128196; Leseprobe &ouml;ffnen
                                 </button>
-                            </div>
-                            <!-- Agent's Note -->
-                            <div class="sidebar-section">
-                                <div style="font-size: 10px; font-weight: 700; color: #8764b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 4px;">
-                                    <span>&#9733;</span> Agent's Note
-                                </div>
-                                <textarea class="note-textarea" style="min-height: 60px; font-size: 12px; background: #ffffff; border-color: #e1dfdd; color: #323130;" placeholder="Notizen hier eingeben...">Starke Stimme, erinnert an Babel. Unbedingt Kapitel 3 lesen.</textarea>
-                                <p style="font-size: 10px; color: #a19f9d; margin-top: 4px;">Auto-sync mit Portal</p>
-                            </div>
-                            <!-- Sync Status -->
-                            <div class="sidebar-section" style="margin-bottom: 12px;">
-                                <div style="display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: #dff6dd; border-radius: 6px; font-size: 11px; color: #107c10;">
-                                    <span style="animation: pulse 2s infinite;">&#9679;</span> In Portal synchronisiert
+                                <div style="font-size: 11px; font-weight: 600; color: #242424; margin-bottom: 6px;">Interne Notiz</div>
+                                <textarea style="width: 100%; min-height: 50px; font-size: 11px; background: #faf9f8; border: 1px solid #edebe9; border-radius: 6px; color: #242424; padding: 8px; font-family: 'Segoe UI', sans-serif; resize: vertical; outline: none;" placeholder="Notiz hinzuf&uuml;gen...">Starke Stimme, erinnert an Babel. Unbedingt Kapitel 3 lesen.</textarea>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                    <span style="font-size: 9px; color: #9e9e9e;">Auto-sync mit Portal</span>
+                                    <span style="font-size: 9px; color: #107c10; font-weight: 500;">&#10003; Gespeichert</span>
                                 </div>
                             </div>
                             <!-- Actions -->
-                            <div class="sidebar-section">
-                                <div style="font-size: 10px; font-weight: 700; color: #0078d4; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Workflow</div>
-                                <button class="action-btn" style="font-size: 12px; padding: 8px 12px; background: #0078d4; color: #ffffff; border: none; border-radius: 6px; width: 100%; font-weight: 600; cursor: pointer; margin-bottom: 6px;">Full MS anfordern</button>
-                                <div style="position: relative;">
-                                    <button class="action-btn" onclick="toggleDropdown()" id="rejectBtn" style="font-size: 12px; padding: 8px 12px; background: #ffffff; border: 1px solid #e1dfdd; border-radius: 6px; color: #323130; width: 100%; cursor: pointer; margin-bottom: 6px; font-weight: 500;">Absage schicken &#9662;</button>
-                                    <div id="rejectDropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #ffffff; border: 1px solid #e1dfdd; border-radius: 6px; overflow: hidden; z-index: 10; margin-top: 2px; box-shadow: 0 4px 12px rgba(0,0,0,0.12);">
-                                        <div style="padding: 8px 12px; font-size: 12px; color: #323130; cursor: pointer; transition: background 0.15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background='transparent'">Standard</div>
-                                        <div style="padding: 8px 12px; font-size: 12px; color: #323130; cursor: pointer; border-top: 1px solid #f3f2f1; transition: background 0.15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background='transparent'">Fast-Hit</div>
-                                        <div style="padding: 8px 12px; font-size: 12px; color: #323130; cursor: pointer; border-top: 1px solid #f3f2f1; transition: background 0.15s;" onmouseover="this.style.background='#f3f2f1'" onmouseout="this.style.background='transparent'">Not for me</div>
+                            <div style="background: #ffffff; border: 1px solid #edebe9; border-radius: 8px; padding: 14px;">
+                                <div style="font-size: 11px; font-weight: 600; color: #242424; margin-bottom: 10px;">Aktionen</div>
+                                <button style="font-size: 12px; padding: 9px 14px; background: #0f6cbd; color: #ffffff; border: none; border-radius: 6px; width: 100%; font-weight: 600; cursor: pointer; margin-bottom: 6px;">Full MS anfordern</button>
+                                <div style="display: flex; gap: 6px;">
+                                    <div style="position: relative; flex: 1;">
+                                        <button onclick="toggleDropdown()" id="rejectBtn" style="font-size: 11px; padding: 8px; background: #ffffff; border: 1px solid #d2d0ce; border-radius: 6px; color: #242424; width: 100%; cursor: pointer; font-weight: 500;">Absage &#9662;</button>
+                                        <div id="rejectDropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #ffffff; border: 1px solid #e1dfdd; border-radius: 8px; overflow: hidden; z-index: 10; margin-top: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.14);">
+                                            <div style="padding: 9px 14px; font-size: 12px; color: #242424; cursor: pointer; transition: background 0.1s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">Standard-Absage</div>
+                                            <div style="padding: 9px 14px; font-size: 12px; color: #242424; cursor: pointer; border-top: 1px solid #f5f5f5; transition: background 0.1s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">Fast-Hit</div>
+                                            <div style="padding: 9px 14px; font-size: 12px; color: #242424; cursor: pointer; border-top: 1px solid #f5f5f5; transition: background 0.1s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">Not for me</div>
+                                        </div>
                                     </div>
+                                    <button style="font-size: 11px; padding: 8px; background: #ffffff; border: 1px solid #d2d0ce; border-radius: 6px; color: #242424; flex: 1; cursor: pointer; font-weight: 500;">Team-Review</button>
                                 </div>
-                                <button class="action-btn" style="font-size: 12px; padding: 8px 12px; background: transparent; border: 1px solid #e1dfdd; border-radius: 6px; color: #605e5c; width: 100%; cursor: pointer; font-weight: 500;">Team-Review zuweisen</button>
                             </div>
                         </div>
                     </div>

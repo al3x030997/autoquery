@@ -3,16 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutoQuery - Query Literary Agents in Minutes</title>
+    <title>AutoQuery - Querying, Rebuilt for Writers</title>
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-primary: #1c1917;
+            --bg-secondary: #292524;
+            --bg-tertiary: #0f0e0d;
+            --bg-card: #1c1917;
+            --text-primary: #fafaf9;
+            --text-secondary: #a8a29e;
+            --text-muted: #78716c;
+            --border: #44403c;
+            --border-light: #44403c;
+            --green: #4ade80;
+            --green-dark: #22c55e;
+            --green-bg: rgba(74, 222, 128, 0.1);
+            --green-shadow: rgba(74, 222, 128, 0.3);
+            --tag-bg: rgba(74, 222, 128, 0.1);
+            --tag-border: #4ade80;
+            --style-bg: rgba(100, 116, 139, 0.2);
+            --style-border: #64748b;
+            --style-color: #94a3b8;
+            --spinner-track: #44403c;
+            --shadow: rgba(0,0,0,0.3);
+        }
+        body.light {
+            --bg-primary: #faf9f7;
+            --bg-secondary: #f0eeeb;
+            --bg-tertiary: #e8e6e3;
+            --bg-card: #ffffff;
+            --text-primary: #1c1917;
+            --text-secondary: #78716c;
+            --text-muted: #a8a29e;
+            --border: #e5e2de;
+            --border-light: #d6d3cf;
+            --green: #16a34a;
+            --green-dark: #15803d;
+            --green-bg: rgba(22, 163, 74, 0.08);
+            --green-shadow: rgba(22, 163, 74, 0.2);
+            --tag-bg: rgba(22, 163, 74, 0.08);
+            --tag-border: #16a34a;
+            --style-bg: rgba(100, 116, 139, 0.08);
+            --style-border: #cbd5e1;
+            --style-color: #64748b;
+            --spinner-track: #e5e2de;
+            --shadow: rgba(0,0,0,0.08);
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { 
-            font-family: 'DM Sans', sans-serif; 
-            background-color: #1c1917; 
-            color: #fafaf9; 
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
             min-height: 100vh;
             overflow-x: hidden;
+            transition: background-color 0.3s, color 0.3s;
         }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
         
@@ -34,12 +79,6 @@
                 gap: 12px !important;
             }
 
-            header .container a[href*="proofreading"] {
-                width: 100%;
-                text-align: center;
-                padding: 12px 16px !important;
-            }
-
             /* Logo mobile size */
             .logo { font-size: 24px; }
 
@@ -54,7 +93,8 @@
             }
         }
         
-        header { padding: 32px 0; position: relative; }
+        header { padding: 20px 0; position: sticky; top: 0; z-index: 100; background: var(--bg-primary); transition: box-shadow 0.3s, padding 0.3s; }
+        header.scrolled { padding: 12px 0; box-shadow: 0 2px 12px var(--shadow); }
         .logo {
             font-size: 28px;
             font-weight: 700;
@@ -70,7 +110,7 @@
             top: 8px;
             right: 24px;
             font-size: 11px;
-            color: #78716c;
+            color: var(--text-muted);
             font-weight: 500;
         }
 
@@ -83,14 +123,19 @@
             }
         }
         
-        .hero { padding: 48px 0 32px; text-align: center; max-width: 900px; margin: 0 auto; }
-        
+        .hero {
+            min-height: calc(100vh - 100px);
+            display: flex; align-items: center; justify-content: center;
+            text-align: center; max-width: 900px; margin: 0 auto;
+            padding: 40px 0;
+        }
+
         @media (max-width: 768px) {
-            .hero { padding: 32px 0 24px; }
+            .hero { min-height: calc(100vh - 80px); padding: 24px 0; }
         }
         .badge {
-            display: inline-block; padding: 8px 16px; background: #292524;
-            border: 1px solid #44403c; border-radius: 24px; font-size: 12px;
+            display: inline-block; padding: 8px 16px; background: var(--bg-secondary);
+            border: 1px solid var(--border); border-radius: 24px; font-size: 12px;
             font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;
             color: #fbbf24; margin-bottom: 24px;
         }
@@ -98,22 +143,38 @@
             font-size: clamp(52px, 7vw, 84px); font-weight: 700; line-height: 1.1; 
             margin-bottom: 24px; font-family: 'Crimson Pro', serif; 
         }
-        .green { color: #4ade80; }
-        .subtitle { font-size: clamp(18px, 2.5vw, 24px); color: #a8a29e; margin-bottom: 40px; line-height: 1.5; }
+        .green { color: var(--green); }
+        .subtitle { font-size: clamp(18px, 2.5vw, 24px); color: var(--text-secondary); margin-bottom: 40px; line-height: 1.5; }
         .cta-buttons { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
         
         @media (max-width: 768px) {
             .cta-buttons { flex-direction: column; align-items: stretch; gap: 12px; }
             .cta-buttons .btn { width: 100%; }
+            .hero-email-form, .bottom-email-form { flex-direction: column !important; }
+            .hero-email-form button, .bottom-email-form button { width: 100%; }
         }
         .btn {
             padding: 12px 32px; font-size: 16px; font-weight: 600;
             border-radius: 8px; border: none; cursor: pointer;
         }
-        .btn-primary { background: #4ade80; color: #1c1917; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
-        .btn-secondary { background: #292524; color: #fafaf9; border: 1px solid #44403c; }
+        .btn-primary { background: var(--green); color: #1c1917; box-shadow: 0 1px 3px var(--shadow); }
+        .btn-secondary { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); }
         
-        .demo-section { padding: 60px 0; background: linear-gradient(to bottom, #1c1917, #292524); }
+        .demo-section { padding: 80px 0 60px; background: var(--bg-secondary); }
+        .section-divider {
+            height: 80px; display: flex; align-items: center; justify-content: center; margin: 20px 0 40px; position: relative;
+        }
+        .section-divider::before {
+            content: ''; position: absolute; left: 5%; right: 5%; height: 2px; background: var(--border-light);
+        }
+        .section-divider .step-num {
+            width: 44px; height: 44px; border-radius: 50%; background: var(--green); border: 3px solid var(--bg-primary);
+            display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #fff;
+            position: relative; z-index: 1; box-shadow: 0 2px 8px var(--green-shadow);
+        }
+        .hero-divider {
+            width: 100%; height: 2px; background: var(--border-light); margin: 60px 0 0;
+        }
         
         @media (max-width: 768px) {
             .demo-section { padding: 40px 0; }
@@ -190,14 +251,14 @@
         
         
         .search-bar {
-            background: #1c1917; padding: 20px 24px; border-radius: 12px;
-            border: 2px solid #4ade80; display: flex; align-items: center;
-            gap: 12px; margin-bottom: 32px; box-shadow: 0 0 20px rgba(74, 222, 128, 0.2);
+            background: var(--bg-card); padding: 20px 24px; border-radius: 12px;
+            border: 2px solid var(--green); display: flex; align-items: center;
+            gap: 12px; margin-bottom: 32px; box-shadow: 0 0 20px var(--green-shadow);
         }
-        
+
         .agent-card {
-            background: #1c1917; padding: 20px; border-radius: 12px;
-            border: 1px solid #44403c; display: grid;
+            background: var(--bg-card); padding: 20px; border-radius: 12px;
+            border: 1px solid var(--border); display: grid;
             grid-template-columns: 80px 1fr 200px; gap: 20px;
             align-items: start; margin-bottom: 16px; cursor: pointer;
             transition: all 0.3s; opacity: 0; animation: fadeIn 0.6s ease forwards;
@@ -211,8 +272,8 @@
             }
         }
         .agent-card:hover {
-            border-color: #4ade80; transform: translateX(8px) scale(1.02);
-            box-shadow: 0 8px 32px rgba(74, 222, 128, 0.4);
+            border-color: var(--green); transform: translateX(8px) scale(1.02);
+            box-shadow: 0 8px 32px var(--green-shadow);
         }
         .agent-avatar { 
             width: 48px; 
@@ -222,39 +283,39 @@
             background-position: center;
         }
         .agent-name { font-weight: 600; }
-        .agent-agency { font-size: 14px; color: #a8a29e; margin-top: 4px; }
+        .agent-agency { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
         .agent-tags { display: flex; gap: 8px; margin-top: 8px; }
         .tag {
-            padding: 4px 10px; background: rgba(74, 222, 128, 0.1);
-            border: 1px solid #4ade80; border-radius: 12px;
-            font-size: 11px; color: #4ade80; font-weight: 500;
+            padding: 4px 10px; background: var(--tag-bg);
+            border: 1px solid var(--tag-border); border-radius: 12px;
+            font-size: 11px; color: var(--green); font-weight: 500;
         }
-        .agent-response { font-size: 13px; color: #4ade80; font-weight: 600; }
+        .agent-response { font-size: 13px; color: var(--green); font-weight: 600; }
         
         .loading-screen { text-align: center; padding: 120px 40px; }
         .spinner {
             width: 80px; height: 80px; margin: 0 auto 32px;
-            border: 4px solid #44403c; border-top: 4px solid #4ade80;
+            border: 4px solid var(--spinner-track); border-top: 4px solid var(--green);
             border-radius: 50%; animation: spin 1s linear infinite;
         }
         
         .back-btn {
-            margin-bottom: 24px; color: #4ade80; background: none;
+            margin-bottom: 24px; color: var(--green); background: none;
             border: none; cursor: pointer; font-size: 14px;
         }
-        
+
         .profile-header {
-            padding: 32px; background: #292524;
-            border-bottom: 1px solid #44403c;
+            padding: 32px; background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
         }
         .autofill-btn {
-            width: 100%; padding: 16px 32px; background: #4ade80;
+            width: 100%; padding: 16px 32px; background: var(--green);
             color: #1c1917; font-weight: 700; font-size: 18px;
             border-radius: 12px; border: none; cursor: pointer;
-            box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+            box-shadow: 0 4px 12px var(--green-shadow);
         }
-        
-        .section-title { font-size: 11px; font-weight: 700; color: #4ade80; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
+        .section-title { font-size: 11px; font-weight: 700; color: var(--green); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
         
         .hidden { display: none !important; }
         
@@ -272,6 +333,107 @@
         .agent-card:nth-child(3) { animation-delay: 0.6s; }
         .agent-card:nth-child(4) { animation-delay: 0.9s; }
         
+        /* Theme toggle */
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 10px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        .theme-toggle:hover { border-color: var(--green); }
+        .theme-toggle .toggle-icon { font-size: 16px; line-height: 1; }
+
+        /* Light mode overrides for inline-styled elements */
+        body.light header { background: var(--bg-primary); }
+        body.light .logo { background: linear-gradient(135deg, #16a34a, #15803d); -webkit-background-clip: text; background-clip: text; }
+        body.light h1, body.light h2, body.light h3, body.light h4 { color: var(--text-primary); }
+
+        /* Cards & containers in light mode */
+        body.light div[style*="background: #292524"],
+        body.light div[style*="background:#292524"] { background: var(--bg-secondary) !important; }
+        body.light div[style*="background: #1c1917"],
+        body.light div[style*="background:#1c1917"] { background: var(--bg-primary) !important; }
+        body.light div[style*="border: 1px solid #44403c"],
+        body.light div[style*="border:1px solid #44403c"] { border-color: var(--border) !important; }
+        body.light div[style*="border-bottom: 1px solid #44403c"] { border-color: var(--border) !important; }
+        body.light div[style*="border-top: 1px solid #44403c"] { border-color: var(--border) !important; }
+        body.light div[style*="border-left: 3px solid #4ade80"] { border-left-color: var(--green) !important; }
+
+        /* Text colors in light mode */
+        body.light span[style*="color: #fafaf9"],
+        body.light div[style*="color: #fafaf9"],
+        body.light p[style*="color: #fafaf9"],
+        body.light strong[style*="color: #fafaf9"] { color: var(--text-primary) !important; }
+        body.light span[style*="color: #a8a29e"],
+        body.light div[style*="color: #a8a29e"],
+        body.light p[style*="color: #a8a29e"] { color: var(--text-secondary) !important; }
+        body.light span[style*="color: #78716c"],
+        body.light p[style*="color: #78716c"] { color: var(--text-muted) !important; }
+        body.light span[style*="color: #4ade80"],
+        body.light div[style*="color: #4ade80"] { color: var(--green) !important; }
+        body.light span[style*="color: #94a3b8"] { color: var(--style-color) !important; }
+
+        /* Inline backgrounds */
+        body.light span[style*="background: rgba(74, 222, 128"],
+        body.light div[style*="background: rgba(74, 222, 128"] { background: var(--green-bg) !important; }
+        body.light span[style*="background: rgba(100, 116, 139"],
+        body.light div[style*="background: rgba(100, 116, 139"] { background: var(--style-bg) !important; }
+        body.light span[style*="border: 1px solid #64748b"] { border-color: var(--style-border) !important; }
+        body.light span[style*="border: 1px solid #4ade80"] { border-color: var(--green) !important; }
+        body.light div[style*="background: conic-gradient(#4ade80"] { background: conic-gradient(var(--green) 0% 98%, var(--border) 98% 100%) !important; }
+        body.light div[style*="background: #1c1917"][style*="border-radius: 50%"][style*="font-size: 9px"] { background: var(--bg-primary) !important; color: var(--green) !important; }
+
+        /* Separators */
+        body.light div[style*="background: linear-gradient(to right, transparent, #4ade80, transparent)"] { background: linear-gradient(to right, transparent, var(--green), transparent) !important; }
+
+        /* Demo section containers */
+        body.light .demo-section { background: linear-gradient(to bottom, var(--bg-primary), var(--bg-secondary)) !important; }
+
+        /* CTA section */
+        body.light section[style*="padding: 80px 0; text-align: center"] { background: var(--bg-primary) !important; }
+
+        /* For Agents section */
+        body.light section[style*="background: #292524; border-top"] { background: var(--bg-secondary) !important; border-color: var(--border) !important; }
+
+        /* Proofreading section */
+        body.light section[style*="background: linear-gradient(to bottom, #292524, #1c1917)"] { background: linear-gradient(to bottom, var(--bg-secondary), var(--bg-primary)) !important; border-color: var(--border) !important; }
+
+        /* Footer */
+        body.light footer { background: var(--bg-tertiary) !important; border-color: var(--border) !important; }
+        body.light footer h4 { color: var(--text-primary) !important; }
+        body.light footer a { color: var(--text-secondary) !important; }
+        body.light footer p { color: var(--text-secondary) !important; }
+        body.light footer div[style*="border-top: 1px solid #44403c"] { border-color: var(--border) !important; }
+
+        /* Buttons in light mode */
+        body.light a[style*="background: #292524"] { background: var(--bg-secondary) !important; }
+        body.light button[style*="background: #4ade80"],
+        body.light a[style*="background: #4ade80"] { background: var(--green) !important; }
+        body.light button[style*="background: #44403c"] { background: var(--border) !important; }
+
+        /* Input in light */
+        body.light input[style*="background: #1c1917"] { background: var(--bg-primary) !important; border-color: var(--border) !important; color: var(--text-primary) !important; }
+
+        /* Spinner inline */
+        body.light div[style*="border: 4px solid #44403c"] { border-color: var(--spinner-track) !important; border-top-color: var(--green) !important; }
+
+        /* Agent banner link styles in light */
+        body.light .last-updated { color: var(--text-muted); }
+
+        /* Header nav in light mode */
+        body.light a[style*="color: #fbbf24"] { color: #b45309 !important; border-color: #b45309 !important; }
+        body.light div[style*="background: #292524"][style*="border-radius: 8px"][style*="border: 1px solid #44403c"] { background: var(--bg-secondary) !important; border-color: var(--border) !important; }
+
+        /* Gradient buttons keep working */
+        body.light a[style*="background: linear-gradient(135deg, #ff6b35"] { background: linear-gradient(135deg, #ff6b35, #f7931e) !important; }
+
         /* Footer mobile optimization */
         @media (max-width: 768px) {
             footer div[style*="grid-template-columns: repeat(3, 1fr)"] {
@@ -281,28 +443,35 @@
         }
     </style>
 </head>
-<body>
+<body class="light">
+    <!-- For Agents Banner -->
+    <div style="background: linear-gradient(135deg, #7c3aed, #a78bfa); padding: 10px 0; text-align: center;">
+        <a href="agent-sidebar.html" style="color: #ffffff; text-decoration: none; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+            <span style="padding: 3px 8px; background: rgba(255,255,255,0.2); border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">For Agents</span>
+            Discover the Agent Sidebar — manage submissions directly from your inbox
+            <span>&rarr;</span>
+        </a>
+    </div>
+
     <header>
-        <div class="last-updated">Last updated: February 26, 2026 at 19:38</div>
         <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
-            <div class="logo">AutoQuery</div>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div class="logo">AutoQuery</div>
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch theme">
+                    <span class="toggle-icon" id="themeIcon">&#9728;</span>
+                </button>
+            </div>
             <div style="display: flex; align-items: center; gap: 24px;">
-                <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #292524; border-radius: 8px; border: 1px solid #44403c;">
-                    <a href="index.html" style="color: #4ade80; text-decoration: none; font-size: 14px; font-weight: 600;">EN</a>
-                    <span style="color: #44403c;">|</span>
-                    <a href="index-de.html" style="color: #a8a29e; text-decoration: none; font-size: 14px;">DE</a>
-                    <span style="color: #44403c;">|</span>
-                    <a href="#" style="color: #a8a29e; text-decoration: none; font-size: 14px;">FR</a>
+                <a href="#bottom-cta" style="padding: 10px 20px; background: var(--green); color: #1c1917; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 14px; transition: all 0.2s;">
+                    Join Waitlist
+                </a>
+                <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--border);">
+                    <a href="index.html" style="color: var(--green); text-decoration: none; font-size: 14px; font-weight: 600;">EN</a>
+                    <span style="color: var(--border);">|</span>
+                    <a href="index-de.html" style="color: var(--text-secondary); text-decoration: none; font-size: 14px;">DE</a>
+                    <span style="color: var(--border);">|</span>
+                    <a href="#" style="color: var(--text-secondary); text-decoration: none; font-size: 14px;">FR</a>
                 </div>
-                <a href="agent-sidebar.html" style="padding: 12px 24px; background: #292524; color: #a78bfa; border: 1px solid #a78bfa; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 14px; transition: all 0.2s;">
-                    The Agent Sidebar
-                </a>
-                <a href="app/index.html" style="padding: 12px 24px; background: #292524; color: #fbbf24; border: 1px solid #fbbf24; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 14px; transition: all 0.2s;">
-                    Agent Finder
-                </a>
-                <a href="proofreading-community.html" style="padding: 12px 24px; background: linear-gradient(135deg, #4ade80, #22c55e); color: #1c1917; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 14px; transition: transform 0.2s;">
-                    Join Proofreading Community
-                </a>
             </div>
         </div>
     </header>
@@ -310,17 +479,16 @@
     <section class="hero">
         <div class="container">
             <div class="badge">For Authors</div>
-            <h1>Query literary agents in minutes, <span class="green">now.</span></h1>
+            <h1>Querying, rebuilt for <span class="green">writers.</span></h1>
             <p class="subtitle">
-                Search the right literary agents in seconds, automate formatting, and track submissions in real-time. Your manuscript deserves to be seen.
+                Go from finished manuscript to sent queries in minutes.
             </p>
-            <div class="cta-buttons">
-                <a href="coming-soon.html" class="btn btn-primary" style="text-decoration: none; padding: 18px 40px; font-size: 18px; text-align: center; display: inline-block;">Start Free Trial →</a>
-                <a href="manuscript-feedback.html" class="btn btn-secondary" style="text-decoration: none; padding: 18px 40px; font-size: 18px; display: flex; flex-direction: column; align-items: center;">
-                    <span>Get Manuscript Feedback</span>
-                    <span style="font-size: 12px; font-weight: 400; margin-top: 4px; opacity: 0.8;">for free</span>
-                </a>
-            </div>
+            <form class="hero-email-form" onsubmit="handleHeroSignup(event)" style="display: flex; gap: 12px; max-width: 520px; margin: 0 auto 16px;">
+                <input type="email" id="heroEmail" placeholder="Your email address" required style="flex: 1; padding: 14px 20px; font-size: 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); outline: none; font-family: 'DM Sans', sans-serif;" />
+                <button type="submit" class="btn btn-primary" style="padding: 14px 28px; font-size: 16px; white-space: nowrap; cursor: pointer;">Join Waitlist →</button>
+            </form>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">No spam, ever. Get early access when we launch.</p>
+            <a href="manuscript-feedback.html" style="color: var(--green); text-decoration: none; font-size: 14px; font-weight: 600;">Or get free manuscript feedback →</a>
         </div>
     </section>
 
@@ -329,11 +497,11 @@
             <!-- Step 1: Find Agents (Interactive) -->
             <div class="demo-container">
                 <!-- Title outside container, centered -->
-                <h2 style="font-size: 36px; font-weight: 700; font-family: 'Crimson Pro', serif; text-align: center; margin-bottom: 16px;">
-                    Find relevant literary agents in <span class="green">minutes</span>
+                <h2 style="font-size: clamp(36px, 5vw, 48px); font-weight: 700; font-family: 'Crimson Pro', serif; text-align: center; margin-bottom: 16px;">
+                    Find agents who are looking for <span class="green">your story</span>
                 </h2>
                 <p style="text-align: center; font-size: 16px; color: #a8a29e; margin-bottom: 48px; max-width: 700px; margin-left: auto; margin-right: auto;">
-                    Search our database of thousands of agents. Filter by genre, response rate, and current submission status.
+                    Skip the manual searching. Browse agents who are actively looking for work in your genre, filtered by their current submission status and preferences.
                 </p>
                 
                 <div style="background: #292524; border-radius: 12px; border: 1px solid #44403c; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
@@ -343,19 +511,16 @@
                 </div>
             </div>
             
-            <!-- Visual Separator -->
-            <div style="height: 80px; display: flex; align-items: center; justify-content: center; margin-bottom: 80px;">
-                <div style="width: 50%; height: 2px; background: linear-gradient(to right, transparent, #4ade80, transparent);"></div>
-            </div>
-            
+            <div class="section-divider"><span class="step-num">2</span></div>
+
             <!-- Step 2: Agent Profile View -->
             <div class="demo-container">
                 <!-- Title outside container, centered -->
-                <h2 style="font-size: 36px; font-weight: 700; font-family: 'Crimson Pro', serif; text-align: center; margin-bottom: 16px;">
-                    Review agent details and <span class="green">requirements</span>
+                <h2 style="font-size: clamp(36px, 5vw, 48px); font-weight: 700; font-family: 'Crimson Pro', serif; text-align: center; margin-bottom: 16px;">
+                    Know exactly what each <span class="green">agent wants</span>
                 </h2>
                 <p style="text-align: center; font-size: 16px; color: #a8a29e; margin-bottom: 48px; max-width: 700px; margin-left: auto; margin-right: auto;">
-                    See what each agent is looking for, their recent sales, and submission preferences.
+                    Avoid instant rejections. See every agent's current wishlist, recent deals, and specific submission requirements in a single view.
                 </p>
                 
                 <div style="background: #292524; border-radius: 12px; border: 1px solid #44403c; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
@@ -485,19 +650,16 @@
                 </div>
             </div>
             
-            <!-- Visual Separator -->
-            <div style="height: 80px; display: flex; align-items: center; justify-content: center; margin-bottom: 80px;">
-                <div style="width: 50%; height: 2px; background: linear-gradient(to right, transparent, #4ade80, transparent);"></div>
-            </div>
-            
+            <div class="section-divider"><span class="step-num">3</span></div>
+
             <!-- Step 3: Formatted Query Summary -->
             <div class="demo-container">
                 <!-- Title outside container, centered -->
-                <h2 style="font-size: 36px; font-weight: 700; font-family: 'Crimson Pro', serif; text-align: center; margin-bottom: 16px;">
-                    Auto-fill queries in <span class="green">seconds</span>
+                <h2 style="font-size: clamp(36px, 5vw, 48px); font-weight: 700; font-family: 'Crimson Pro', serif; text-align: center; margin-bottom: 16px;">
+                    Automated formatting, <span class="green">zero busywork</span>
                 </h2>
                 <p style="text-align: center; font-size: 16px; color: #a8a29e; margin-bottom: 48px; max-width: 700px; margin-left: auto; margin-right: auto;">
-                    One click formats your query letter to each agent's exact specifications. No more manual formatting.
+                    We handle the technical requirements for you. Your query is automatically formatted to meet each agent's specific guidelines so you can stay focused on your writing.
                 </p>
                 
                 <div style="background: #292524; border-radius: 12px; border: 1px solid #44403c; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
@@ -516,19 +678,16 @@
                 </div>
             </div>
             
-            <!-- Visual Separator -->
-            <div style="height: 80px; display: flex; align-items: center; justify-content: center; margin-bottom: 80px;">
-                <div style="width: 50%; height: 2px; background: linear-gradient(to right, transparent, #4ade80, transparent);"></div>
-            </div>
-            
+            <div class="section-divider"><span class="step-num">4</span></div>
+
             <!-- Step 4: Track Queries -->
             <div class="demo-container">
                 <!-- Title outside container, centered -->
-                <h2 style="font-size: 36px; font-weight: 700; font-family: 'Crimson Pro', serif; text-align: center; margin-bottom: 16px;">
-                    Track your queries in <span class="green">real-time</span>
+                <h2 style="font-size: clamp(36px, 5vw, 48px); font-weight: 700; font-family: 'Crimson Pro', serif; text-align: center; margin-bottom: 16px;">
+                    Real-time tracking for every <span class="green">submission</span>
                 </h2>
                 <p style="text-align: center; font-size: 16px; color: #a8a29e; margin-bottom: 48px; max-width: 700px; margin-left: auto; margin-right: auto;">
-                    Know exactly when agents open your query. Get notified of responses. Never lose track of your submissions.
+                    Know exactly when agents open your query and get notified of responses. Keep your entire submission history organized without spreadsheets.
                 </p>
                 
                 <div style="background: #292524; border-radius: 12px; border: 1px solid #44403c; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.3);">
@@ -658,18 +817,51 @@
     </section>
 
     <!-- CTA Section -->
-    <section style="padding: 80px 0; text-align: center;">
+    <section id="bottom-cta" style="padding: 80px 0; text-align: center;">
         <div class="container">
             <h2 style="font-size: 56px; font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 24px;">
-                Ready to get your manuscript seen?
+                You wrote the book.<br>Let us handle the rest.
             </h2>
             <p style="font-size: 20px; color: #a8a29e; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
-                Join authors who are querying smarter, not harder.
+                Get early access and be the first to query with AutoQuery.
             </p>
-            <a href="coming-soon.html" class="btn btn-primary" style="padding: 14px 48px; font-size: 18px; text-decoration: none; display: inline-block; text-align: center;">
-                Start Free Trial →
+            <form class="bottom-email-form" onsubmit="handleBottomSignup(event)" style="display: flex; gap: 12px; max-width: 520px; margin: 0 auto;">
+                <input type="email" id="bottomEmail" placeholder="Your email address" required style="flex: 1; padding: 14px 20px; font-size: 16px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-primary); outline: none; font-family: 'DM Sans', sans-serif;" />
+                <button type="submit" class="btn btn-primary" style="padding: 14px 28px; font-size: 16px; white-space: nowrap; cursor: pointer;">Join Waitlist →</button>
+            </form>
+            <p style="margin-top: 16px; color: var(--text-muted); font-size: 13px;">No spam, ever. Unsubscribe anytime.</p>
+        </div>
+    </section>
+
+    <!-- For Agents Section -->
+    <section style="padding: 60px 0; text-align: center; background: #292524; border-top: 1px solid #44403c;">
+        <div class="container">
+            <div class="badge" style="color: #a78bfa; border-color: #a78bfa;">For Agents</div>
+            <h2 style="font-size: clamp(28px, 4vw, 42px); font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 16px;">
+                The other side of the <span style="color: #a78bfa;">query</span>
+            </h2>
+            <p style="font-size: 18px; color: #a8a29e; margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                Manage submissions directly from your inbox with our Outlook & Gmail Extension.
+            </p>
+            <a href="agent-sidebar.html" style="display: inline-block; padding: 16px 40px; background: #a78bfa; color: #1c1917; font-weight: 700; font-size: 16px; border-radius: 10px; text-decoration: none; box-shadow: 0 4px 16px rgba(167,139,250,0.3); transition: transform 0.2s;">
+                Discover the Agent Sidebar →
             </a>
-            <p style="margin-top: 16px; color: #a8a29e; font-size: 14px;">No credit card required · 14-day free trial</p>
+        </div>
+    </section>
+
+    <!-- Proofreading Community Section -->
+    <section style="padding: 60px 0; text-align: center; background: linear-gradient(to bottom, #292524, #1c1917); border-top: 1px solid #44403c;">
+        <div class="container">
+            <div class="badge" style="color: #4ade80; border-color: #4ade80;">Community</div>
+            <h2 style="font-size: clamp(28px, 4vw, 42px); font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 16px;">
+                The Proofreading <span class="green">Community</span>
+            </h2>
+            <p style="font-size: 18px; color: #a8a29e; margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                Get feedback from fellow writers and beta readers before you query. Fresh eyes catch what yours can't.
+            </p>
+            <a href="proofreading-community.html" style="display: inline-block; padding: 16px 40px; background: #4ade80; color: #1c1917; font-weight: 700; font-size: 16px; border-radius: 10px; text-decoration: none; box-shadow: 0 4px 16px rgba(74,222,128,0.3); transition: transform 0.2s;">
+                Join the Community →
+            </a>
         </div>
     </section>
 
@@ -679,6 +871,51 @@
     </div>
 
     <script>
+        // Theme toggle
+        function toggleTheme() {
+            const isLight = document.body.classList.toggle('light');
+            localStorage.setItem('autoquery-theme', isLight ? 'light' : 'dark');
+            document.getElementById('themeIcon').innerHTML = isLight ? '&#9728;' : '&#9790;';
+        }
+        // Load saved theme (light is default)
+        (function() {
+            const saved = localStorage.getItem('autoquery-theme');
+            if (saved === 'dark') {
+                document.body.classList.remove('light');
+                document.getElementById('themeIcon').innerHTML = '&#9790;';
+            }
+        })();
+
+        // Sticky header
+        window.addEventListener('scroll', function() {
+            document.querySelector('header').classList.toggle('scrolled', window.scrollY > 50);
+        });
+
+        // Email signup handlers
+        function handleHeroSignup(e) {
+            e.preventDefault();
+            var email = document.getElementById('heroEmail').value;
+            showSignupConfirmation(email);
+        }
+        function handleBottomSignup(e) {
+            e.preventDefault();
+            var email = document.getElementById('bottomEmail').value;
+            showSignupConfirmation(email);
+        }
+        function showSignupConfirmation(email) {
+            var modal = document.getElementById('modalOverlay');
+            var content = document.getElementById('modalContent');
+            content.innerHTML = '<div style="background: var(--bg-secondary); border-radius: 16px; border: 1px solid var(--border); overflow: hidden;">' +
+                '<button onclick="closeModal()" style="position: absolute; top: 20px; right: 20px; background: var(--border); border: none; color: var(--text-primary); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; z-index: 10;">&times;</button>' +
+                '<div style="text-align: center; padding: 80px 40px;">' +
+                '<div style="font-size: 48px; margin-bottom: 24px;">&#9989;</div>' +
+                '<h2 style="font-size: 36px; font-weight: 700; margin-bottom: 16px; font-family: Crimson Pro, serif; color: var(--text-primary);">You\'re on the list!</h2>' +
+                '<p style="font-size: 18px; color: var(--text-secondary); margin-bottom: 8px;">We\'ll notify <strong style="color: var(--text-primary);">' + email + '</strong> as soon as AutoQuery launches.</p>' +
+                '<p style="font-size: 14px; color: var(--text-muted); margin-top: 24px;">In the meantime, check out our <a href="manuscript-feedback.html" style="color: var(--green); text-decoration: none; font-weight: 600;">free manuscript feedback</a>.</p>' +
+                '</div></div>';
+            modal.style.display = 'block';
+        }
+
         // Modal functions
         function showComingSoon() {
             const modal = document.getElementById('modalOverlay');
@@ -1186,6 +1423,7 @@
             </div>
             <div style="border-top: 1px solid #44403c; padding-top: 32px; text-align: center;">
                 <p style="color: #a8a29e; font-size: 14px;">© 2026 AutoQuery. All rights reserved.</p>
+                <p style="color: #78716c; font-size: 12px; margin-top: 8px;">Last updated: February 21, 2026</p>
             </div>
         </div>
     </footer>
