@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Font Preview — AutoQuery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=EB+Garamond:wght@400;600;700&family=Spectral:wght@400;600;700&family=Merriweather:wght@400;700&family=Alegreya:wght@400;700&family=Cardo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: #faf9f7; color: #1c1917; padding: 40px 24px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { font-family: 'DM Sans', sans-serif; font-size: 24px; margin-bottom: 8px; }
+        .subtitle { color: #78716c; font-size: 14px; margin-bottom: 48px; }
+        .font-card {
+            background: #fff; border: 1px solid #e5e2de; border-radius: 12px;
+            padding: 32px; margin-bottom: 24px; transition: box-shadow 0.2s;
+        }
+        .font-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+        .font-name { font-size: 13px; font-weight: 600; color: #78716c; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; }
+        .font-name span.current { background: #16a34a; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; text-transform: uppercase; }
+        .headline { font-size: 48px; font-weight: 700; line-height: 1.15; margin-bottom: 12px; color: #1c1917; }
+        .headline .green { color: #16a34a; }
+        .body-text { font-size: 18px; line-height: 1.6; color: #78716c; margin-bottom: 16px; }
+        .section-title { font-size: 32px; font-weight: 700; line-height: 1.2; color: #1c1917; }
+        .section-title .green { color: #16a34a; }
+        .divider { height: 1px; background: #e5e2de; margin: 16px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Font Preview</h1>
+        <p class="subtitle">Vergleiche alle Schriftarten mit echtem AutoQuery-Content. Aktuell: Crimson Pro.</p>
+
+        <div class="font-card">
+            <div class="font-name">Crimson Pro <span class="current">Aktuell</span></div>
+            <div class="headline" style="font-family: 'Crimson Pro', serif;">Querying, rebuilt for <span class="green">writers.</span></div>
+            <div class="body-text" style="font-family: 'Crimson Pro', serif;">Go from finished manuscript to sent queries in minutes.</div>
+            <div class="divider"></div>
+            <div class="section-title" style="font-family: 'Crimson Pro', serif;">Find agents who are looking for <span class="green">your story</span></div>
+        </div>
+
+        <div class="font-card">
+            <div class="font-name">EB Garamond</div>
+            <div class="headline" style="font-family: 'EB Garamond', serif;">Querying, rebuilt for <span class="green">writers.</span></div>
+            <div class="body-text" style="font-family: 'EB Garamond', serif;">Go from finished manuscript to sent queries in minutes.</div>
+            <div class="divider"></div>
+            <div class="section-title" style="font-family: 'EB Garamond', serif;">Find agents who are looking for <span class="green">your story</span></div>
+        </div>
+
+        <div class="font-card">
+            <div class="font-name">Spectral</div>
+            <div class="headline" style="font-family: 'Spectral', serif;">Querying, rebuilt for <span class="green">writers.</span></div>
+            <div class="body-text" style="font-family: 'Spectral', serif;">Go from finished manuscript to sent queries in minutes.</div>
+            <div class="divider"></div>
+            <div class="section-title" style="font-family: 'Spectral', serif;">Find agents who are looking for <span class="green">your story</span></div>
+        </div>
+
+        <div class="font-card">
+            <div class="font-name">Merriweather</div>
+            <div class="headline" style="font-family: 'Merriweather', serif;">Querying, rebuilt for <span class="green">writers.</span></div>
+            <div class="body-text" style="font-family: 'Merriweather', serif;">Go from finished manuscript to sent queries in minutes.</div>
+            <div class="divider"></div>
+            <div class="section-title" style="font-family: 'Merriweather', serif;">Find agents who are looking for <span class="green">your story</span></div>
+        </div>
+
+        <div class="font-card">
+            <div class="font-name">Alegreya</div>
+            <div class="headline" style="font-family: 'Alegreya', serif;">Querying, rebuilt for <span class="green">writers.</span></div>
+            <div class="body-text" style="font-family: 'Alegreya', serif;">Go from finished manuscript to sent queries in minutes.</div>
+            <div class="divider"></div>
+            <div class="section-title" style="font-family: 'Alegreya', serif;">Find agents who are looking for <span class="green">your story</span></div>
+        </div>
+
+        <div class="font-card">
+            <div class="font-name">Cardo</div>
+            <div class="headline" style="font-family: 'Cardo', serif;">Querying, rebuilt for <span class="green">writers.</span></div>
+            <div class="body-text" style="font-family: 'Cardo', serif;">Go from finished manuscript to sent queries in minutes.</div>
+            <div class="divider"></div>
+            <div class="section-title" style="font-family: 'Cardo', serif;">Find agents who are looking for <span class="green">your story</span></div>
+        </div>
+    </div>
+</body>
+</html>
