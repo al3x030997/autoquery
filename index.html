@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AutoQuery - Querying, Rebuilt for Writers</title>
-    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-primary: #1c1917;
@@ -98,7 +98,7 @@
         .logo {
             font-size: 28px;
             font-weight: 700;
-            font-family: 'Crimson Pro', serif;
+            font-family: 'EB Garamond', serif;
             background: linear-gradient(135deg, #4ade80, #22c55e);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -141,7 +141,7 @@
         }
         h1 { 
             font-size: clamp(52px, 7vw, 84px); font-weight: 700; line-height: 1.1; 
-            margin-bottom: 24px; font-family: 'Crimson Pro', serif; 
+            margin-bottom: 24px; font-family: 'EB Garamond', serif; 
         }
         .green { color: var(--green); }
         .subtitle { font-size: clamp(18px, 2.5vw, 24px); color: var(--text-secondary); margin-bottom: 40px; line-height: 1.5; }
@@ -161,6 +161,28 @@
         .btn-secondary { background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border); }
         
         .demo-section { padding: 80px 0 60px; background: var(--bg-secondary); }
+        /* Force only the demo app containers (not titles/text around them) to stay dark */
+        body.light .demo-container > div[style*="background: #292524"] {
+            --bg-primary: #1c1917;
+            --bg-secondary: #292524;
+            --bg-card: #1c1917;
+            --text-primary: #fafaf9;
+            --text-secondary: #a8a29e;
+            --text-muted: #78716c;
+            --border: #44403c;
+            --border-light: #44403c;
+            --green: #4ade80;
+            --green-dark: #22c55e;
+            --green-bg: rgba(74, 222, 128, 0.1);
+            --green-shadow: rgba(74, 222, 128, 0.3);
+            --tag-bg: rgba(74, 222, 128, 0.1);
+            --tag-border: #4ade80;
+            --style-bg: rgba(100, 116, 139, 0.2);
+            --style-border: #64748b;
+            --style-color: #94a3b8;
+            --spinner-track: #44403c;
+            --shadow: rgba(0,0,0,0.3);
+        }
         .section-divider {
             height: 80px; display: flex; align-items: center; justify-content: center; margin: 20px 0 40px; position: relative;
         }
@@ -251,15 +273,15 @@
         
         
         .search-bar {
-            background: var(--bg-card); padding: 20px 24px; border-radius: 12px;
-            border: 2px solid var(--green); display: flex; align-items: center;
-            gap: 12px; margin-bottom: 32px; box-shadow: 0 0 20px var(--green-shadow);
+            background: var(--bg-card); padding: 16px 20px; border-radius: 8px;
+            border: 1px solid var(--border); display: flex; align-items: center;
+            gap: 12px; margin-bottom: 16px;
         }
 
         .agent-card {
-            background: var(--bg-card); padding: 20px; border-radius: 12px;
+            background: var(--bg-card); padding: 20px; border-radius: 8px;
             border: 1px solid var(--border); display: grid;
-            grid-template-columns: 80px 1fr 200px; gap: 20px;
+            grid-template-columns: 60px 1fr 170px; gap: 16px;
             align-items: start; margin-bottom: 16px; cursor: pointer;
             transition: all 0.3s; opacity: 0; animation: fadeIn 0.6s ease forwards;
         }
@@ -272,8 +294,8 @@
             }
         }
         .agent-card:hover {
-            border-color: var(--green); transform: translateX(8px) scale(1.02);
-            box-shadow: 0 8px 32px var(--green-shadow);
+            border-color: var(--green); transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
         }
         .agent-avatar { 
             width: 48px; 
@@ -282,7 +304,7 @@
             background-size: cover;
             background-position: center;
         }
-        .agent-name { font-weight: 600; }
+        .agent-name { font-weight: 600; font-size: 16px; color: #fafaf9; }
         .agent-agency { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
         .agent-tags { display: flex; gap: 8px; margin-top: 8px; }
         .tag {
@@ -355,46 +377,44 @@
         body.light .logo { background: linear-gradient(135deg, #16a34a, #15803d); -webkit-background-clip: text; background-clip: text; }
         body.light h1, body.light h2, body.light h3, body.light h4 { color: var(--text-primary); }
 
-        /* Cards & containers in light mode */
-        body.light div[style*="background: #292524"],
-        body.light div[style*="background:#292524"] { background: var(--bg-secondary) !important; }
-        body.light div[style*="background: #1c1917"],
-        body.light div[style*="background:#1c1917"] { background: var(--bg-primary) !important; }
-        body.light div[style*="border: 1px solid #44403c"],
-        body.light div[style*="border:1px solid #44403c"] { border-color: var(--border) !important; }
-        body.light div[style*="border-bottom: 1px solid #44403c"] { border-color: var(--border) !important; }
-        body.light div[style*="border-top: 1px solid #44403c"] { border-color: var(--border) !important; }
-        body.light div[style*="border-left: 3px solid #4ade80"] { border-left-color: var(--green) !important; }
+        /*
+         * Light mode strategy:
+         * - .demo-section stays DARK (no overrides)
+         * - Everything else gets light overrides
+         * We use .light-zone on non-demo sections via JS, OR scope selectors to exclude .demo-section
+         */
 
-        /* Text colors in light mode */
-        body.light span[style*="color: #fafaf9"],
-        body.light div[style*="color: #fafaf9"],
-        body.light p[style*="color: #fafaf9"],
-        body.light strong[style*="color: #fafaf9"] { color: var(--text-primary) !important; }
-        body.light span[style*="color: #a8a29e"],
-        body.light div[style*="color: #a8a29e"],
-        body.light p[style*="color: #a8a29e"] { color: var(--text-secondary) !important; }
-        body.light span[style*="color: #78716c"],
-        body.light p[style*="color: #78716c"] { color: var(--text-muted) !important; }
-        body.light span[style*="color: #4ade80"],
-        body.light div[style*="color: #4ade80"] { color: var(--green) !important; }
-        body.light span[style*="color: #94a3b8"] { color: var(--style-color) !important; }
+        /* Light overrides ONLY outside demo section */
+        body.light header div[style*="background: #292524"],
+        body.light section:not(.demo-section) div[style*="background: #292524"],
+        body.light footer div[style*="background: #292524"] { background: var(--bg-secondary) !important; }
+        body.light header div[style*="background: #1c1917"],
+        body.light section:not(.demo-section) div[style*="background: #1c1917"],
+        body.light footer div[style*="background: #1c1917"] { background: var(--bg-primary) !important; }
+        body.light header div[style*="border: 1px solid #44403c"],
+        body.light section:not(.demo-section) div[style*="border: 1px solid #44403c"],
+        body.light footer div[style*="border: 1px solid #44403c"] { border-color: var(--border) !important; }
+        body.light section:not(.demo-section) div[style*="border-top: 1px solid #44403c"],
+        body.light footer div[style*="border-top: 1px solid #44403c"] { border-color: var(--border) !important; }
 
-        /* Inline backgrounds */
-        body.light span[style*="background: rgba(74, 222, 128"],
-        body.light div[style*="background: rgba(74, 222, 128"] { background: var(--green-bg) !important; }
-        body.light span[style*="background: rgba(100, 116, 139"],
-        body.light div[style*="background: rgba(100, 116, 139"] { background: var(--style-bg) !important; }
-        body.light span[style*="border: 1px solid #64748b"] { border-color: var(--style-border) !important; }
-        body.light span[style*="border: 1px solid #4ade80"] { border-color: var(--green) !important; }
-        body.light div[style*="background: conic-gradient(#4ade80"] { background: conic-gradient(var(--green) 0% 98%, var(--border) 98% 100%) !important; }
-        body.light div[style*="background: #1c1917"][style*="border-radius: 50%"][style*="font-size: 9px"] { background: var(--bg-primary) !important; color: var(--green) !important; }
+        /* Text colors — only outside demo */
+        body.light header span[style*="color: #fafaf9"],
+        body.light section:not(.demo-section) span[style*="color: #fafaf9"],
+        body.light section:not(.demo-section) div[style*="color: #fafaf9"],
+        body.light section:not(.demo-section) p[style*="color: #fafaf9"],
+        body.light section:not(.demo-section) strong[style*="color: #fafaf9"],
+        body.light footer span[style*="color: #fafaf9"],
+        body.light footer div[style*="color: #fafaf9"] { color: var(--text-primary) !important; }
+        body.light section:not(.demo-section) span[style*="color: #a8a29e"],
+        body.light section:not(.demo-section) div[style*="color: #a8a29e"],
+        body.light section:not(.demo-section) p[style*="color: #a8a29e"],
+        body.light footer p[style*="color: #a8a29e"],
+        body.light footer a[style*="color: #a8a29e"] { color: var(--text-secondary) !important; }
 
-        /* Separators */
-        body.light div[style*="background: linear-gradient(to right, transparent, #4ade80, transparent)"] { background: linear-gradient(to right, transparent, var(--green), transparent) !important; }
-
-        /* Demo section containers */
-        body.light .demo-section { background: linear-gradient(to bottom, var(--bg-primary), var(--bg-secondary)) !important; }
+        /* Nice shadow for dark demo containers on light bg */
+        body.light .demo-section .demo-container > div[style*="background: #292524"] {
+            box-shadow: 0 8px 40px rgba(0,0,0,0.18) !important;
+        }
 
         /* CTA section */
         body.light section[style*="padding: 80px 0; text-align: center"] { background: var(--bg-primary) !important; }
@@ -412,24 +432,25 @@
         body.light footer p { color: var(--text-secondary) !important; }
         body.light footer div[style*="border-top: 1px solid #44403c"] { border-color: var(--border) !important; }
 
-        /* Buttons in light mode */
-        body.light a[style*="background: #292524"] { background: var(--bg-secondary) !important; }
-        body.light button[style*="background: #4ade80"],
-        body.light a[style*="background: #4ade80"] { background: var(--green) !important; }
-        body.light button[style*="background: #44403c"] { background: var(--border) !important; }
+        /* Buttons in light mode — exclude demo section */
+        body.light header a[style*="background: #292524"],
+        body.light section:not(.demo-section) a[style*="background: #292524"],
+        body.light footer a[style*="background: #292524"] { background: var(--bg-secondary) !important; }
+        body.light header button[style*="background: #44403c"],
+        body.light section:not(.demo-section) button[style*="background: #44403c"],
+        body.light footer button[style*="background: #44403c"] { background: var(--border) !important; }
 
-        /* Input in light */
-        body.light input[style*="background: #1c1917"] { background: var(--bg-primary) !important; border-color: var(--border) !important; color: var(--text-primary) !important; }
+        /* Input in light — exclude demo section */
+        body.light section:not(.demo-section) input[style*="background: #1c1917"] { background: var(--bg-primary) !important; border-color: var(--border) !important; color: var(--text-primary) !important; }
 
-        /* Spinner inline */
-        body.light div[style*="border: 4px solid #44403c"] { border-color: var(--spinner-track) !important; border-top-color: var(--green) !important; }
+        /* Spinner inline — exclude demo section */
+        body.light section:not(.demo-section) div[style*="border: 4px solid #44403c"] { border-color: var(--spinner-track) !important; border-top-color: var(--green) !important; }
 
         /* Agent banner link styles in light */
         body.light .last-updated { color: var(--text-muted); }
 
         /* Header nav in light mode */
-        body.light a[style*="color: #fbbf24"] { color: #b45309 !important; border-color: #b45309 !important; }
-        body.light div[style*="background: #292524"][style*="border-radius: 8px"][style*="border: 1px solid #44403c"] { background: var(--bg-secondary) !important; border-color: var(--border) !important; }
+        body.light header a[style*="color: #fbbf24"] { color: #b45309 !important; border-color: #b45309 !important; }
 
         /* Gradient buttons keep working */
         body.light a[style*="background: linear-gradient(135deg, #ff6b35"] { background: linear-gradient(135deg, #ff6b35, #f7931e) !important; }
@@ -497,7 +518,7 @@
             <!-- Step 1: Find Agents (Interactive) -->
             <div class="demo-container">
                 <!-- Title outside container, centered -->
-                <h2 style="font-size: clamp(36px, 5vw, 48px); font-weight: 700; font-family: 'Crimson Pro', serif; text-align: center; margin-bottom: 16px;">
+                <h2 style="font-size: clamp(36px, 5vw, 48px); font-weight: 700; font-family: 'EB Garamond', serif; text-align: center; margin-bottom: 16px;">
                     Find agents who are looking for <span class="green">your story</span>
                 </h2>
                 <p style="text-align: center; font-size: 16px; color: #a8a29e; margin-bottom: 48px; max-width: 700px; margin-left: auto; margin-right: auto;">
@@ -516,7 +537,7 @@
             <!-- Step 2: Agent Profile View -->
             <div class="demo-container">
                 <!-- Title outside container, centered -->
-                <h2 style="font-size: clamp(36px, 5vw, 48px); font-weight: 700; font-family: 'Crimson Pro', serif; text-align: center; margin-bottom: 16px;">
+                <h2 style="font-size: clamp(36px, 5vw, 48px); font-weight: 700; font-family: 'EB Garamond', serif; text-align: center; margin-bottom: 16px;">
                     Know exactly what each <span class="green">agent wants</span>
                 </h2>
                 <p style="text-align: center; font-size: 16px; color: #a8a29e; margin-bottom: 48px; max-width: 700px; margin-left: auto; margin-right: auto;">
@@ -534,7 +555,7 @@
                             </div>
                             <div style="flex: 1;">
                                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                    <h3 style="font-size: 32px; font-weight: 700; margin: 0; font-family: 'Crimson Pro', serif;">Rebecca Thompson</h3>
+                                    <h3 style="font-size: 32px; font-weight: 700; margin: 0; font-family: 'EB Garamond', serif;">Rebecca Thompson</h3>
                                     <div style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite;"></div>
                                 </div>
                                 <p style="color: #a8a29e; font-size: 16px; margin-bottom: 12px;">Verve Literary</p>
@@ -554,7 +575,7 @@
                         </div>
                         
                         <div style="margin-bottom: 24px; padding: 20px; background: #1c1917; border-radius: 12px; border: 1px solid #44403c;">
-                            <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 16px; font-family: 'Crimson Pro', serif;">Submission Requirements</h4>
+                            <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 16px; font-family: 'EB Garamond', serif;">Submission Requirements</h4>
                             <div style="display: flex; flex-direction: column; gap: 12px;">
                                 <div style="display: flex; align-items: center; gap: 12px;">
                                     <div style="width: 20px; height: 20px; background: #4ade80; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -584,7 +605,7 @@
                         </div>
                         
                         <div style="margin-bottom: 24px; padding: 20px; background: #1c1917; border-radius: 12px; border: 1px solid #44403c;">
-                            <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 16px; font-family: 'Crimson Pro', serif;">Content Requirements</h4>
+                            <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 16px; font-family: 'EB Garamond', serif;">Content Requirements</h4>
                             <div style="display: flex; flex-direction: column; gap: 12px;">
                                 <div style="display: flex; align-items: center; gap: 12px;">
                                     <div style="width: 20px; height: 20px; background: #4ade80; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
@@ -614,7 +635,7 @@
                         </div>
                         
                         <div style="margin-bottom: 24px;">
-                            <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 12px; font-family: 'Crimson Pro', serif;">Stylometric Analysis</h4>
+                            <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 12px; font-family: 'EB Garamond', serif;">Stylometric Analysis</h4>
                             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                                 <span style="padding: 6px 12px; background: rgba(100, 116, 139, 0.2); border: 1px solid #64748b; border-radius: 12px; font-size: 12px; color: #94a3b8;">Atmospheric</span>
                                 <span style="padding: 6px 12px; background: rgba(100, 116, 139, 0.2); border: 1px solid #64748b; border-radius: 12px; font-size: 12px; color: #94a3b8;">Character-Driven</span>
@@ -623,11 +644,11 @@
                         </div>
                         
                         <div style="margin-bottom: 24px;">
-                            <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 12px; font-family: 'Crimson Pro', serif;">About</h4>
+                            <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 12px; font-family: 'EB Garamond', serif;">About</h4>
                             <p style="color: #a8a29e; line-height: 1.7;">Passionate about feminist thrillers and stories with strong female protagonists. Looking for fresh voices in psychological suspense.</p>
                         </div>
                         <div>
-                            <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 12px; font-family: 'Crimson Pro', serif;">Recent Sales</h4>
+                            <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 12px; font-family: 'EB Garamond', serif;">Recent Sales</h4>
                             <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
                                 <li style="display: flex; align-items: start; gap: 8px; color: #a8a29e;">
                                     <span style="color: #4ade80; margin-top: 4px;">✓</span>
@@ -655,7 +676,7 @@
             <!-- Step 3: Formatted Query Summary -->
             <div class="demo-container">
                 <!-- Title outside container, centered -->
-                <h2 style="font-size: clamp(36px, 5vw, 48px); font-weight: 700; font-family: 'Crimson Pro', serif; text-align: center; margin-bottom: 16px;">
+                <h2 style="font-size: clamp(36px, 5vw, 48px); font-weight: 700; font-family: 'EB Garamond', serif; text-align: center; margin-bottom: 16px;">
                     Automated formatting, <span class="green">zero busywork</span>
                 </h2>
                 <p style="text-align: center; font-size: 16px; color: #a8a29e; margin-bottom: 48px; max-width: 700px; margin-left: auto; margin-right: auto;">
@@ -667,7 +688,7 @@
                         <!-- Initial loading state -->
                         <div style="text-align: center; padding: 60px 40px;">
                             <div style="width: 80px; height: 80px; margin: 0 auto 32px; border: 4px solid #44403c; border-top: 4px solid #4ade80; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                            <h3 style="font-size: 28px; font-weight: 700; margin-bottom: 12px; font-family: 'Crimson Pro', serif;">
+                            <h3 style="font-size: 28px; font-weight: 700; margin-bottom: 12px; font-family: 'EB Garamond', serif;">
                                 Analyzing manuscript...
                             </h3>
                             <p style="font-size: 16px; color: #a8a29e;">
@@ -683,7 +704,7 @@
             <!-- Step 4: Track Queries -->
             <div class="demo-container">
                 <!-- Title outside container, centered -->
-                <h2 style="font-size: clamp(36px, 5vw, 48px); font-weight: 700; font-family: 'Crimson Pro', serif; text-align: center; margin-bottom: 16px;">
+                <h2 style="font-size: clamp(36px, 5vw, 48px); font-weight: 700; font-family: 'EB Garamond', serif; text-align: center; margin-bottom: 16px;">
                     Real-time tracking for every <span class="green">submission</span>
                 </h2>
                 <p style="text-align: center; font-size: 16px; color: #a8a29e; margin-bottom: 48px; max-width: 700px; margin-left: auto; margin-right: auto;">
@@ -819,7 +840,7 @@
     <!-- CTA Section -->
     <section id="bottom-cta" style="padding: 80px 0; text-align: center;">
         <div class="container">
-            <h2 style="font-size: 56px; font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 24px;">
+            <h2 style="font-size: 56px; font-weight: 700; font-family: 'EB Garamond', serif; margin-bottom: 24px;">
                 You wrote the book.<br>Let us handle the rest.
             </h2>
             <p style="font-size: 20px; color: #a8a29e; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
@@ -837,7 +858,7 @@
     <section style="padding: 60px 0; text-align: center; background: #292524; border-top: 1px solid #44403c;">
         <div class="container">
             <div class="badge" style="color: #a78bfa; border-color: #a78bfa;">For Agents</div>
-            <h2 style="font-size: clamp(28px, 4vw, 42px); font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 16px;">
+            <h2 style="font-size: clamp(28px, 4vw, 42px); font-weight: 700; font-family: 'EB Garamond', serif; margin-bottom: 16px;">
                 The other side of the <span style="color: #a78bfa;">query</span>
             </h2>
             <p style="font-size: 18px; color: #a8a29e; margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto;">
@@ -853,7 +874,7 @@
     <section style="padding: 60px 0; text-align: center; background: linear-gradient(to bottom, #292524, #1c1917); border-top: 1px solid #44403c;">
         <div class="container">
             <div class="badge" style="color: #4ade80; border-color: #4ade80;">Community</div>
-            <h2 style="font-size: clamp(28px, 4vw, 42px); font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 16px;">
+            <h2 style="font-size: clamp(28px, 4vw, 42px); font-weight: 700; font-family: 'EB Garamond', serif; margin-bottom: 16px;">
                 The Proofreading <span class="green">Community</span>
             </h2>
             <p style="font-size: 18px; color: #a8a29e; margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto;">
@@ -924,7 +945,7 @@
                 <div style="background: #292524; border-radius: 16px; border: 1px solid #44403c; overflow: hidden;">
                     <button onclick="closeModal()" style="position: absolute; top: 20px; right: 20px; background: #44403c; border: none; color: #fafaf9; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; z-index: 10;">×</button>
                     <div style="text-align: center; padding: 80px 40px;">
-                        <h2 style="font-size: 56px; font-weight: 700; margin-bottom: 16px; font-family: 'Crimson Pro', serif;">
+                        <h2 style="font-size: 56px; font-weight: 700; margin-bottom: 16px; font-family: 'EB Garamond', serif;">
                             Oops, we're still building
                         </h2>
                         <p style="font-size: 20px; color: #a8a29e; margin-bottom: 48px;">
@@ -954,7 +975,7 @@
                 <div style="background: #292524; border-radius: 16px; border: 1px solid #44403c; overflow: hidden;">
                     <button onclick="closeModal()" style="position: absolute; top: 20px; right: 20px; background: #44403c; border: none; color: #fafaf9; width: 40px; height: 40px; border-radius: 50%; cursor: pointer; font-size: 20px; z-index: 10;">×</button>
                     <div style="padding: 60px 40px; max-height: 80vh; overflow-y: auto;">
-                        <h2 style="font-size: 48px; font-weight: 700; margin-bottom: 24px; font-family: 'Crimson Pro', serif; line-height: 1.1;">
+                        <h2 style="font-size: 48px; font-weight: 700; margin-bottom: 24px; font-family: 'EB Garamond', serif; line-height: 1.1;">
                             From "Sent" to "Signed" — Your New Query Workflow
                         </h2>
                         
@@ -967,7 +988,7 @@
                             <!-- Step 1 -->
                             <div>
                                 <div style="font-size: 14px; color: #4ade80; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">STEP 1: THE SMART MATCH</div>
-                                <h3 style="font-size: 28px; font-weight: 700; margin-bottom: 16px; font-family: 'Crimson Pro', serif;">
+                                <h3 style="font-size: 28px; font-weight: 700; margin-bottom: 16px; font-family: 'EB Garamond', serif;">
                                     Find your perfect match in seconds, not Sundays.
                                 </h3>
                                 <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px;">
@@ -989,7 +1010,7 @@
                             <!-- Step 2 -->
                             <div>
                                 <div style="font-size: 14px; color: #4ade80; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">STEP 2: THE MASTER PROFILE</div>
-                                <h3 style="font-size: 28px; font-weight: 700; margin-bottom: 16px; font-family: 'Crimson Pro', serif;">
+                                <h3 style="font-size: 28px; font-weight: 700; margin-bottom: 16px; font-family: 'EB Garamond', serif;">
                                     Set it up once. We handle the rest.
                                 </h3>
                                 <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px;">
@@ -1007,7 +1028,7 @@
                             <!-- Step 3 -->
                             <div>
                                 <div style="font-size: 14px; color: #4ade80; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">STEP 3: THE ONE-CLICK FORMATTER</div>
-                                <h3 style="font-size: 28px; font-weight: 700; margin-bottom: 16px; font-family: 'Crimson Pro', serif;">
+                                <h3 style="font-size: 28px; font-weight: 700; margin-bottom: 16px; font-family: 'EB Garamond', serif;">
                                     Their rules. Your manuscript. Zero effort.
                                 </h3>
                                 <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px;">
@@ -1025,7 +1046,7 @@
                             <!-- Step 4 -->
                             <div>
                                 <div style="font-size: 14px; color: #4ade80; font-weight: 700; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">STEP 4: THE SUBMISSION HUB</div>
-                                <h3 style="font-size: 28px; font-weight: 700; margin-bottom: 16px; font-family: 'Crimson Pro', serif;">
+                                <h3 style="font-size: 28px; font-weight: 700; margin-bottom: 16px; font-family: 'EB Garamond', serif;">
                                     Send with confidence. Track with clarity.
                                 </h3>
                                 <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px;">
@@ -1043,7 +1064,7 @@
 
                         <!-- CTA -->
                         <div style="text-align: center; margin-top: 60px; padding-top: 40px; border-top: 1px solid #44403c;">
-                            <h3 style="font-size: 32px; font-weight: 700; margin-bottom: 24px; font-family: 'Crimson Pro', serif;">
+                            <h3 style="font-size: 32px; font-weight: 700; margin-bottom: 24px; font-family: 'EB Garamond', serif;">
                                 Ready to leave the "Query Trenches" behind?
                             </h3>
                             <button onclick="closeModal(); showComingSoon();" style="padding: 18px 48px; font-size: 18px; font-weight: 700; background: #4ade80; color: #1c1917; border-radius: 10px; border: none; cursor: pointer; box-shadow: 0 4px 16px rgba(74, 222, 128, 0.3);">
@@ -1089,126 +1110,112 @@
         
         function showAgentList() {
             const step1 = step1Container;
-            
-            // Clear any existing content first
             step1.innerHTML = '';
-            
-            // Add fresh content
+
+            // Static content — no typing animation
             step1.innerHTML = `
                 <div class="search-bar">
-                    <span style="font-size: 20px;">🔍</span>
-                    <div id="searchTyping" style="font-size: 16px; font-weight: 500;"></div>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#78716c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <div style="font-size: 15px; font-weight: 400; color: #fafaf9;">literary thriller, feminist themes, adult fiction, 85k words</div>
                 </div>
-                <div id="agentResults" style="opacity: 0; transition: opacity 0.5s;"></div>
-            `;
-            
-            // Animate typing and loop
-            const searchEl = document.getElementById('searchTyping');
-            typeWriter(searchEl, 'thriller and feminism', 50).then(() => {
-                document.getElementById('agentResults').style.opacity = '1';
-                document.getElementById('agentResults').innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 4px;">
+                    <div style="font-size: 13px; color: #78716c;">3 agents match your manuscript</div>
+                    <div style="font-size: 12px; color: #78716c;">Sorted by relevance</div>
+                </div>
+
                 <div class="agent-card" onclick="showAgentProfile('Rebecca Thompson', 'Verve Literary', '91%')" style="cursor: pointer;">
                     <div style="position: relative;">
                         <div class="agent-avatar" style="background-image: url('https://i.pravatar.cc/150?img=5');"></div>
-                        <div style="position: absolute; bottom: -3px; right: -3px; width: 36px; height: 36px; background: conic-gradient(#4ade80 0% 98%, #44403c 98% 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                            <div style="width: 28px; height: 28px; background: #1c1917; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #4ade80;">98%</div>
+                        <div style="position: absolute; bottom: -3px; right: -3px; width: 32px; height: 32px; background: #292524; border: 2px solid #4ade80; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <div style="font-size: 9px; font-weight: 700; color: #4ade80;">98%</div>
                         </div>
                     </div>
                     <div style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
                             <div class="agent-name">Rebecca Thompson</div>
-                            <div style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite;"></div>
+                            <div style="width: 6px; height: 6px; background: #4ade80; border-radius: 50%;"></div>
                         </div>
                         <div class="agent-agency" style="margin-bottom: 8px;">Verve Literary</div>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
                             <span class="tag">Thriller</span>
                             <span class="tag">Feminism</span>
-                            <span style="padding: 4px 10px; background: rgba(100, 116, 139, 0.2); border: 1px solid #64748b; border-radius: 12px; font-size: 11px; color: #94a3b8; font-weight: 500;">Atmospheric</span>
-                            <span style="padding: 4px 10px; background: rgba(100, 116, 139, 0.2); border: 1px solid #64748b; border-radius: 12px; font-size: 11px; color: #94a3b8; font-weight: 500;">Character-Driven</span>
+                            <span style="padding: 4px 10px; background: rgba(100, 116, 139, 0.15); border: 1px solid #555; border-radius: 6px; font-size: 11px; color: #94a3b8;">Atmospheric</span>
+                            <span style="padding: 4px 10px; background: rgba(100, 116, 139, 0.15); border: 1px solid #555; border-radius: 6px; font-size: 11px; color: #94a3b8;">Character-Driven</span>
                         </div>
-                        <div style="font-size: 12px; color: #a8a29e; font-style: italic; line-height: 1.4;">
+                        <div style="font-size: 12px; color: #a8a29e; line-height: 1.5;">
                             Matches your focus on intersectional feminism and psychological suspense found in Rebecca's 2025 sale to Penguin.
                         </div>
                     </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 13px; color: #4ade80; font-weight: 600; margin-bottom: 4px;">Avg. Response: 8 Days</div>
-                        <div style="font-size: 11px; color: #a8a29e; margin-bottom: 8px;">Trend Alignment: <span style="color: #4ade80; font-weight: 600;">High</span></div>
-                        <div style="display: inline-block; padding: 4px 10px; background: rgba(74, 222, 128, 0.15); border: 1px solid #4ade80; border-radius: 12px; font-size: 10px; color: #4ade80; font-weight: 600;">
-                            Recent: "The Silent Shore" → HarperCollins
-                        </div>
+                    <div style="text-align: right; min-width: 160px;">
+                        <div style="font-size: 12px; color: #a8a29e; margin-bottom: 4px;">Avg. Response</div>
+                        <div style="font-size: 15px; color: #fafaf9; font-weight: 600; margin-bottom: 12px;">8 Days</div>
+                        <div style="font-size: 11px; color: #78716c;">Latest Sale</div>
+                        <div style="font-size: 12px; color: #a8a29e; margin-top: 2px;">"The Silent Shore" &rarr; HarperCollins</div>
                     </div>
                 </div>
-                
+
                 <div class="agent-card" onclick="showAgentProfile('Jessica Wu', 'The Bent Agency', '87%')" style="cursor: pointer;">
                     <div style="position: relative;">
                         <div class="agent-avatar" style="background-image: url('https://i.pravatar.cc/150?img=9');"></div>
-                        <div style="position: absolute; bottom: -3px; right: -3px; width: 36px; height: 36px; background: conic-gradient(#4ade80 0% 94%, #44403c 94% 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                            <div style="width: 28px; height: 28px; background: #1c1917; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #4ade80;">94%</div>
+                        <div style="position: absolute; bottom: -3px; right: -3px; width: 32px; height: 32px; background: #292524; border: 2px solid #4ade80; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <div style="font-size: 9px; font-weight: 700; color: #4ade80;">94%</div>
                         </div>
                     </div>
                     <div style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
                             <div class="agent-name">Jessica Wu</div>
-                            <div style="width: 8px; height: 8px; background: #4ade80; border-radius: 50%; animation: pulse 2s infinite;"></div>
+                            <div style="width: 6px; height: 6px; background: #4ade80; border-radius: 50%;"></div>
                         </div>
                         <div class="agent-agency" style="margin-bottom: 8px;">The Bent Agency</div>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
                             <span class="tag">Thriller</span>
                             <span class="tag">Feminism</span>
-                            <span style="padding: 4px 10px; background: rgba(100, 116, 139, 0.2); border: 1px solid #64748b; border-radius: 12px; font-size: 11px; color: #94a3b8; font-weight: 500;">Fast-Paced</span>
-                            <span style="padding: 4px 10px; background: rgba(100, 116, 139, 0.2); border: 1px solid #64748b; border-radius: 12px; font-size: 11px; color: #94a3b8; font-weight: 500;">Plot-Driven</span>
+                            <span style="padding: 4px 10px; background: rgba(100, 116, 139, 0.15); border: 1px solid #555; border-radius: 6px; font-size: 11px; color: #94a3b8;">Fast-Paced</span>
+                            <span style="padding: 4px 10px; background: rgba(100, 116, 139, 0.15); border: 1px solid #555; border-radius: 6px; font-size: 11px; color: #94a3b8;">Plot-Driven</span>
                         </div>
-                        <div style="font-size: 12px; color: #a8a29e; font-style: italic; line-height: 1.4;">
+                        <div style="font-size: 12px; color: #a8a29e; line-height: 1.5;">
                             Strong alignment with corporate thriller themes and MeToo narratives from Jessica's recent acquisitions.
                         </div>
                     </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 13px; color: #4ade80; font-weight: 600; margin-bottom: 4px;">Avg. Response: 12 Days</div>
-                        <div style="font-size: 11px; color: #a8a29e; margin-bottom: 8px;">Trend Alignment: <span style="color: #4ade80; font-weight: 600;">High</span></div>
-                        <div style="display: inline-block; padding: 4px 10px; background: rgba(74, 222, 128, 0.15); border: 1px solid #4ade80; border-radius: 12px; font-size: 10px; color: #4ade80; font-weight: 600;">
-                            Recent: "Breaking Glass" → Simon & Schuster
-                        </div>
+                    <div style="text-align: right; min-width: 160px;">
+                        <div style="font-size: 12px; color: #a8a29e; margin-bottom: 4px;">Avg. Response</div>
+                        <div style="font-size: 15px; color: #fafaf9; font-weight: 600; margin-bottom: 12px;">12 Days</div>
+                        <div style="font-size: 11px; color: #78716c;">Latest Sale</div>
+                        <div style="font-size: 12px; color: #a8a29e; margin-top: 2px;">"Breaking Glass" &rarr; Simon & Schuster</div>
                     </div>
                 </div>
-                
+
                 <div class="agent-card" onclick="showAgentProfile('Diana Patel', 'Janklow & Nesbit', '94%')" style="cursor: pointer;">
                     <div style="position: relative;">
                         <div class="agent-avatar" style="background-image: url('https://i.pravatar.cc/150?img=32');"></div>
-                        <div style="position: absolute; bottom: -3px; right: -3px; width: 36px; height: 36px; background: conic-gradient(#4ade80 0% 96%, #44403c 96% 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                            <div style="width: 28px; height: 28px; background: #1c1917; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #4ade80;">96%</div>
+                        <div style="position: absolute; bottom: -3px; right: -3px; width: 32px; height: 32px; background: #292524; border: 2px solid #4ade80; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <div style="font-size: 9px; font-weight: 700; color: #4ade80;">96%</div>
                         </div>
                     </div>
                     <div style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
                             <div class="agent-name">Diana Patel</div>
-                            <div style="padding: 2px 8px; background: #ff6b35; border-radius: 8px; font-size: 9px; font-weight: 700; color: white;">Closing in 4 days</div>
+                            <div style="padding: 2px 8px; background: rgba(255, 107, 53, 0.15); border: 1px solid #ff6b35; border-radius: 4px; font-size: 10px; font-weight: 600; color: #ff6b35;">Closing in 4 days</div>
                         </div>
                         <div class="agent-agency" style="margin-bottom: 8px;">Janklow & Nesbit</div>
                         <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
                             <span class="tag">Thriller</span>
                             <span class="tag">Feminism</span>
-                            <span style="padding: 4px 10px; background: rgba(100, 116, 139, 0.2); border: 1px solid #64748b; border-radius: 12px; font-size: 11px; color: #94a3b8; font-weight: 500;">Lyrical</span>
-                            <span style="padding: 4px 10px; background: rgba(100, 116, 139, 0.2); border: 1px solid #64748b; border-radius: 12px; font-size: 11px; color: #94a3b8; font-weight: 500;">Voice-Driven</span>
+                            <span style="padding: 4px 10px; background: rgba(100, 116, 139, 0.15); border: 1px solid #555; border-radius: 6px; font-size: 11px; color: #94a3b8;">Lyrical</span>
+                            <span style="padding: 4px 10px; background: rgba(100, 116, 139, 0.15); border: 1px solid #555; border-radius: 6px; font-size: 11px; color: #94a3b8;">Voice-Driven</span>
                         </div>
-                        <div style="font-size: 12px; color: #a8a29e; font-style: italic; line-height: 1.4;">
+                        <div style="font-size: 12px; color: #a8a29e; line-height: 1.5;">
                             Perfect match for literary thriller crossover with strong female voice and social commentary.
                         </div>
                     </div>
-                    <div style="text-align: right;">
-                        <div style="font-size: 13px; color: #4ade80; font-weight: 600; margin-bottom: 4px;">Avg. Response: 6 Days</div>
-                        <div style="font-size: 11px; color: #a8a29e; margin-bottom: 8px;">Trend Alignment: <span style="color: #fbbf24; font-weight: 600;">Medium</span></div>
-                        <div style="display: inline-block; padding: 4px 10px; background: rgba(74, 222, 128, 0.15); border: 1px solid #4ade80; border-radius: 12px; font-size: 10px; color: #4ade80; font-weight: 600;">
-                            Recent: "Witness" → Random House
-                        </div>
+                    <div style="text-align: right; min-width: 160px;">
+                        <div style="font-size: 12px; color: #a8a29e; margin-bottom: 4px;">Avg. Response</div>
+                        <div style="font-size: 15px; color: #fafaf9; font-weight: 600; margin-bottom: 12px;">6 Days</div>
+                        <div style="font-size: 11px; color: #78716c;">Latest Sale</div>
+                        <div style="font-size: 12px; color: #a8a29e; margin-top: 2px;">"Witness" &rarr; Random House</div>
                     </div>
                 </div>
-                `;
-            }).then(() => {
-                // Wait 45 seconds after the typing completes, then loop
-                setTimeout(() => {
-                    loopContainer1();
-                }, 45000);
-            });
+            `;
         }
         
         // Loop Container 1 animation
@@ -1229,7 +1236,7 @@
                 <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 24px;">
                     <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #22c55e, #4ade80);"></div>
                     <div>
-                        <h3 style="font-size: 32px; font-weight: 700; margin-bottom: 4px; font-family: 'Crimson Pro', serif;">${name}</h3>
+                        <h3 style="font-size: 32px; font-weight: 700; margin-bottom: 4px; font-family: 'EB Garamond', serif;">${name}</h3>
                         <p style="color: #a8a29e; font-size: 16px;">${agency}</p>
                     </div>
                 </div>
@@ -1238,11 +1245,11 @@
                     <span style="padding: 8px 16px; background: #292524; color: #4ade80; border-radius: 20px; font-size: 14px; font-weight: 600;">4-6 weeks</span>
                 </div>
                 <div style="margin-bottom: 24px;">
-                    <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 12px; font-family: 'Crimson Pro', serif;">About</h4>
+                    <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 12px; font-family: 'EB Garamond', serif;">About</h4>
                     <p style="color: #a8a29e; line-height: 1.7;">Passionate about feminist thrillers and stories with strong female protagonists. Looking for fresh voices in psychological suspense.</p>
                 </div>
                 <div>
-                    <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 12px; font-family: 'Crimson Pro', serif;">Recent Sales</h4>
+                    <h4 style="font-size: 16px; font-weight: 700; color: #4ade80; margin-bottom: 12px; font-family: 'EB Garamond', serif;">Recent Sales</h4>
                     <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
                         <li style="display: flex; align-items: start; gap: 8px; color: #a8a29e;">
                             <span style="color: #4ade80; margin-top: 4px;">✓</span>
@@ -1263,7 +1270,7 @@
                 <div style="padding: 40px; background: #1c1917; border-radius: 12px; border: 1px solid #44403c;">
                     <div style="border-bottom: 1px solid #44403c; padding-bottom: 20px; margin-bottom: 28px;">
                         <div class="section-title">Title</div>
-                        <p style="font-size: 24px; font-weight: 700; font-family: 'Crimson Pro', serif;">The Silent Witness</p>
+                        <p style="font-size: 24px; font-weight: 700; font-family: 'EB Garamond', serif;">The Silent Witness</p>
                     </div>
                     <div style="border-bottom: 1px solid #44403c; padding-bottom: 20px; margin-bottom: 28px;">
                         <div class="section-title">Summary</div>
@@ -1291,7 +1298,7 @@
             container3.innerHTML = `
                 <div style="text-align: center; padding: 60px 40px;">
                     <div style="width: 80px; height: 80px; margin: 0 auto 32px; border: 4px solid #44403c; border-top: 4px solid #4ade80; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                    <h3 style="font-size: 28px; font-weight: 700; margin-bottom: 12px; font-family: 'Crimson Pro', serif;">
+                    <h3 style="font-size: 28px; font-weight: 700; margin-bottom: 12px; font-family: 'EB Garamond', serif;">
                         Analyzing manuscript...
                     </h3>
                     <p style="font-size: 16px; color: #a8a29e;">
@@ -1304,7 +1311,7 @@
                 container3.innerHTML = `
                     <div style="border-bottom: 1px solid #44403c; padding-bottom: 20px; margin-bottom: 28px;">
                         <div class="section-title">Title</div>
-                        <p style="font-size: 24px; font-weight: 700; font-family: 'Crimson Pro', serif;">The Silent Witness</p>
+                        <p style="font-size: 24px; font-weight: 700; font-family: 'EB Garamond', serif;">The Silent Witness</p>
                     </div>
                     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; border-bottom: 1px solid #44403c; padding-bottom: 20px; margin-bottom: 28px;">
                         <div>
@@ -1397,7 +1404,7 @@
         <div class="container">
             <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; margin-bottom: 48px;">
                 <div>
-                    <div style="font-size: 24px; font-weight: 700; font-family: 'Crimson Pro', serif; background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 16px;">
+                    <div style="font-size: 24px; font-weight: 700; font-family: 'EB Garamond', serif; background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 16px;">
                         AutoQuery
                     </div>
                     <p style="color: #a8a29e; font-size: 14px; line-height: 1.7;">
