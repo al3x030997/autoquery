@@ -500,6 +500,197 @@
         ::-webkit-scrollbar       { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.09); border-radius: 3px; }
+
+        /* ── SIGNUP SCREEN ── */
+        .signup-screen {
+            display: none;
+            position: fixed; inset: 0; z-index: 500;
+            background: var(--bg);
+            overflow-y: auto;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+        .signup-screen.visible { display: flex; align-items: flex-start; justify-content: center; }
+        .signup-screen.in      { opacity: 1; }
+
+        /* blurred agent teaser behind the card */
+        .signup-backdrop {
+            position: fixed; inset: 0; z-index: 0;
+            background: radial-gradient(ellipse 70% 60% at 50% 30%, rgba(124,106,247,0.1) 0%, transparent 70%);
+        }
+        .teaser-blur {
+            position: fixed; inset: 0; z-index: 1;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none;
+        }
+        .teaser-rows {
+            width: 700px; max-width: 90vw;
+            display: flex; flex-direction: column; gap: 10px;
+            filter: blur(7px); opacity: 0.28;
+            transform: scale(0.96);
+        }
+        .teaser-row {
+            height: 68px; border-radius: 12px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            display: flex; align-items: center; gap: 14px;
+            padding: 0 18px;
+        }
+        .teaser-avatar {
+            width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+        }
+        .teaser-lines { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+        .teaser-line {
+            height: 10px; border-radius: 5px;
+            background: rgba(255,255,255,0.12);
+        }
+        .teaser-tag {
+            width: 60px; height: 22px; border-radius: 6px;
+            background: var(--accent-dim); flex-shrink: 0;
+        }
+
+        /* signup card */
+        .signup-wrap {
+            position: relative; z-index: 2;
+            width: 100%; max-width: 420px;
+            padding: 40px 24px 60px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .su-back {
+            align-self: flex-start; margin-bottom: 24px;
+            display: flex; align-items: center; gap: 6px;
+            font-size: 13px; color: var(--text-2);
+            cursor: pointer; background: none; border: none;
+            transition: color var(--t);
+        }
+        .su-back:hover { color: var(--text-1); }
+        .su-back svg { width: 15px; height: 15px; }
+
+        .su-query-pill {
+            width: 100%; padding: 10px 14px;
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: var(--r); margin-bottom: 24px;
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+        .su-query-icon {
+            width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+            background: var(--accent-dim);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .su-query-icon svg { width: 14px; height: 14px; }
+        .su-query-text {
+            font-size: 12.5px; color: var(--text-2); line-height: 1.5;
+            overflow: hidden; display: -webkit-box;
+            -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        }
+
+        .su-match-badge {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 8px;
+        }
+        .su-match-count {
+            font-family: var(--font-d); font-size: 38px; font-weight: 700;
+            background: linear-gradient(130deg, #b8b0ff, var(--teal));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; line-height: 1;
+        }
+        .su-match-label {
+            font-size: 14px; color: var(--text-2); line-height: 1.3; max-width: 100px;
+        }
+
+        .su-lock-msg {
+            font-family: var(--font-d); font-size: 22px; font-weight: 600;
+            text-align: center; line-height: 1.3; margin-bottom: 6px;
+            color: var(--text-1);
+        }
+        .su-sub {
+            font-size: 13.5px; color: var(--text-2); text-align: center;
+            margin-bottom: 28px; line-height: 1.6;
+        }
+
+        .su-card {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border-hover);
+            border-radius: var(--r-lg);
+            padding: 26px 24px;
+        }
+
+        .su-google-btn {
+            width: 100%; padding: 11px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-hover);
+            border-radius: var(--r); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            color: var(--text-1); font-family: var(--font-b);
+            font-size: 14px; font-weight: 500;
+            transition: all var(--t-md); margin-bottom: 18px;
+        }
+        .su-google-btn:hover {
+            background: rgba(255,255,255,0.09);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .su-google-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+        .su-divider {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 11.5px; color: var(--text-3);
+            margin-bottom: 18px;
+        }
+        .su-divider::before,.su-divider::after {
+            content:''; flex:1; height:1px; background: var(--border);
+        }
+
+        .su-field { margin-bottom: 12px; }
+        .su-label {
+            display: block; font-size: 11.5px; font-weight: 600;
+            color: var(--text-2); margin-bottom: 6px; letter-spacing: 0.04em;
+        }
+        .su-input {
+            width: 100%; padding: 11px 14px;
+            background: var(--surface-2);
+            border: 1.5px solid var(--border);
+            border-radius: var(--r); outline: none;
+            font-family: var(--font-b); font-size: 14px;
+            color: var(--text-1);
+            transition: border-color var(--t-md), box-shadow var(--t-md);
+        }
+        .su-input::placeholder { color: var(--text-3); }
+        .su-input:focus {
+            border-color: rgba(124,106,247,0.5);
+            box-shadow: 0 0 0 3px rgba(124,106,247,0.09);
+        }
+
+        .su-submit {
+            width: 100%; padding: 12px;
+            margin-top: 6px;
+            background: linear-gradient(135deg, var(--accent), #5b52e0);
+            border: none; border-radius: var(--r); cursor: pointer;
+            color: #fff; font-family: var(--font-b);
+            font-size: 14.5px; font-weight: 600;
+            letter-spacing: 0.01em;
+            transition: all var(--t-md);
+            box-shadow: 0 4px 18px var(--accent-glow);
+        }
+        .su-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 7px 24px rgba(124,106,247,0.5);
+        }
+        .su-submit:active { transform: translateY(0); }
+
+        .su-signin {
+            margin-top: 16px; font-size: 13px; color: var(--text-3);
+            text-align: center;
+        }
+        .su-signin a { color: var(--accent); text-decoration: none; }
+        .su-signin a:hover { text-decoration: underline; }
+
+        .su-terms {
+            margin-top: 12px; font-size: 11px; color: var(--text-3);
+            text-align: center; line-height: 1.5;
+        }
+        .su-terms a { color: var(--text-2); text-decoration: underline; }
     </style>
 </head>
 <body>
@@ -786,6 +977,117 @@
     </main>
 </div><!-- /app -->
 
+<!-- ══════════════════════════════
+     SIGNUP SCREEN
+══════════════════════════════ -->
+<div class="signup-screen" id="signupScreen">
+    <div class="signup-backdrop"></div>
+
+    <!-- blurred fake agent cards behind -->
+    <div class="teaser-blur">
+        <div class="teaser-rows">
+            <div class="teaser-row">
+                <div class="teaser-avatar" style="background:linear-gradient(135deg,#7c6af7,#36c9bb)"></div>
+                <div class="teaser-lines">
+                    <div class="teaser-line" style="width:55%"></div>
+                    <div class="teaser-line" style="width:35%"></div>
+                </div>
+                <div class="teaser-tag"></div>
+            </div>
+            <div class="teaser-row">
+                <div class="teaser-avatar" style="background:linear-gradient(135deg,#36c9bb,#e8b84b)"></div>
+                <div class="teaser-lines">
+                    <div class="teaser-line" style="width:48%"></div>
+                    <div class="teaser-line" style="width:30%"></div>
+                </div>
+                <div class="teaser-tag"></div>
+            </div>
+            <div class="teaser-row">
+                <div class="teaser-avatar" style="background:linear-gradient(135deg,#e8b84b,#7c6af7)"></div>
+                <div class="teaser-lines">
+                    <div class="teaser-line" style="width:62%"></div>
+                    <div class="teaser-line" style="width:40%"></div>
+                </div>
+                <div class="teaser-tag"></div>
+            </div>
+            <div class="teaser-row">
+                <div class="teaser-avatar" style="background:linear-gradient(135deg,#5b52e0,#36c9bb)"></div>
+                <div class="teaser-lines">
+                    <div class="teaser-line" style="width:44%"></div>
+                    <div class="teaser-line" style="width:28%"></div>
+                </div>
+                <div class="teaser-tag"></div>
+            </div>
+            <div class="teaser-row">
+                <div class="teaser-avatar" style="background:linear-gradient(135deg,#36c9bb,#7c6af7)"></div>
+                <div class="teaser-lines">
+                    <div class="teaser-line" style="width:50%"></div>
+                    <div class="teaser-line" style="width:33%"></div>
+                </div>
+                <div class="teaser-tag"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- signup card -->
+    <div class="signup-wrap">
+        <button class="su-back" onclick="closeSignup()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+            </svg>
+            Back to search
+        </button>
+
+        <!-- search query preview -->
+        <div class="su-query-pill">
+            <div class="su-query-icon">
+                <svg fill="none" viewBox="0 0 24 24" stroke="#a99ff9" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803 7.5 7.5 0 0016.803 15.803z"/>
+                </svg>
+            </div>
+            <div class="su-query-text" id="suQueryText">Your search</div>
+        </div>
+
+        <!-- match count -->
+        <div class="su-match-badge">
+            <div class="su-match-count" id="suCount">47</div>
+            <div class="su-match-label">agents match your manuscript</div>
+        </div>
+
+        <h2 class="su-lock-msg">Unlock your matches</h2>
+        <p class="su-sub">Create a free account to see all matching agents,<br>their submission preferences &amp; auto-formatted query letters.</p>
+
+        <div class="su-card">
+            <!-- Google -->
+            <button class="su-google-btn" onclick="handleSignup('google')">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Continue with Google
+            </button>
+
+            <div class="su-divider">or sign up with email</div>
+
+            <div class="su-field">
+                <label class="su-label">Email address</label>
+                <input type="email" class="su-input" placeholder="you@example.com" id="suEmail" autocomplete="email">
+            </div>
+            <div class="su-field">
+                <label class="su-label">Password</label>
+                <input type="password" class="su-input" placeholder="Min. 8 characters" id="suPassword" autocomplete="new-password">
+            </div>
+
+            <button class="su-submit" onclick="handleSignup('email')">Create free account &amp; see matches</button>
+
+            <div class="su-signin">Already have an account? <a href="#">Sign in</a></div>
+            <div class="su-terms">By signing up you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a></div>
+        </div>
+    </div>
+</div>
+
 <script>
 // ── textarea auto-resize + char count
 function onType(el) {
@@ -875,7 +1177,7 @@ function useExample(card) {
     ta.focus();
 }
 
-// ── search
+// ── search → signup
 function runSearch() {
     const q = document.getElementById('searchInput').value.trim();
     if (!q) { document.getElementById('searchInput').focus(); return; }
@@ -887,7 +1189,45 @@ function runSearch() {
     setTimeout(() => {
         btn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>`;
         btn.disabled = false;
-    }, 1800);
+        openSignup(q);
+    }, 1400);
+}
+
+function openSignup(query) {
+    // populate query preview
+    const short = query.length > 110 ? query.slice(0, 108) + '…' : query;
+    document.getElementById('suQueryText').textContent = short;
+
+    // random-ish count based on selected chips to feel personalised
+    const activeChips = document.querySelectorAll('.chip.on').length;
+    const count = 28 + Math.floor(Math.random() * 30) + activeChips * 3;
+    document.getElementById('suCount').textContent = count;
+
+    const screen = document.getElementById('signupScreen');
+    screen.classList.add('visible');
+    screen.scrollTop = 0;
+    requestAnimationFrame(() => requestAnimationFrame(() => screen.classList.add('in')));
+    document.body.style.overflow = 'hidden';
+}
+
+function closeSignup() {
+    const screen = document.getElementById('signupScreen');
+    screen.classList.remove('in');
+    setTimeout(() => {
+        screen.classList.remove('visible');
+        document.body.style.overflow = '';
+    }, 350);
+}
+
+function handleSignup(method) {
+    const btn = document.querySelector('.su-submit');
+    if (method === 'email') {
+        const email = document.getElementById('suEmail').value.trim();
+        if (!email) { document.getElementById('suEmail').focus(); return; }
+        btn.textContent = 'Creating your account…';
+        btn.disabled = true;
+    }
+    // placeholder — wire to real auth here
 }
 
 // ── mobile sidebar
@@ -907,7 +1247,10 @@ document.addEventListener('keydown', e => {
         document.getElementById('searchInput').focus();
     }
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') runSearch();
-    if (e.key === 'Escape') closeSidebar();
+    if (e.key === 'Escape') {
+        if (document.getElementById('signupScreen').classList.contains('visible')) closeSignup();
+        else closeSidebar();
+    }
 });
 </script>
 </body>
