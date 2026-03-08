@@ -389,6 +389,7 @@
         }
         .det-chip.genre-chip   { background: var(--accent-dim);  border: 1px solid rgba(124,106,247,0.35); color: #c4bffd; }
         .det-chip.audience-chip{ background: var(--teal-dim);    border: 1px solid rgba(54,201,187,0.35);  color: #80ebe3; }
+        .det-chip.comp-chip    { background: rgba(232,184,75,0.1); border: 1px solid rgba(232,184,75,0.3); color: #f0c875; }
         .det-chip-x {
             cursor: pointer; opacity: 0.55; font-size: 13px; line-height: 1;
             transition: opacity var(--t);
@@ -901,6 +902,21 @@
             <!-- FILTERS -->
             <div class="filters">
                 <div class="filter-grp">
+                    <div class="f-label">Comparable Titles</div>
+                    <div class="smart-bar" id="compBar">
+                        <svg style="width:15px;height:15px;flex-shrink:0;color:var(--text-3);margin-right:2px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+                        <input
+                            class="smart-bar-input"
+                            id="compInput"
+                            placeholder="e.g. "The Name of the Wind", "The Poppy War", "Circe""
+                            autocomplete="off"
+                            onkeydown="addCompTitle(event)"
+                        >
+                    </div>
+                    <div style="font-size:11px;color:var(--text-3);margin-top:5px;padding-left:2px;">Press <kbd style="font-family:var(--font-m);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:10px;">Enter</kbd> or <kbd style="font-family:var(--font-m);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:10px;">,</kbd> after each title</div>
+                </div>
+
+                <div class="filter-grp">
                     <div class="f-label">Genre</div>
                     <div class="smart-bar" id="genreBar">
                         <input
@@ -1228,6 +1244,34 @@ function removeDetChip(x, barId, label) {
     detectedAudience.delete(label);
 }
 
+// ── comp titles
+const compTitles = new Set();
+
+function addCompTitle(e) {
+    if (e.key !== 'Enter' && e.key !== ',') return;
+    e.preventDefault();
+    const input = document.getElementById('compInput');
+    const val = input.value.replace(/,/g, '').replace(/[""]/g, '"').trim();
+    if (!val || compTitles.has(val)) { input.value = ''; return; }
+    compTitles.add(val);
+
+    const bar = document.getElementById('compBar');
+    const chip = document.createElement('div');
+    chip.className = 'det-chip comp-chip';
+    chip.dataset.label = val;
+    chip.innerHTML = `<svg style="width:11px;height:11px;opacity:0.6;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0118 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>${val}<span class="det-chip-x" onclick="removeCompTitle(this,'${val.replace(/'/g,"\\'")}')">×</span>`;
+    bar.insertBefore(chip, input);
+    input.value = '';
+}
+
+function removeCompTitle(x, label) {
+    const chip = x.closest('.det-chip');
+    chip.style.transition = 'opacity 0.15s, transform 0.15s';
+    chip.style.opacity = '0'; chip.style.transform = 'scale(0.8)';
+    setTimeout(() => chip.remove(), 150);
+    compTitles.delete(label);
+}
+
 // expose detected values for runSearch
 function getDetectedFilters() {
     return {
@@ -1258,8 +1302,9 @@ function clearAll() {
     // reset smart bars
     document.getElementById('genreInput').value = '';
     document.getElementById('audienceInput').value = '';
+    document.getElementById('compInput').value = '';
     document.querySelectorAll('.det-chip').forEach(c => c.remove());
-    detectedGenres.clear(); detectedAudience.clear();
+    detectedGenres.clear(); detectedAudience.clear(); compTitles.clear();
     // reset uploads
     ['ms','bio','sum','ql'].forEach(k => {
         document.getElementById('b-' + k).textContent = k === 'ms' ? 'PDF · DOCX' : 'PDF · TXT';
