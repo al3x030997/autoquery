@@ -415,6 +415,53 @@
         .chip.on.teal   { border-color: rgba(54,201,187,0.45); background: var(--teal-dim);   color: #80ebe3; }
         .chip.on.gold   { border-color: rgba(232,184,75,0.42); background: var(--gold-dim);   color: #f0c875; }
 
+        /* ── PUBLISHED AUTHOR ── */
+        .pub-author-sec {
+            width: 100%; margin-top: 20px;
+            animation: fadeUp 0.55s ease 0.28s both;
+        }
+        .pub-toggle-row {
+            display: flex; align-items: center; gap: 10px;
+            padding: 11px 14px;
+            background: rgba(255,255,255,0.025);
+            border: 1.5px solid var(--border);
+            border-radius: var(--r);
+            cursor: pointer;
+            transition: border-color var(--t-md), background var(--t-md);
+            user-select: none;
+        }
+        .pub-toggle-row:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.04); }
+        .pub-toggle-row input[type="checkbox"] {
+            width: 15px; height: 15px; accent-color: #7c6af7; cursor: pointer; flex-shrink: 0;
+        }
+        .pub-toggle-label { font-size: 13.5px; color: var(--text-2); flex: 1; }
+        .pub-toggle-hint { font-size: 11px; color: var(--text-3); }
+        .pub-expand {
+            display: none; margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+        .pub-expand.open { display: block; }
+        .social-grid { display: flex; flex-direction: column; gap: 8px; }
+        .social-row {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--surface-2);
+            border: 1.5px solid var(--border-hover);
+            border-radius: var(--r);
+            padding: 8px 14px;
+            transition: border-color var(--t-md), box-shadow var(--t-md);
+        }
+        .social-row:focus-within {
+            border-color: rgba(124,106,247,0.45);
+            box-shadow: 0 0 0 3px rgba(124,106,247,0.08);
+        }
+        .social-row svg { flex-shrink: 0; color: var(--text-3); }
+        .social-row input {
+            flex: 1; background: transparent; border: none; outline: none;
+            font-family: var(--font-b); font-size: 13.5px; color: var(--text-1);
+        }
+        .social-row input::placeholder { color: var(--text-3); }
+
         /* ── UPLOAD ── */
         .upload-sec {
             width: 100%; margin-top: 34px;
@@ -1011,6 +1058,58 @@
                 </div>
             </div>
 
+            <!-- PUBLISHED AUTHOR -->
+            <div class="pub-author-sec">
+                <label class="pub-toggle-row" onclick="togglePubAuthor(event)">
+                    <input type="checkbox" id="pubAuthorCheck">
+                    <span class="pub-toggle-label">I am a published author</span>
+                    <span class="pub-toggle-hint">optional · improves matching</span>
+                </label>
+
+                <div class="pub-expand" id="pubExpand">
+                    <!-- Published Titles -->
+                    <div class="filter-grp">
+                        <div class="f-label">Published Titles</div>
+                        <div class="smart-bar" id="pubTitlesBar">
+                            <svg style="width:15px;height:15px;flex-shrink:0;color:var(--text-3);margin-right:2px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+                            <input class="smart-bar-input" id="pubTitlesInput" placeholder='e.g. "The Midnight Library"' autocomplete="off" onkeydown="addPubTitle(event)">
+                        </div>
+                        <div style="font-size:11px;color:var(--text-3);margin-top:5px;padding-left:2px;">Press <kbd style="font-family:var(--font-m);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:10px;">Enter</kbd> or <kbd style="font-family:var(--font-m);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:10px;">,</kbd> after each title</div>
+                    </div>
+
+                    <!-- Social Media -->
+                    <div class="filter-grp">
+                        <div class="f-label">Social Media</div>
+                        <div class="social-grid">
+                            <div class="social-row">
+                                <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+                                <input id="socialInstagram" type="url" placeholder="Instagram — handle or profile URL" autocomplete="off">
+                            </div>
+                            <div class="social-row">
+                                <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.252 5.622 5.912-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                                <input id="socialX" type="url" placeholder="X / Twitter — handle or profile URL" autocomplete="off">
+                            </div>
+                            <div class="social-row">
+                                <svg width="15" height="15" fill="currentColor" viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.22 8.22 0 004.84 1.56V6.78a4.85 4.85 0 01-1.07-.09z"/></svg>
+                                <input id="socialTikTok" type="url" placeholder="TikTok — handle or profile URL" autocomplete="off">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Follower Count -->
+                    <div class="filter-grp" style="margin-bottom:0;">
+                        <div class="f-label">Total Following (across platforms)</div>
+                        <div class="chips" id="followerChips">
+                            <div class="chip" onclick="toggleChip(this,'followers','teal')">Under 1k</div>
+                            <div class="chip" onclick="toggleChip(this,'followers','teal')">1k – 10k</div>
+                            <div class="chip" onclick="toggleChip(this,'followers','teal')">10k – 50k</div>
+                            <div class="chip" onclick="toggleChip(this,'followers','teal')">50k – 100k</div>
+                            <div class="chip" onclick="toggleChip(this,'followers','teal')">100k+</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- EXAMPLES -->
             <div class="examples-sec">
                 <div class="or-line">or start with an example</div>
@@ -1273,6 +1372,41 @@ function removeCompTitle(x, label) {
     chip.style.opacity = '0'; chip.style.transform = 'scale(0.8)';
     setTimeout(() => chip.remove(), 150);
     compTitles.delete(label);
+}
+
+// ── published author
+function togglePubAuthor(e) {
+    // avoid double-fire when clicking the checkbox itself
+    if (e.target.tagName === 'INPUT') return;
+    const cb = document.getElementById('pubAuthorCheck');
+    cb.checked = !cb.checked;
+    document.getElementById('pubExpand').classList.toggle('open', cb.checked);
+}
+
+const pubTitles = new Set();
+
+function addPubTitle(e) {
+    if (e.key !== 'Enter' && e.key !== ',') return;
+    e.preventDefault();
+    const input = document.getElementById('pubTitlesInput');
+    const val = input.value.replace(/,/g, '').replace(/[""]/g, '"').trim();
+    if (!val || pubTitles.has(val)) { input.value = ''; return; }
+    pubTitles.add(val);
+    const bar = document.getElementById('pubTitlesBar');
+    const chip = document.createElement('div');
+    chip.className = 'det-chip comp-chip';
+    chip.dataset.label = val;
+    chip.innerHTML = `${val}<span class="det-chip-x" onclick="removePubTitle(this,'${val.replace(/'/g,"\\'")}')">×</span>`;
+    bar.insertBefore(chip, input);
+    input.value = '';
+}
+
+function removePubTitle(x, label) {
+    const chip = x.closest('.det-chip');
+    chip.style.transition = 'opacity 0.15s, transform 0.15s';
+    chip.style.opacity = '0'; chip.style.transform = 'scale(0.8)';
+    setTimeout(() => chip.remove(), 150);
+    pubTitles.delete(label);
 }
 
 // expose detected values for runSearch
