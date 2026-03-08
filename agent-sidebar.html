@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoQuery - The Agent Sidebar | Outlook Extension</title>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #1c1917;
+            color: #fafaf9;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+
+        @media (max-width: 768px) {
+            .container { padding: 0 16px; }
+            body { font-size: 14px; }
+            header .container > div {
+                flex-direction: column !important;
+                gap: 16px !important;
+                align-items: flex-start !important;
+            }
+            header .container > div > div:last-child {
+                width: 100%;
+                flex-direction: column !important;
+                gap: 12px !important;
+            }
+            .logo { font-size: 24px; }
+            .btn, button, a[class*="btn"] {
+                min-height: 44px;
+                padding: 12px 24px !important;
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+            }
+        }
+
+        header { padding: 32px 0; position: relative; }
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            font-family: 'Crimson Pro', serif;
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+
+        .green { color: #4ade80; }
+        .section-title { font-size: 11px; font-weight: 700; color: #4ade80; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Hero */
+        .hero { padding: 80px 0 60px; text-align: center; max-width: 900px; margin: 0 auto; }
+        @media (max-width: 768px) { .hero { padding: 40px 0 32px; } }
+        .badge {
+            display: inline-block; padding: 8px 16px; background: #292524;
+            border: 1px solid #44403c; border-radius: 24px; font-size: 12px;
+            font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;
+            color: #a78bfa; margin-bottom: 24px;
+        }
+
+        /* Outlook mockup - New Outlook (2024+) style */
+        .outlook-window {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 12px;
+            border: 1px solid #d1d1d1;
+            overflow: hidden;
+            box-shadow: 0 12px 60px rgba(0,0,0,0.4);
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #323130;
+            transform: scale(0.82);
+            transform-origin: top center;
+            margin-bottom: -80px;
+        }
+        /* Titlebar - New Outlook uses subtle grey */
+        .outlook-titlebar {
+            height: 36px;
+            background: #f3f2f1;
+            display: flex;
+            align-items: center;
+            padding: 0 12px;
+            gap: 8px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .titlebar-dot {
+            width: 12px; height: 12px; border-radius: 50%;
+        }
+        /* New Outlook top bar with search */
+        .outlook-topbar {
+            height: 48px;
+            background: #0f6cbd;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 12px;
+        }
+        /* New Outlook command bar (replaces ribbon) */
+        .outlook-commandbar {
+            height: 44px;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            gap: 4px;
+            border-bottom: 1px solid #e1dfdd;
+            font-size: 13px;
+            color: #242424;
+        }
+        .cmd-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: default;
+            transition: background 0.1s;
+            font-size: 13px;
+            color: #242424;
+            white-space: nowrap;
+        }
+        .cmd-btn:hover { background: #f5f5f5; }
+        .cmd-btn .cmd-icon { font-size: 16px; line-height: 1; }
+        .cmd-sep {
+            width: 1px; height: 24px; background: #e1dfdd; margin: 0 4px; flex-shrink: 0;
+        }
+        .outlook-body {
+            display: flex;
+            height: 680px;
+        }
+        @media (max-width: 768px) {
+            .outlook-body { height: auto; flex-direction: column; }
+        }
+        /* New Outlook folder sidebar */
+        .outlook-nav {
+            width: 200px;
+            background: #faf9f8;
+            border-right: 1px solid #e1dfdd;
+            display: flex;
+            flex-direction: column;
+            padding: 8px;
+            gap: 2px;
+            flex-shrink: 0;
+            overflow-y: auto;
+        }
+        @media (max-width: 768px) { .outlook-nav { display: none; } }
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 7px 12px;
+            border-radius: 6px;
+            cursor: default;
+            font-size: 13px;
+            color: #242424;
+            transition: background 0.1s;
+        }
+        .nav-item:hover { background: #e8e6e3; }
+        .nav-item.active { background: #e8e6e3; font-weight: 600; }
+        .nav-item .nav-count { margin-left: auto; font-size: 12px; color: #616161; font-weight: 600; }
+        /* Email list - New Outlook */
+        .outlook-list {
+            width: 360px;
+            background: #ffffff;
+            border-right: 1px solid #e1dfdd;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+        @media (max-width: 900px) { .outlook-list { width: 280px; } }
+        @media (max-width: 768px) { .outlook-list { width: 100%; height: 200px; border-right: none; border-bottom: 1px solid #e1dfdd; } }
+        .list-header {
+            padding: 12px 16px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #242424;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .email-item {
+            padding: 10px 16px;
+            cursor: default;
+            transition: background 0.1s;
+            border-left: 3px solid transparent;
+            border-radius: 4px;
+            margin: 0 4px;
+        }
+        .email-item:hover { background: #f5f5f5; }
+        .email-item.selected { background: #ebebeb; border-left: 3px solid #0f6cbd; }
+        .email-item.unread { border-left: 3px solid #0f6cbd; }
+        .email-item.unread.selected { border-left: 3px solid #0f6cbd; }
+        .email-item.unread .email-sender { font-weight: 600; color: #242424; }
+        .email-sender { font-size: 13px; color: #616161; margin-bottom: 2px; }
+        .email-subject { font-size: 13px; color: #242424; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .email-preview { font-size: 12px; color: #9e9e9e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .email-time { font-size: 11px; color: #9e9e9e; }
+        /* Email reading pane */
+        .outlook-reading {
+            flex: 1;
+            background: #ffffff;
+            overflow-y: auto;
+            min-width: 0;
+        }
+        .reading-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid #e1dfdd;
+        }
+        .reading-body {
+            padding: 20px 24px;
+            font-size: 14px;
+            color: #323130;
+            line-height: 1.7;
+        }
+        /* Agent Sidebar taskpane - light theme to match email client */
+        .sidebar-taskpane {
+            width: 300px;
+            background: #faf9f8;
+            border-left: 2px solid #0f6cbd;
+            overflow-y: auto;
+            flex-shrink: 0;
+            position: relative;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #242424;
+        }
+        @media (max-width: 900px) { .sidebar-taskpane { width: 260px; } }
+        @media (max-width: 768px) { .sidebar-taskpane { width: 100%; height: 500px; border-left: none; border-top: 2px solid #0f6cbd; } }
+        .taskpane-header {
+            padding: 12px 16px;
+            background: #ffffff;
+            border-bottom: 1px solid #e1dfdd;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #e1dfdd;
+            background: #ffffff;
+        }
+        .sidebar-body {
+            padding: 14px 16px;
+        }
+        .sidebar-section {
+            margin-bottom: 16px;
+        }
+        .sidebar-section:last-child { margin-bottom: 0; }
+
+        /* Metadata grid */
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: #a8a29e;
+        }
+        .meta-item span:first-child { font-size: 16px; }
+        .meta-label { color: #78716c; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .meta-value { color: #fafaf9; font-weight: 500; }
+
+        /* Pulse score */
+        .pulse-bar-track {
+            width: 100%;
+            height: 10px;
+            background: #44403c;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .pulse-bar-fill {
+            height: 100%;
+            border-radius: 5px;
+            background: linear-gradient(to right, #4ade80, #22c55e);
+            transition: width 1.5s ease;
+        }
+
+        /* Status badge */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-new { background: rgba(168, 85, 247, 0.2); color: #a855f7; border: 1px solid #a855f7; }
+        .status-review { background: rgba(251, 191, 36, 0.2); color: #fbbf24; border: 1px solid #fbbf24; }
+
+        /* Action buttons */
+        .action-btn {
+            width: 100%;
+            padding: 10px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .action-btn:hover { transform: translateY(-1px); }
+        .action-btn:last-child { margin-bottom: 0; }
+        .action-primary { background: #4ade80; color: #1c1917; box-shadow: 0 2px 8px rgba(74,222,128,0.3); }
+        .action-secondary { background: #292524; color: #fafaf9; border: 1px solid #44403c; }
+        .action-tertiary { background: transparent; color: #a8a29e; border: 1px solid #44403c; }
+
+        /* Feature sections */
+        .feature-section {
+            padding: 80px 0;
+        }
+        @media (max-width: 768px) { .feature-section { padding: 48px 0; } }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+        @media (max-width: 768px) {
+            .feature-grid { grid-template-columns: 1fr; gap: 32px; }
+        }
+        .feature-card {
+            background: #292524;
+            border: 1px solid #44403c;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+        .feature-card:last-child { margin-bottom: 0; }
+
+        /* Tech stack */
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+        @media (max-width: 768px) { .tech-grid { grid-template-columns: repeat(2, 1fr); } }
+        .tech-card {
+            background: #292524;
+            border: 1px solid #44403c;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+        .tech-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 12px;
+            background: rgba(74, 222, 128, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        /* Agent's Note */
+        .note-textarea {
+            width: 100%;
+            min-height: 80px;
+            background: #1c1917;
+            border: 1px solid #44403c;
+            border-radius: 8px;
+            padding: 12px;
+            color: #fafaf9;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            resize: vertical;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .note-textarea:focus { border-color: #4ade80; }
+        .note-textarea::placeholder { color: #78716c; }
+
+        /* Spec table */
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .spec-table th, .spec-table td {
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid #44403c;
+            font-size: 14px;
+        }
+        .spec-table th {
+            color: #4ade80;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 700;
+        }
+        .spec-table td { color: #a8a29e; }
+        .spec-table td:first-child { color: #fafaf9; font-weight: 500; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        @keyframes fillBar {
+            from { width: 0%; }
+            to { width: 92%; }
+        }
+        .animate-in {
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        .animate-delay-1 { animation-delay: 0.2s; }
+        .animate-delay-2 { animation-delay: 0.4s; }
+        .animate-delay-3 { animation-delay: 0.6s; }
+
+        @media (max-width: 768px) {
+            div[style*="grid-template-columns: repeat(3, 1fr)"] {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+            }
+            footer div[style*="grid-template-columns: repeat(3, 1fr)"] {
+                gap: 32px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center;">
+            <a href="index.html" class="logo" style="text-decoration: none;">AutoQuery</a>
+            <div style="display: flex; align-items: center; gap: 24px;">
+                <a href="index.html" style="color: #a8a29e; text-decoration: none; font-size: 14px; font-weight: 500; transition: color 0.2s;">Home</a>
+                <a href="app/index.html" style="padding: 12px 24px; background: #292524; color: #fbbf24; border: 1px solid #fbbf24; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 14px;">
+                    Agent Finder
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="container">
+            <div class="badge">For Literary Agents</div>
+            <h1 style="font-size: clamp(42px, 6vw, 72px); font-weight: 700; line-height: 1.1; margin-bottom: 24px; font-family: 'Crimson Pro', serif;">
+                The Agent <span class="green">Sidebar</span>
+            </h1>
+            <p style="font-size: clamp(18px, 2.5vw, 22px); color: #a8a29e; margin-bottom: 16px; line-height: 1.5;">
+                An Outlook Extension that transforms raw submissions into actionable intelligence. Right where you work.
+            </p>
+            <p style="font-size: 15px; color: #78716c; margin-bottom: 48px;">
+                Office.js &middot; React &middot; SSO &middot; Two-Way Sync
+            </p>
+        </div>
+    </section>
+
+    <!-- Client Toggle + Mockups -->
+    <section style="padding: 0 0 80px;">
+        <div class="container" id="sidebarMockup" style="max-width: 1400px;">
+            <!-- Toggle Buttons -->
+            <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 32px;">
+                <button id="toggleOutlook" onclick="showClient('outlook')" style="padding: 10px 24px; background: #0078d4; color: #ffffff; border: 2px solid #0078d4; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                    &#128233; Outlook
+                </button>
+                <button id="toggleGmail" onclick="showClient('gmail')" style="padding: 10px 24px; background: transparent; color: #a8a29e; border: 2px solid #44403c; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                    &#9993; Gmail
+                </button>
+            </div>
+            <!-- OUTLOOK MOCKUP (New Outlook 2024+) -->
+            <div id="outlookMockup" class="outlook-window animate-in">
+                <!-- Window Chrome -->
+                <div class="outlook-titlebar">
+                    <div class="titlebar-dot" style="background: #ff5f56;"></div>
+                    <div class="titlebar-dot" style="background: #ffbd2e;"></div>
+                    <div class="titlebar-dot" style="background: #27c93f;"></div>
+                    <span style="flex: 1;"></span>
+                    <div style="display: flex; gap: 0;">
+                        <div style="width: 46px; height: 36px; display: flex; align-items: center; justify-content: center; color: #616161; font-size: 10px; cursor: default;">&#9644;</div>
+                        <div style="width: 46px; height: 36px; display: flex; align-items: center; justify-content: center; color: #616161; font-size: 10px; cursor: default;">&#9723;</div>
+                        <div style="width: 46px; height: 36px; display: flex; align-items: center; justify-content: center; color: #616161; font-size: 14px; cursor: default;">&times;</div>
+                    </div>
+                </div>
+                <!-- Top Bar with Search - New Outlook signature blue bar -->
+                <div class="outlook-topbar">
+                    <span style="font-size: 18px; color: rgba(255,255,255,0.9); margin-right: 4px;">&#128233;</span>
+                    <span style="font-size: 14px; color: rgba(255,255,255,0.9); font-weight: 600;">Mail</span>
+                    <div style="flex: 1; max-width: 680px; margin: 0 auto; background: rgba(255,255,255,0.15); border-radius: 6px; padding: 7px 14px; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 14px; color: rgba(255,255,255,0.7);">&#128269;</span>
+                        <span style="font-size: 13px; color: rgba(255,255,255,0.6);">Search in Mail</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
+                        <span style="font-size: 16px; color: rgba(255,255,255,0.7);">&#9881;</span>
+                        <span style="font-size: 16px; color: rgba(255,255,255,0.7);">&#10067;</span>
+                        <div style="width: 28px; height: 28px; border-radius: 50%; background: #8764b8; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff;">A</div>
+                    </div>
+                </div>
+                <!-- Command Bar (replaces classic ribbon) -->
+                <div class="outlook-commandbar">
+                    <div class="cmd-btn" style="background: #0f6cbd; color: #ffffff; border-radius: 6px; padding: 6px 16px; font-weight: 600;">
+                        <span class="cmd-icon">&#9993;</span> New Email
+                    </div>
+                    <div class="cmd-sep"></div>
+                    <div class="cmd-btn"><span class="cmd-icon">&#8617;</span> Reply</div>
+                    <div class="cmd-btn"><span class="cmd-icon">&#8618;</span> Forward</div>
+                    <div class="cmd-sep"></div>
+                    <div class="cmd-btn"><span class="cmd-icon">&#128451;</span> Archive</div>
+                    <div class="cmd-btn"><span class="cmd-icon" style="color: #c4314b;">&#128465;</span> Delete</div>
+                    <div class="cmd-sep"></div>
+                    <div class="cmd-btn"><span class="cmd-icon">&#128196;</span> Move</div>
+                    <div style="flex: 1;"></div>
+                    <!-- AutoQuery toggle in command bar -->
+                    <div class="cmd-btn" style="background: rgba(15,108,189,0.08); border: 1px solid rgba(15,108,189,0.3); border-radius: 6px; padding: 6px 14px; font-weight: 600; color: #0f6cbd;">
+                        <span class="cmd-icon" style="color: #4ade80;">&#9670;</span> AutoQuery Sidebar
+                    </div>
+                </div>
+                <!-- Body: Folder Nav + List + Reading Pane + Sidebar -->
+                <div class="outlook-body">
+                    <!-- Folder Navigation (New Outlook style) -->
+                    <div class="outlook-nav">
+                        <button style="width: 100%; padding: 10px 16px; background: #0f6cbd; color: #ffffff; border: none; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                            <span style="font-size: 16px;">&#9998;</span> New Message
+                        </button>
+                        <div class="nav-item active">
+                            <span style="font-size: 16px;">&#128229;</span> Inbox
+                            <span class="nav-count">24</span>
+                        </div>
+                        <div class="nav-item">
+                            <span style="font-size: 16px;">&#128228;</span> Sent
+                        </div>
+                        <div class="nav-item">
+                            <span style="font-size: 16px;">&#128221;</span> Drafts
+                            <span class="nav-count">2</span>
+                        </div>
+                        <div class="nav-item">
+                            <span style="font-size: 16px;">&#128451;</span> Archive
+                        </div>
+                        <div class="nav-item">
+                            <span style="font-size: 16px;">&#128465;</span> Deleted
+                        </div>
+                        <div class="nav-item">
+                            <span style="font-size: 16px;">&#9888;</span> Junk Email
+                        </div>
+                        <div style="border-top: 1px solid #e1dfdd; margin: 12px 0; padding-top: 12px;">
+                            <div style="font-size: 11px; font-weight: 600; color: #616161; text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 12px; margin-bottom: 4px;">Favorites</div>
+                            <div class="nav-item">
+                                <span style="font-size: 16px;">&#11088;</span> Flagged
+                            </div>
+                            <div class="nav-item">
+                                <span style="font-size: 16px; color: #c4314b;">&#9679;</span> Submissions
+                                <span class="nav-count">6</span>
+                            </div>
+                            <div class="nav-item">
+                                <span style="font-size: 16px; color: #0f6cbd;">&#9679;</span> Publishers
+                            </div>
+                            <div class="nav-item">
+                                <span style="font-size: 16px; color: #107c10;">&#9679;</span> Negotiations
+                            </div>
+                        </div>
+                        <div style="flex: 1;"></div>
+                        <div style="border-top: 1px solid #e1dfdd; padding-top: 8px; display: flex; justify-content: space-around;">
+                            <span style="font-size: 20px; color: #616161; cursor: default; padding: 8px;" title="Mail">&#128233;</span>
+                            <span style="font-size: 20px; color: #616161; cursor: default; padding: 8px;" title="Calendar">&#128197;</span>
+                            <span style="font-size: 20px; color: #616161; cursor: default; padding: 8px;" title="Contacts">&#128101;</span>
+                        </div>
+                    </div>
+                    <!-- Email List -->
+                    <div class="outlook-list">
+                        <div class="list-header">
+                            <span>Inbox</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 11px; color: #0f6cbd; font-weight: 600;">All</span>
+                                <span style="font-size: 11px; color: #616161;">Unread</span>
+                                <span style="font-size: 16px; color: #616161;">&#9782;</span>
+                            </div>
+                        </div>
+                        <!-- Selected email -->
+                        <div class="email-item selected unread">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #8764b8; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">SM</div>
+                                    <span class="email-sender" style="font-weight: 600; color: #242424;">Sarah Martinez</span>
+                                </div>
+                                <span class="email-time">10:23</span>
+                            </div>
+                            <div class="email-subject" style="font-weight: 600; margin-left: 40px;">Query: The Silent Witness</div>
+                            <div class="email-preview" style="margin-left: 40px;">Historical Fiction, 85,000 Words, New Adult...</div>
+                            <div style="display: flex; gap: 4px; margin-top: 6px; margin-left: 40px;">
+                                <span style="padding: 1px 6px; background: #dff6dd; border-radius: 4px; font-size: 9px; color: #107c10; font-weight: 600;">PORTAL</span>
+                                <span style="padding: 1px 6px; background: #e8daef; border-radius: 4px; font-size: 9px; color: #8764b8; font-weight: 600;">92% MATCH</span>
+                            </div>
+                        </div>
+                        <!-- Other emails -->
+                        <div class="email-item unread">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #0f6cbd; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">JO</div>
+                                    <span class="email-sender">James O'Connor</span>
+                                </div>
+                                <span class="email-time">09:14</span>
+                            </div>
+                            <div class="email-subject" style="font-weight: 600; margin-left: 40px;">Query: Midnight Protocol</div>
+                            <div class="email-preview" style="margin-left: 40px;">Thriller, 92,000 Words...</div>
+                            <div style="display: flex; gap: 4px; margin-top: 4px; margin-left: 40px;">
+                                <span style="padding: 1px 6px; background: #dff6dd; border-radius: 4px; font-size: 9px; color: #107c10; font-weight: 600;">PORTAL</span>
+                                <span style="padding: 1px 6px; background: #fff4ce; border-radius: 4px; font-size: 9px; color: #986f0b; font-weight: 600;">74% MATCH</span>
+                            </div>
+                        </div>
+                        <div class="email-item unread">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #ca5010; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">LK</div>
+                                    <span class="email-sender">Lena Kowalski</span>
+                                </div>
+                                <span class="email-time">Yesterday</span>
+                            </div>
+                            <div class="email-subject" style="font-weight: 600; margin-left: 40px;">Query: The Garden of Lost Things</div>
+                            <div class="email-preview" style="margin-left: 40px;">Literary Fiction, 78,000 Words...</div>
+                            <div style="display: flex; gap: 4px; margin-top: 4px; margin-left: 40px;">
+                                <span style="padding: 1px 6px; background: #dff6dd; border-radius: 4px; font-size: 9px; color: #107c10; font-weight: 600;">PORTAL</span>
+                            </div>
+                        </div>
+                        <div class="email-item">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #498205; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">VT</div>
+                                    <span class="email-sender">Publisher Meeting</span>
+                                </div>
+                                <span class="email-time">Yesterday</span>
+                            </div>
+                            <div class="email-subject" style="margin-left: 40px;">Invitation: Frankfurt Book Fair</div>
+                            <div class="email-preview" style="margin-left: 40px;">Pre-Meeting on March 15...</div>
+                        </div>
+                        <div class="email-item">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #242424; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">HC</div>
+                                    <span class="email-sender">HarperCollins</span>
+                                </div>
+                                <span class="email-time">Mon</span>
+                            </div>
+                            <div class="email-subject" style="margin-left: 40px;">Re: Contract Draft &mdash; "The Silent Shore"</div>
+                            <div class="email-preview" style="margin-left: 40px;">Enclosed is the revised draft...</div>
+                        </div>
+                        <div class="email-item">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #881798; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">TR</div>
+                                    <span class="email-sender">Tom Reichert</span>
+                                </div>
+                                <span class="email-time">Mon</span>
+                            </div>
+                            <div class="email-subject" style="margin-left: 40px;">Query: Bone River</div>
+                            <div class="email-preview" style="margin-left: 40px;">Dear Agent...</div>
+                        </div>
+                        <div class="email-item">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #da3b01; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">AV</div>
+                                    <span class="email-sender">Anna Vogt</span>
+                                </div>
+                                <span class="email-time">Fri</span>
+                            </div>
+                            <div class="email-subject" style="margin-left: 40px;">Re: Editorial Feedback</div>
+                            <div class="email-preview" style="margin-left: 40px;">Thank you for your comments...</div>
+                        </div>
+                        <div class="email-item">
+                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #107c10; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; flex-shrink: 0;">RP</div>
+                                    <span class="email-sender">Rowohlt Press</span>
+                                </div>
+                                <span class="email-time">Fri</span>
+                            </div>
+                            <div class="email-subject" style="margin-left: 40px;">Spring 2026 Program Preview</div>
+                            <div class="email-preview" style="margin-left: 40px;">Please find enclosed...</div>
+                        </div>
+                    </div>
+                    <!-- Reading Pane -->
+                    <div class="outlook-reading">
+                        <div class="reading-header">
+                            <h3 style="font-size: 20px; font-weight: 600; color: #323130; margin-bottom: 12px;">Query: The Silent Witness &mdash; Historical Fiction (85.000 Worter)</h3>
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                <div style="width: 40px; height: 40px; border-radius: 50%; background: #8764b8; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; color: #fff;">SM</div>
+                                <div>
+                                    <div style="font-size: 14px; color: #323130; font-weight: 600;">Sarah Martinez <span style="color: #a19f9d; font-weight: 400;">&lt;sarah.martinez@autoquery-portal.com&gt;</span></div>
+                                    <div style="font-size: 12px; color: #a19f9d;">An: agent@literaturagentur.de &middot; Heute, 10:23</div>
+                                </div>
+                            </div>
+                            <!-- Reply/Forward bar -->
+                            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                                <div style="padding: 5px 14px; border: 1px solid #e1dfdd; border-radius: 4px; font-size: 12px; color: #323130; cursor: default; display: flex; align-items: center; gap: 4px;">&#8617; Reply</div>
+                                <div style="padding: 5px 14px; border: 1px solid #e1dfdd; border-radius: 4px; font-size: 12px; color: #323130; cursor: default; display: flex; align-items: center; gap: 4px;">&#8618; Forward</div>
+                            </div>
+                            <div style="display: flex; gap: 6px;">
+                                <span style="padding: 2px 8px; background: #dff6dd; border: 1px solid #a7e3a5; border-radius: 3px; font-size: 10px; color: #107c10; font-weight: 600;">Via AutoQuery Portal</span>
+                                <span style="padding: 2px 8px; background: #deecf9; border: 1px solid #a4c8e8; border-radius: 3px; font-size: 10px; color: #0f6cbd; font-weight: 600;">Verified Submission</span>
+                            </div>
+                        </div>
+                        <div class="reading-body">
+                            <p style="margin-bottom: 16px;">Dear Agent,</p>
+                            <p style="margin-bottom: 16px;">
+                                I am pleased to present my novel <strong>THE SILENT WITNESS</strong> &mdash; a historical fiction at 85,000 words, telling the story of a young linguist in 1920s Berlin.
+                            </p>
+                            <p style="margin-bottom: 16px;">
+                                When Clara Richter discovers a lost manuscript in the archives of Humboldt University, she has no idea that the records it contains have the potential to rewrite history. Caught between academic ambition and a dangerous truth, Clara must decide whether to reveal her knowledge to the world &mdash; or bury it forever.
+                            </p>
+                            <p style="margin-bottom: 16px;">
+                                Comp titles: R.F. Kuang's <em>BABEL</em> meets Susanna Clarke's <em>PIRANESI</em>.
+                            </p>
+                            <p style="margin-bottom: 16px; color: #605e5c;">
+                                &#128206; <em>SilentWitness_Sample_Ch1-3.pdf</em> (324 KB)
+                            </p>
+                            <p>Best regards,<br>Sarah Martinez</p>
+                        </div>
+                    </div>
+                    <!-- Agent Sidebar Taskpane -->
+                    <div class="sidebar-taskpane">
+                        <!-- Header -->
+                        <div class="taskpane-header" style="padding: 10px 14px; border-bottom: 1px solid #edebe9;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 22px; height: 22px; background: linear-gradient(135deg, #0f6cbd, #2899f5); border-radius: 5px; display: flex; align-items: center; justify-content: center;">
+                                    <span style="font-size: 12px; color: #fff; font-weight: 800;">A</span>
+                                </div>
+                                <span style="font-size: 13px; font-weight: 600; color: #242424;">AutoQuery</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 9px; color: #107c10; background: #dff6dd; padding: 2px 6px; border-radius: 4px; font-weight: 600; display: flex; align-items: center; gap: 3px;"><span style="animation: pulse 2s infinite;">&#9679;</span> Sync</span>
+                                <span style="font-size: 14px; color: #616161; cursor: pointer;">&#8943;</span>
+                            </div>
+                        </div>
+                        <!-- Submission Card -->
+                        <div style="padding: 14px;">
+                            <!-- Title & Status -->
+                            <div style="background: #ffffff; border: 1px solid #edebe9; border-radius: 8px; padding: 14px; margin-bottom: 10px;">
+                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                    <div>
+                                        <h2 style="font-size: 15px; font-weight: 700; color: #242424; margin-bottom: 3px; letter-spacing: -0.2px;">The Silent Witness</h2>
+                                        <p style="font-size: 12px; color: #616161;">Sarah Martinez</p>
+                                    </div>
+                                    <span style="padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: #e8daef; color: #5c2d91;">New</span>
+                                </div>
+                                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                    <span style="padding: 3px 8px; background: #f3f2f1; border-radius: 4px; font-size: 10px; color: #242424; font-weight: 500;">Historical Fiction</span>
+                                    <span style="padding: 3px 8px; background: #f3f2f1; border-radius: 4px; font-size: 10px; color: #242424; font-weight: 500;">85k words</span>
+                                    <span style="padding: 3px 8px; background: #f3f2f1; border-radius: 4px; font-size: 10px; color: #242424; font-weight: 500;">New Adult</span>
+                                </div>
+                            </div>
+                            <!-- Match Score -->
+                            <div style="background: #ffffff; border: 1px solid #edebe9; border-radius: 8px; padding: 14px; margin-bottom: 10px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 12px; font-weight: 600; color: #242424;">Match Score</span>
+                                    <span style="font-size: 20px; font-weight: 700; color: #107c10;" id="pulseValue">92%</span>
+                                </div>
+                                <div style="height: 6px; background: #edebe9; border-radius: 3px; overflow: hidden; margin-bottom: 8px;">
+                                    <div id="pulseBar" style="width: 0%; height: 100%; background: linear-gradient(to right, #107c10, #54b054); border-radius: 3px; transition: width 1.5s ease;"></div>
+                                </div>
+                                <div style="display: flex; gap: 6px;">
+                                    <span style="padding: 2px 8px; background: #dff6dd; border-radius: 4px; font-size: 9px; color: #107c10; font-weight: 600;">Portal Verified</span>
+                                    <span style="padding: 2px 8px; background: #deecf9; border-radius: 4px; font-size: 9px; color: #0f6cbd; font-weight: 600;">AI-Analyzed</span>
+                                </div>
+                            </div>
+                            <!-- Metadata Grid -->
+                            <div style="background: #ffffff; border: 1px solid #edebe9; border-radius: 8px; padding: 14px; margin-bottom: 10px;">
+                                <div style="font-size: 11px; font-weight: 600; color: #242424; margin-bottom: 10px;">Details</div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                                    <div>
+                                        <div style="font-size: 10px; color: #9e9e9e; margin-bottom: 2px;">Zielgruppe</div>
+                                        <div style="font-size: 12px; color: #242424; font-weight: 500;">New Adult</div>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 10px; color: #9e9e9e; margin-bottom: 2px;">Comps</div>
+                                        <div style="font-size: 12px; color: #242424; font-weight: 500;">Babel &times; Piranesi</div>
+                                    </div>
+                                    <div style="grid-column: span 2;">
+                                        <div style="font-size: 10px; color: #9e9e9e; margin-bottom: 4px;">Pitch</div>
+                                        <p style="font-size: 11px; color: #424242; line-height: 1.5; margin: 0;">A young linguist discovers a lost manuscript in 1920s Berlin that could rewrite history.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Sample & Notes -->
+                            <div style="background: #ffffff; border: 1px solid #edebe9; border-radius: 8px; padding: 14px; margin-bottom: 10px;">
+                                <button style="width: 100%; padding: 9px; background: #f3f2f1; border: 1px solid #d2d0ce; border-radius: 6px; color: #242424; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; font-weight: 500; margin-bottom: 10px;">
+                                    &#128196; Open Sample
+                                </button>
+                                <div style="font-size: 11px; font-weight: 600; color: #242424; margin-bottom: 6px;">Internal Note</div>
+                                <textarea style="width: 100%; min-height: 50px; font-size: 11px; background: #faf9f8; border: 1px solid #edebe9; border-radius: 6px; color: #242424; padding: 8px; font-family: 'Segoe UI', sans-serif; resize: vertical; outline: none;" placeholder="Add a note...">Strong voice, reminiscent of Babel. Must read Chapter 3.</textarea>
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 4px;">
+                                    <span style="font-size: 9px; color: #9e9e9e;">Auto-sync with portal</span>
+                                    <span style="font-size: 9px; color: #107c10; font-weight: 500;">&#10003; Saved</span>
+                                </div>
+                            </div>
+                            <!-- Actions -->
+                            <div style="background: #ffffff; border: 1px solid #edebe9; border-radius: 8px; padding: 14px;">
+                                <div style="font-size: 11px; font-weight: 600; color: #242424; margin-bottom: 10px;">Aktionen</div>
+                                <button style="font-size: 12px; padding: 9px 14px; background: #0f6cbd; color: #ffffff; border: none; border-radius: 6px; width: 100%; font-weight: 600; cursor: pointer; margin-bottom: 6px;">Request Full MS</button>
+                                <div style="display: flex; gap: 6px;">
+                                    <div style="position: relative; flex: 1;">
+                                        <button onclick="toggleDropdown()" id="rejectBtn" style="font-size: 11px; padding: 8px; background: #ffffff; border: 1px solid #d2d0ce; border-radius: 6px; color: #242424; width: 100%; cursor: pointer; font-weight: 500;">Absage &#9662;</button>
+                                        <div id="rejectDropdown" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: #ffffff; border: 1px solid #e1dfdd; border-radius: 8px; overflow: hidden; z-index: 10; margin-top: 2px; box-shadow: 0 8px 24px rgba(0,0,0,0.14);">
+                                            <div style="padding: 9px 14px; font-size: 12px; color: #242424; cursor: pointer; transition: background 0.1s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">Standard-Absage</div>
+                                            <div style="padding: 9px 14px; font-size: 12px; color: #242424; cursor: pointer; border-top: 1px solid #f5f5f5; transition: background 0.1s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">Fast-Hit</div>
+                                            <div style="padding: 9px 14px; font-size: 12px; color: #242424; cursor: pointer; border-top: 1px solid #f5f5f5; transition: background 0.1s;" onmouseover="this.style.background='#f5f5f5'" onmouseout="this.style.background='#fff'">Not for me</div>
+                                        </div>
+                                    </div>
+                                    <button style="font-size: 11px; padding: 8px; background: #ffffff; border: 1px solid #d2d0ce; border-radius: 6px; color: #242424; flex: 1; cursor: pointer; font-weight: 500;">Team-Review</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- GMAIL MOCKUP -->
+            <div id="gmailMockup" style="display: none;" class="outlook-window animate-in">
+                <!-- Gmail Titlebar -->
+                <div style="background: #ffffff; padding: 8px 16px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #e0e0e0;">
+                    <div style="display: flex; gap: 6px;">
+                        <div class="titlebar-dot" style="background: #ff5f56;"></div>
+                        <div class="titlebar-dot" style="background: #ffbd2e;"></div>
+                        <div class="titlebar-dot" style="background: #27c93f;"></div>
+                    </div>
+                    <div style="flex: 1; background: #f1f3f4; border-radius: 24px; padding: 8px 16px; display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #5f6368; font-size: 14px;">&#128274;</span>
+                        <span style="color: #5f6368; font-size: 13px;">mail.google.com/mail/u/0/#inbox</span>
+                    </div>
+                </div>
+                <!-- Gmail Header -->
+                <div style="background: #ffffff; padding: 8px 16px; display: flex; align-items: center; gap: 16px; border-bottom: 1px solid #e0e0e0;">
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <span style="font-size: 16px; color: #5f6368; cursor: pointer; padding: 8px;">&#9776;</span>
+                        <img src="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/logo_gmail_lockup_default_1x_r5.png" alt="Gmail" style="height: 24px;" onerror="this.outerHTML='<span style=\'font-size: 22px; font-weight: 500; color: #5f6368;\'>Gmail</span>'">
+                    </div>
+                    <div style="flex: 1; background: #eaf1fb; border-radius: 8px; padding: 10px 16px; display: flex; align-items: center; gap: 12px; max-width: 720px;">
+                        <span style="color: #5f6368; font-size: 18px;">&#128269;</span>
+                        <span style="color: #5f6368; font-size: 14px;">In E-Mails suchen</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px; margin-left: auto;">
+                        <span style="font-size: 18px; color: #5f6368;">&#10067;</span>
+                        <span style="font-size: 18px; color: #5f6368;">&#9881;</span>
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #8764b8; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; color: #fff; cursor: default;">A</div>
+                    </div>
+                </div>
+                <!-- Gmail Body -->
+                <div style="display: flex; background: #f6f8fc; min-height: 480px;">
+                    <!-- Gmail Sidebar Navigation -->
+                    <div style="width: 200px; padding: 8px 0; flex-shrink: 0;">
+                        <button style="margin: 0 12px 12px; padding: 14px 24px; background: #c2e7ff; border: none; border-radius: 16px; font-size: 14px; font-weight: 500; color: #001d35; cursor: pointer; display: flex; align-items: center; gap: 12px; width: calc(100% - 24px);">
+                            <span style="font-size: 18px;">&#9998;</span> Schreiben
+                        </button>
+                        <div style="padding: 0 12px;">
+                            <div style="padding: 8px 16px; border-radius: 0 16px 16px 0; background: #d3e3fd; font-size: 13px; font-weight: 700; color: #001d35; display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+                                <span>&#128229; Inbox</span>
+                                <span style="font-size: 12px; font-weight: 700;">24</span>
+                            </div>
+                            <div style="padding: 8px 16px; font-size: 13px; color: #444746; margin-bottom: 2px;">&#11088; Flagged</div>
+                            <div style="padding: 8px 16px; font-size: 13px; color: #444746; margin-bottom: 2px;">&#128337; Zuruckgestellt</div>
+                            <div style="padding: 8px 16px; font-size: 13px; color: #444746; margin-bottom: 2px;">&#128228; Sent</div>
+                            <div style="padding: 8px 16px; font-size: 13px; color: #444746; margin-bottom: 2px;">&#128240; Drafts</div>
+                            <div style="padding: 8px 16px; font-size: 13px; color: #444746; margin-bottom: 12px;">&#9660; Mehr</div>
+                            <div style="border-top: 1px solid #e0e0e0; padding-top: 12px; font-size: 12px; font-weight: 600; color: #444746; margin-bottom: 8px; padding-left: 16px;">Labels</div>
+                            <div style="padding: 4px 16px; font-size: 13px; color: #444746; display: flex; align-items: center; gap: 8px;"><span style="width: 8px; height: 8px; background: #d93025; border-radius: 50%; display: inline-block;"></span> Submissions</div>
+                            <div style="padding: 4px 16px; font-size: 13px; color: #444746; display: flex; align-items: center; gap: 8px;"><span style="width: 8px; height: 8px; background: #1a73e8; border-radius: 50%; display: inline-block;"></span> Publishers</div>
+                            <div style="padding: 4px 16px; font-size: 13px; color: #444746; display: flex; align-items: center; gap: 8px;"><span style="width: 8px; height: 8px; background: #188038; border-radius: 50%; display: inline-block;"></span> Negotiations</div>
+                        </div>
+                    </div>
+                    <!-- Gmail Email List -->
+                    <div style="flex: 1; background: #ffffff; border-radius: 16px 16px 0 0; overflow: hidden;">
+                        <!-- Gmail Toolbar -->
+                        <div style="padding: 4px 8px; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; gap: 8px;">
+                            <input type="checkbox" style="margin: 0 8px; accent-color: #1a73e8;">
+                            <span style="font-size: 16px; color: #5f6368; padding: 8px; cursor: default;">&#8635;</span>
+                            <span style="font-size: 14px; color: #5f6368; padding: 8px; cursor: default;">&#8942;</span>
+                            <div style="flex: 1;"></div>
+                            <span style="font-size: 12px; color: #5f6368;">1-24 von 24</span>
+                        </div>
+                        <!-- Tab Row -->
+                        <div style="display: flex; border-bottom: 1px solid #e0e0e0;">
+                            <div style="padding: 12px 24px; font-size: 13px; font-weight: 600; color: #1a73e8; border-bottom: 3px solid #1a73e8; display: flex; align-items: center; gap: 8px;">
+                                &#128229; Allgemein
+                            </div>
+                            <div style="padding: 12px 24px; font-size: 13px; color: #5f6368; display: flex; align-items: center; gap: 8px;">
+                                &#127991; Werbung
+                            </div>
+                            <div style="padding: 12px 24px; font-size: 13px; color: #5f6368; display: flex; align-items: center; gap: 8px;">
+                                &#128101; Soziale Netzwerke
+                            </div>
+                        </div>
+                        <!-- Email rows -->
+                        <div style="font-size: 13px;">
+                            <!-- Active email (selected) -->
+                            <div style="display: flex; align-items: center; padding: 6px 8px; background: #c2dbff; border-left: 4px solid #1a73e8; cursor: pointer;">
+                                <input type="checkbox" checked style="margin: 0 8px; accent-color: #1a73e8;">
+                                <span style="font-size: 16px; color: #f4b400; margin-right: 8px; cursor: pointer;">&#9733;</span>
+                                <span style="font-weight: 700; color: #202124; min-width: 160px;">Sarah Martinez</span>
+                                <span style="flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+                                    <strong style="color: #202124;">Query: The Silent Witness</strong>
+                                    <span style="color: #5f6368;"> &mdash; Dear Agent, I am pleased to present my novel...</span>
+                                </span>
+                                <span style="padding: 2px 6px; background: #fce8e6; border-radius: 4px; font-size: 10px; color: #d93025; font-weight: 600; margin: 0 8px; flex-shrink: 0;">Submissions</span>
+                                <span style="color: #5f6368; font-size: 12px; flex-shrink: 0;">10:23</span>
+                            </div>
+                            <div style="display: flex; align-items: center; padding: 6px 8px; border-bottom: 1px solid #f1f3f4; cursor: pointer;" onmouseover="this.style.background='#f2f2f2'" onmouseout="this.style.background='transparent'">
+                                <input type="checkbox" style="margin: 0 8px;">
+                                <span style="font-size: 16px; color: #dadce0; margin-right: 8px;">&#9734;</span>
+                                <span style="font-weight: 700; color: #202124; min-width: 160px;">Frankfurter Buchmesse</span>
+                                <span style="flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+                                    <strong style="color: #202124;">Einladung: Vorab-Meeting</strong>
+                                    <span style="color: #5f6368;"> &mdash; Wir laden Sie herzlich ein zum Vorab-Meeting am 15. Marz...</span>
+                                </span>
+                                <span style="color: #5f6368; font-size: 12px; flex-shrink: 0;">Yesterday</span>
+                            </div>
+                            <div style="display: flex; align-items: center; padding: 6px 8px; border-bottom: 1px solid #f1f3f4; cursor: pointer;" onmouseover="this.style.background='#f2f2f2'" onmouseout="this.style.background='transparent'">
+                                <input type="checkbox" style="margin: 0 8px;">
+                                <span style="font-size: 16px; color: #dadce0; margin-right: 8px;">&#9734;</span>
+                                <span style="color: #202124; min-width: 160px;">HarperCollins</span>
+                                <span style="flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+                                    <strong style="color: #202124;">Re: Vertragsentwurf</strong>
+                                    <span style="color: #5f6368;"> &mdash; Enclosed is the revised draft for "The Silent Shore"...</span>
+                                </span>
+                                <span style="color: #5f6368; font-size: 12px; flex-shrink: 0;">Mo</span>
+                            </div>
+                            <div style="display: flex; align-items: center; padding: 6px 8px; border-bottom: 1px solid #f1f3f4; cursor: pointer;" onmouseover="this.style.background='#f2f2f2'" onmouseout="this.style.background='transparent'">
+                                <input type="checkbox" style="margin: 0 8px;">
+                                <span style="font-size: 16px; color: #dadce0; margin-right: 8px;">&#9734;</span>
+                                <span style="color: #202124; min-width: 160px;">Tom Reichert</span>
+                                <span style="flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+                                    <strong style="color: #202124;">Query: Bone River</strong>
+                                    <span style="color: #5f6368;"> &mdash; Dear Agent, I would like to present to you...</span>
+                                </span>
+                                <span style="padding: 2px 6px; background: #fce8e6; border-radius: 4px; font-size: 10px; color: #d93025; font-weight: 600; margin: 0 8px; flex-shrink: 0;">Submissions</span>
+                                <span style="color: #5f6368; font-size: 12px; flex-shrink: 0;">Mo</span>
+                            </div>
+                            <div style="display: flex; align-items: center; padding: 6px 8px; border-bottom: 1px solid #f1f3f4; cursor: pointer;" onmouseover="this.style.background='#f2f2f2'" onmouseout="this.style.background='transparent'">
+                                <input type="checkbox" style="margin: 0 8px;">
+                                <span style="font-size: 16px; color: #dadce0; margin-right: 8px;">&#9734;</span>
+                                <span style="color: #202124; min-width: 160px;">Penguin Random House</span>
+                                <span style="flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;">
+                                    <strong style="color: #202124;">Manuscript Update</strong>
+                                    <span style="color: #5f6368;"> &mdash; Die finale Version liegt bei. Bitte um Freigabe...</span>
+                                </span>
+                                <span style="padding: 2px 6px; background: #e6f4ea; border-radius: 4px; font-size: 10px; color: #188038; font-weight: 600; margin: 0 8px; flex-shrink: 0;">Negotiations</span>
+                                <span style="color: #5f6368; font-size: 12px; flex-shrink: 0;">Fr</span>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Gmail Reading Pane (right split) -->
+                    <div style="width: 380px; background: #ffffff; border-left: 1px solid #e0e0e0; padding: 20px; overflow-y: auto; flex-shrink: 0;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                            <span style="font-size: 16px; color: #5f6368; cursor: pointer;">&#8592;</span>
+                            <span style="font-size: 16px; color: #5f6368; cursor: pointer;">&#128451;</span>
+                            <span style="font-size: 16px; color: #5f6368; cursor: pointer;">&#128465;</span>
+                            <span style="font-size: 16px; color: #5f6368; cursor: pointer;">&#9993;</span>
+                            <span style="font-size: 16px; color: #5f6368; cursor: pointer;">&#128337;</span>
+                        </div>
+                        <h3 style="font-size: 18px; font-weight: 400; color: #202124; margin-bottom: 16px;">Query: The Silent Witness &mdash; Historical Fiction (85.000 Worter)</h3>
+                        <div style="display: flex; gap: 6px; margin-bottom: 16px;">
+                            <span style="padding: 2px 8px; background: #fce8e6; border-radius: 4px; font-size: 10px; color: #d93025; font-weight: 600;">Submissions</span>
+                            <span style="padding: 2px 8px; background: #e8f0fe; border-radius: 4px; font-size: 10px; color: #1a73e8; font-weight: 600;">Via AutoQuery</span>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 12px; margin-bottom: 16px;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: #8764b8; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 600; color: #fff; flex-shrink: 0;">SM</div>
+                            <div>
+                                <div style="font-size: 13px; color: #202124;"><strong>Sarah Martinez</strong> <span style="color: #5f6368;">&lt;sarah.martinez@autoquery-portal.com&gt;</span></div>
+                                <div style="font-size: 12px; color: #5f6368;">an mich &middot; Heute, 10:23</div>
+                            </div>
+                        </div>
+                        <div style="font-size: 13px; color: #202124; line-height: 1.7;">
+                            <p style="margin-bottom: 12px;">Dear Agent,</p>
+                            <p style="margin-bottom: 12px;">I am pleased to present my novel <strong>THE SILENT WITNESS</strong> &mdash; a historical fiction at 85,000 words...</p>
+                            <p style="margin-bottom: 12px; color: #5f6368;">&#128206; <em>SilentWitness_Sample_Ch1-3.pdf</em> (324 KB)</p>
+                            <p>Best regards,<br>Sarah Martinez</p>
+                        </div>
+                    </div>
+                    <!-- AutoQuery Sidebar in Gmail -->
+                    <div style="width: 280px; background: #faf9f8; border-left: 1px solid #e0e0e0; overflow-y: auto; flex-shrink: 0;">
+                        <!-- Sidebar Header -->
+                        <div style="padding: 12px 16px; background: #ffffff; border-bottom: 1px solid #e0e0e0; display: flex; align-items: center; justify-content: space-between;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 20px; height: 20px; background: linear-gradient(135deg, #4ade80, #22c55e); border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                                    <span style="font-size: 11px; color: #1c1917; font-weight: 900;">A</span>
+                                </div>
+                                <span style="font-size: 13px; font-weight: 700; color: #202124;">AutoQuery Sidebar</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                                <span style="font-size: 10px; color: #188038; animation: pulse 2s infinite;">&#9679;</span>
+                                <span style="font-size: 10px; color: #5f6368;">Live</span>
+                            </div>
+                        </div>
+                        <!-- Quick Look -->
+                        <div style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0;">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                <div>
+                                    <h2 style="font-size: 17px; font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 2px; color: #202124;">The Silent Witness</h2>
+                                    <p style="font-size: 12px; color: #5f6368;">by Sarah Martinez</p>
+                                </div>
+                                <span style="display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: #fce8e6; color: #d93025; border: 1px solid #f5c6cb;">NEU</span>
+                            </div>
+                            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                <span style="padding: 2px 8px; background: #e6f4ea; border: 1px solid #a8dab5; border-radius: 8px; font-size: 10px; color: #188038; font-weight: 500;">Portal</span>
+                                <span style="padding: 2px 8px; background: #e6f4ea; border: 1px solid #a8dab5; border-radius: 8px; font-size: 10px; color: #188038; font-weight: 500;">Verified</span>
+                            </div>
+                        </div>
+                        <!-- Metadata -->
+                        <div style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0;">
+                            <div style="font-size: 10px; font-weight: 700; color: #1a73e8; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Die harten Fakten</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+                                <div style="font-size: 12px; color: #5f6368;">
+                                    <div style="font-size: 10px; color: #80868b; margin-bottom: 2px;">Genre</div>
+                                    Historical Fiction
+                                </div>
+                                <div style="font-size: 12px; color: #5f6368;">
+                                    <div style="font-size: 10px; color: #80868b; margin-bottom: 2px;">Wortzahl</div>
+                                    85.000
+                                </div>
+                                <div style="font-size: 12px; color: #5f6368;">
+                                    <div style="font-size: 10px; color: #80868b; margin-bottom: 2px;">Zielgruppe</div>
+                                    Adult
+                                </div>
+                                <div style="font-size: 12px; color: #5f6368;">
+                                    <div style="font-size: 10px; color: #80868b; margin-bottom: 2px;">Comps</div>
+                                    Babel &times; Piranesi
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Pitch -->
+                        <div style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0;">
+                            <div style="font-size: 10px; font-weight: 700; color: #1a73e8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Pitch Snippet</div>
+                            <p style="font-size: 12px; color: #3c4043; line-height: 1.5; font-style: italic;">"A young linguist discovers a lost manuscript in 1920s Berlin that could rewrite history."</p>
+                        </div>
+                        <!-- Intelligence Layer -->
+                        <div style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                                <span style="font-size: 12px; font-weight: 600; color: #202124;">Pulse-Score</span>
+                                <div style="display: flex; align-items: center; gap: 4px;">
+                                    <span style="font-size: 13px; font-weight: 700; color: #188038;">92%</span>
+                                    <span style="color: #188038; font-size: 12px;" title="Human-Verified">&#10004;</span>
+                                </div>
+                            </div>
+                            <div style="height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
+                                <div style="width: 92%; background: linear-gradient(to right, #188038, #4ade80); height: 100%; border-radius: 4px;"></div>
+                            </div>
+                        </div>
+                        <!-- Reader Mode -->
+                        <div style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0;">
+                            <button style="width: 100%; padding: 8px; background: #ffffff; border: 1px solid #dadce0; border-radius: 8px; color: #202124; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                &#128214; Open Sample
+                            </button>
+                        </div>
+                        <!-- Agent's Note -->
+                        <div style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0;">
+                            <div style="font-size: 10px; font-weight: 700; color: #8764b8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 4px;">
+                                <span>&#9733;</span> Agent's Note
+                            </div>
+                            <textarea style="width: 100%; min-height: 60px; font-size: 12px; background: #ffffff; border: 1px solid #dadce0; border-radius: 8px; color: #202124; padding: 8px; font-family: inherit; resize: vertical;" placeholder="Enter notes here...">Strong voice, reminiscent of Babel. Must read Chapter 3.</textarea>
+                            <p style="font-size: 10px; color: #80868b; margin-top: 4px;">Auto-sync with portal</p>
+                        </div>
+                        <!-- Sync Status -->
+                        <div style="padding: 12px 16px; border-bottom: 1px solid #e0e0e0;">
+                            <div style="display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: #e6f4ea; border-radius: 8px; font-size: 11px; color: #188038;">
+                                <span style="animation: pulse 2s infinite;">&#9679;</span> Synced to portal
+                            </div>
+                        </div>
+                        <!-- Workflow Actions -->
+                        <div style="padding: 12px 16px;">
+                            <div style="font-size: 10px; font-weight: 700; color: #1a73e8; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px;">Workflow</div>
+                            <button style="font-size: 12px; padding: 8px 12px; background: #1a73e8; color: #ffffff; border: none; border-radius: 8px; width: 100%; font-weight: 600; cursor: pointer; margin-bottom: 6px;">Request Full MS</button>
+                            <button style="font-size: 12px; padding: 8px 12px; background: #ffffff; border: 1px solid #dadce0; border-radius: 8px; color: #202124; width: 100%; cursor: pointer; margin-bottom: 6px; font-weight: 500;">Send Rejection &#9662;</button>
+                            <button style="font-size: 12px; padding: 8px 12px; background: transparent; border: 1px solid #dadce0; border-radius: 8px; color: #5f6368; width: 100%; cursor: pointer; font-weight: 500;">Team-Review zuweisen</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature Sections -->
+    <!-- Feature 1: The Quick Look -->
+    <section class="feature-section" style="background: linear-gradient(to bottom, #1c1917, #292524);">
+        <div class="container">
+            <div class="feature-grid">
+                <div>
+                    <div class="section-title">Header</div>
+                    <h2 style="font-size: 36px; font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 16px;">
+                        The <span class="green">Quick Look</span>
+                    </h2>
+                    <p style="color: #a8a29e; line-height: 1.7; margin-bottom: 24px;">
+                        The sidebar automatically detects emails submitted via the AutoQuery portal &mdash; by header tag or sender ID. Instantly see title, author, and current status.
+                    </p>
+                    <div class="feature-card">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <div style="width: 8px; height: 8px; background: #4ade80; border-radius: 50;"></div>
+                            <span style="font-size: 14px; font-weight: 600;">Automatic Detection</span>
+                        </div>
+                        <p style="font-size: 13px; color: #78716c;">The sidebar only opens for portal emails. No noise, no distractions.</p>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: center;">
+                    <div style="background: #1c1917; border-radius: 12px; border: 1px solid #44403c; padding: 32px; max-width: 320px; width: 100%;">
+                        <div style="margin-bottom: 16px;">
+                            <h3 style="font-size: 20px; font-weight: 700; font-family: 'Crimson Pro', serif;">The Silent Witness</h3>
+                            <p style="font-size: 14px; color: #a8a29e; margin-top: 4px;">Sarah Martinez</p>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <span class="status-badge status-new">NEU</span>
+                            <span class="status-badge status-review">IN PRUFUNG</span>
+                            <span style="padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700; background: rgba(168,162,158,0.2); color: #a8a29e; border: 1px solid #78716c;">ARCHIVIERT</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 2: Intelligence Layer -->
+    <section class="feature-section">
+        <div class="container">
+            <div class="feature-grid">
+                <div style="display: flex; justify-content: center; order: 1;">
+                    <div style="background: #292524; border-radius: 12px; border: 1px solid #44403c; padding: 32px; max-width: 360px; width: 100%;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <span style="font-size: 15px; font-weight: 700;">Profile Match</span>
+                            <span style="font-size: 24px; font-weight: 700; color: #4ade80;">92%</span>
+                        </div>
+                        <div class="pulse-bar-track" style="margin-bottom: 20px;">
+                            <div class="pulse-bar-fill" style="width: 92%;"></div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 10px; background: rgba(74,222,128,0.08); border-radius: 8px; margin-bottom: 16px;">
+                            <span style="color: #4ade80; font-size: 18px;">&#10004;</span>
+                            <span style="font-size: 13px; color: #4ade80; font-weight: 600;">Human-Verified &mdash; AI check passed</span>
+                        </div>
+                        <div style="padding: 12px; background: #1c1917; border-radius: 8px; border: 1px solid #44403c;">
+                            <div style="font-size: 11px; color: #78716c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Match Factors</div>
+                            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #a8a29e;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Genre Match</span>
+                                    <span style="color: #4ade80; font-weight: 600;">98%</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Audience Fit</span>
+                                    <span style="color: #4ade80; font-weight: 600;">90%</span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>Comp-Analyse</span>
+                                    <span style="color: #fbbf24; font-weight: 600;">85%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div style="order: 2;">
+                    <div class="section-title">AI / Data Insights</div>
+                    <h2 style="font-size: 36px; font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 16px;">
+                        The <span class="green">Intelligence Layer</span>
+                    </h2>
+                    <p style="color: #a8a29e; line-height: 1.7; margin-bottom: 24px;">
+                        The Pulse Score shows in real time how well a project matches your stored search profile. Based on genre preferences, audience fit, and comp analysis.
+                    </p>
+                    <div class="feature-card">
+                        <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">Profile Match Logic</h4>
+                        <p style="font-size: 13px; color: #78716c; line-height: 1.6;">Matching between author inputs and agent preferences stored in the backend. Automatic &mdash; no manual screening required.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Feature 3: The Workflow -->
+    <section class="feature-section" style="background: linear-gradient(to bottom, #1c1917, #292524);">
+        <div class="container">
+            <div style="text-align: center; max-width: 700px; margin: 0 auto 48px;">
+                <div class="section-title">Workflow</div>
+                <h2 style="font-size: 36px; font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 16px;">
+                    Three Actions. <span class="green">One Click.</span>
+                </h2>
+                <p style="color: #a8a29e; line-height: 1.7;">
+                    Every action in Outlook is instantly synced to the web portal. Two-way sync ensures no step is lost.
+                </p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+                <div class="feature-card" style="text-align: center;">
+                    <div style="width: 56px; height: 56px; margin: 0 auto 16px; background: rgba(74,222,128,0.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px;">
+                        &#128228;
+                    </div>
+                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px; font-family: 'Crimson Pro', serif;">Request Full MS</h3>
+                    <p style="font-size: 13px; color: #a8a29e; line-height: 1.6;">Primary action. One click sends the request and updates the status in the portal.</p>
+                </div>
+                <div class="feature-card" style="text-align: center;">
+                    <div style="width: 56px; height: 56px; margin: 0 auto 16px; background: rgba(239,68,68,0.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px;">
+                        &#128232;
+                    </div>
+                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px; font-family: 'Crimson Pro', serif;">Send Rejection</h3>
+                    <p style="font-size: 13px; color: #a8a29e; line-height: 1.6;">Dropdown with templates: Standard, Fast-Hit, or Not for me. Professional and fast.</p>
+                </div>
+                <div class="feature-card" style="text-align: center;">
+                    <div style="width: 56px; height: 56px; margin: 0 auto 16px; background: rgba(168,85,247,0.15); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 28px;">
+                        &#128101;
+                    </div>
+                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 8px; font-family: 'Crimson Pro', serif;">Team-Review</h3>
+                    <p style="font-size: 13px; color: #a8a29e; line-height: 1.6;">Forwards the project internally to a colleague. Seamless collaboration within the agency.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Killer Feature: The Ghostwrite -->
+    <section class="feature-section">
+        <div class="container">
+            <div class="feature-grid">
+                <div>
+                    <div class="section-title" style="color: #a855f7;">Killer Feature</div>
+                    <h2 style="font-size: 36px; font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 16px;">
+                        The <span style="color: #a855f7;">Ghostwrite</span>
+                    </h2>
+                    <p style="color: #a8a29e; line-height: 1.7; margin-bottom: 24px;">
+                        The "Agent's Note" field in the sidebar. Everything written here is automatically attached as an internal comment to the project in the portal. Never switch between Outlook and a note-taking app again.
+                    </p>
+                    <div class="feature-card" style="border-color: #a855f7;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                            <span style="color: #a855f7; font-size: 18px;">&#9733;</span>
+                            <span style="font-size: 14px; font-weight: 700;">Why this matters</span>
+                        </div>
+                        <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 8px;">
+                            <li style="display: flex; gap: 8px; font-size: 13px; color: #a8a29e;">
+                                <span style="color: #a855f7;">&#8226;</span>
+                                Instant documentation while reading
+                            </li>
+                            <li style="display: flex; gap: 8px; font-size: 13px; color: #a8a29e;">
+                                <span style="color: #a855f7;">&#8226;</span>
+                                Automatic synchronization with the portal
+                            </li>
+                            <li style="display: flex; gap: 8px; font-size: 13px; color: #a8a29e;">
+                                <span style="color: #a855f7;">&#8226;</span>
+                                No context switching &mdash; everything in Outlook
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: center;">
+                    <div style="background: #292524; border-radius: 12px; border: 1px solid #a855f7; padding: 24px; max-width: 340px; width: 100%; box-shadow: 0 0 30px rgba(168,85,247,0.15);">
+                        <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+                            <span style="color: #a855f7;">&#9733;</span>
+                            <span style="font-size: 12px; font-weight: 700; color: #a855f7; text-transform: uppercase; letter-spacing: 0.5px;">Agent's Note</span>
+                        </div>
+                        <div style="background: #1c1917; border: 1px solid #44403c; border-radius: 8px; padding: 14px; min-height: 120px; position: relative;">
+                            <p style="font-size: 13px; color: #fafaf9; line-height: 1.6; margin-bottom: 8px;" id="ghostwriteText"></p>
+                            <span id="ghostwriteCursor" style="display: inline-block; width: 2px; height: 16px; background: #a855f7; animation: pulse 1s infinite;"></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                            <span style="font-size: 11px; color: #78716c;">Auto-saved</span>
+                            <span style="font-size: 11px; color: #4ade80; display: flex; align-items: center; gap: 4px;">
+                                <span style="animation: pulse 2s infinite;">&#9679;</span> Synced
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Content & Fields Spec Table -->
+    <section class="feature-section" style="background: #292524;">
+        <div class="container">
+            <div style="text-align: center; max-width: 700px; margin: 0 auto 48px;">
+                <div class="section-title">Specification</div>
+                <h2 style="font-size: 36px; font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 16px;">
+                    Content & <span class="green">Fields</span>
+                </h2>
+            </div>
+            <div style="background: #1c1917; border-radius: 12px; border: 1px solid #44403c; overflow: hidden;">
+                <table class="spec-table">
+                    <thead>
+                        <tr style="background: rgba(74,222,128,0.05);">
+                            <th>Section</th>
+                            <th>Field Content</th>
+                            <th>Logic / Source</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Profile Match</td>
+                            <td>"92 % Match"</td>
+                            <td>Matching between author input and agent preferences (backend)</td>
+                        </tr>
+                        <tr>
+                            <td>Pitch-Snippet</td>
+                            <td>First 300 characters of the pitch</td>
+                            <td>Direct display without scrolling in the email</td>
+                        </tr>
+                        <tr>
+                            <td>Reader-Mode</td>
+                            <td>Button "Open Sample"</td>
+                            <td>Modal window with clean text (no formatting errors)</td>
+                        </tr>
+                        <tr>
+                            <td>Sync-Status</td>
+                            <td>"Synced to portal"</td>
+                            <td>Action in Outlook is synced to the web dashboard</td>
+                        </tr>
+                        <tr>
+                            <td>Agent's Note</td>
+                            <td>Free-text field</td>
+                            <td>Automatically saved as internal comment in the portal</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technical Requirements -->
+    <section class="feature-section">
+        <div class="container">
+            <div style="text-align: center; max-width: 700px; margin: 0 auto 48px;">
+                <div class="section-title">Technical Requirements</div>
+                <h2 style="font-size: 36px; font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 16px;">
+                    Under the <span class="green">Hood</span>
+                </h2>
+            </div>
+            <div class="tech-grid">
+                <div class="tech-card">
+                    <div class="tech-icon">&#9881;</div>
+                    <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">Office.js API</h4>
+                    <p style="font-size: 12px; color: #78716c;">JavaScript / TypeScript with native Outlook integration</p>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon">&#9883;</div>
+                    <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">React / Vue.js</h4>
+                    <p style="font-size: 12px; color: #78716c;">Modular UI framework for the taskpane</p>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon">&#128274;</div>
+                    <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">SSO Auth</h4>
+                    <p style="font-size: 12px; color: #78716c;">Single sign-on with the portal account</p>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon">&#128279;</div>
+                    <h4 style="font-size: 14px; font-weight: 700; margin-bottom: 6px;">Deep Linking</h4>
+                    <p style="font-size: 12px; color: #78716c;">Opens the portal with the exact record</p>
+                </div>
+            </div>
+
+            <!-- Two-Way Sync Detail -->
+            <div style="margin-top: 48px;">
+                <div class="feature-card" style="border-color: #4ade80; max-width: 700px; margin: 0 auto;">
+                    <h3 style="font-size: 18px; font-weight: 700; margin-bottom: 16px; font-family: 'Crimson Pro', serif;">
+                        <span class="green">&#8644;</span> Two-Way Sync
+                    </h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <div style="width: 20px; height: 20px; background: #4ade80; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                <span style="color: #1c1917; font-size: 12px; font-weight: 700;">&#10003;</span>
+                            </div>
+                            <p style="font-size: 14px; color: #a8a29e; line-height: 1.6;">
+                                <strong style="color: #fafaf9;">Extension &rarr; Portal:</strong> Every action (rejection, MS request) triggers the platform API
+                            </p>
+                        </div>
+                        <div style="display: flex; align-items: start; gap: 12px;">
+                            <div style="width: 20px; height: 20px; background: #4ade80; border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 2px;">
+                                <span style="color: #1c1917; font-size: 12px; font-weight: 700;">&#10003;</span>
+                            </div>
+                            <p style="font-size: 14px; color: #a8a29e; line-height: 1.6;">
+                                <strong style="color: #fafaf9;">Outlook &rarr; Backend:</strong> Event listener detects deleted emails and sends <code style="background: #1c1917; padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #4ade80;">status: archived</code>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section style="padding: 80px 0; text-align: center; background: linear-gradient(to bottom, #1c1917, #0f0e0d);">
+        <div class="container">
+            <h2 style="font-size: clamp(36px, 5vw, 56px); font-weight: 700; font-family: 'Crimson Pro', serif; margin-bottom: 24px;">
+                Ready for the <span class="green">future</span> of literary agenting?
+            </h2>
+            <p style="font-size: 18px; color: #a8a29e; margin-bottom: 40px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                The Agent Sidebar transforms your Outlook inbox into an intelligent submissions dashboard.
+            </p>
+            <a href="coming-soon.html" style="display: inline-block; padding: 16px 48px; font-size: 18px; font-weight: 700; background: #4ade80; color: #1c1917; border-radius: 10px; text-decoration: none; box-shadow: 0 4px 16px rgba(74,222,128,0.3); transition: transform 0.2s;">
+                Get in touch &rarr;
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer style="background: #0f0e0d; border-top: 1px solid #44403c; padding: 60px 0 40px;">
+        <div class="container">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 60px; margin-bottom: 48px;">
+                <div>
+                    <div style="font-size: 24px; font-weight: 700; font-family: 'Crimson Pro', serif; background: linear-gradient(135deg, #4ade80, #22c55e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 16px;">
+                        AutoQuery
+                    </div>
+                    <p style="color: #a8a29e; font-size: 14px; line-height: 1.7;">
+                        Query literary agents in minutes, not months.
+                    </p>
+                </div>
+                <div>
+                    <h4 style="color: #fafaf9; font-weight: 700; margin-bottom: 16px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Product</h4>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                        <li style="margin-bottom: 12px;"><a href="index.html" style="color: #a8a29e; text-decoration: none; font-size: 14px;">Home</a></li>
+                        <li style="margin-bottom: 12px;"><a href="agent-sidebar.html" style="color: #a8a29e; text-decoration: none; font-size: 14px;">The Agent Sidebar</a></li>
+                        <li style="margin-bottom: 12px;"><a href="manuscript-feedback.html" style="color: #a8a29e; text-decoration: none; font-size: 14px;">Manuscript Analysis</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="color: #fafaf9; font-weight: 700; margin-bottom: 16px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">Company</h4>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                        <li style="margin-bottom: 12px;"><a href="coming-soon.html" style="color: #a8a29e; text-decoration: none; font-size: 14px;">About</a></li>
+                        <li style="margin-bottom: 12px;"><a href="coming-soon.html" style="color: #a8a29e; text-decoration: none; font-size: 14px;">Blog</a></li>
+                        <li style="margin-bottom: 12px;"><a href="coming-soon.html" style="color: #a8a29e; text-decoration: none; font-size: 14px;">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div style="border-top: 1px solid #44403c; padding-top: 32px; text-align: center;">
+                <p style="color: #a8a29e; font-size: 14px;">&copy; 2026 AutoQuery. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Client toggle (Outlook / Gmail)
+        function showClient(client) {
+            const outlook = document.getElementById('outlookMockup');
+            const gmail = document.getElementById('gmailMockup');
+            const btnOutlook = document.getElementById('toggleOutlook');
+            const btnGmail = document.getElementById('toggleGmail');
+            if (client === 'gmail') {
+                outlook.style.display = 'none';
+                gmail.style.display = 'block';
+                btnOutlook.style.background = 'transparent';
+                btnOutlook.style.color = '#a8a29e';
+                btnOutlook.style.borderColor = '#44403c';
+                btnGmail.style.background = '#d93025';
+                btnGmail.style.color = '#ffffff';
+                btnGmail.style.borderColor = '#d93025';
+            } else {
+                gmail.style.display = 'none';
+                outlook.style.display = 'block';
+                btnOutlook.style.background = '#0078d4';
+                btnOutlook.style.color = '#ffffff';
+                btnOutlook.style.borderColor = '#0078d4';
+                btnGmail.style.background = 'transparent';
+                btnGmail.style.color = '#a8a29e';
+                btnGmail.style.borderColor = '#44403c';
+            }
+        }
+
+        // Dropdown toggle
+        function toggleDropdown() {
+            const dd = document.getElementById('rejectDropdown');
+            dd.style.display = dd.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Close dropdown on outside click
+        document.addEventListener('click', function(e) {
+            const dd = document.getElementById('rejectDropdown');
+            const btn = document.getElementById('rejectBtn');
+            if (!btn.contains(e.target) && !dd.contains(e.target)) {
+                dd.style.display = 'none';
+            }
+        });
+
+        // Animate pulse bar on scroll
+        const pulseBar = document.getElementById('pulseBar');
+        if (pulseBar) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        pulseBar.style.width = '92%';
+                        observer.disconnect();
+                    }
+                });
+            }, { threshold: 0.3 });
+            observer.observe(document.getElementById('sidebarMockup'));
+        }
+
+        // Ghostwrite typing animation
+        const ghostwriteText = document.getElementById('ghostwriteText');
+        const ghostwriteCursor = document.getElementById('ghostwriteCursor');
+        const noteText = "Strong voice, reminiscent of R.F. Kuang. Must read Chapter 3. Perfect fit for our fantasy list.";
+        let charIndex = 0;
+
+        function typeGhostwrite() {
+            if (charIndex < noteText.length) {
+                ghostwriteText.textContent += noteText.charAt(charIndex);
+                charIndex++;
+                setTimeout(typeGhostwrite, 40 + Math.random() * 60);
+            } else {
+                ghostwriteCursor.style.display = 'none';
+            }
+        }
+
+        const ghostwriteObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    typeGhostwrite();
+                    ghostwriteObserver.disconnect();
+                }
+            });
+        }, { threshold: 0.3 });
+        ghostwriteObserver.observe(ghostwriteText.parentElement);
+    </script>
+</body>
+</html>

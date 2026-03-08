@@ -1,0 +1,1443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoQuery — Find Your Literary Agent</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:           #09090f;
+            --surface:      #0f0f1c;
+            --surface-2:    #141428;
+            --border:       rgba(255,255,255,0.07);
+            --border-hover: rgba(255,255,255,0.13);
+            --text-1:       #eeeaf4;
+            --text-2:       #7b7a8e;
+            --text-3:       #46455a;
+            --accent:       #7c6af7;
+            --accent-dim:   rgba(124,106,247,0.15);
+            --accent-glow:  rgba(124,106,247,0.22);
+            --teal:         #36c9bb;
+            --teal-dim:     rgba(54,201,187,0.14);
+            --gold:         #e8b84b;
+            --gold-dim:     rgba(232,184,75,0.12);
+            --sidebar-w:    262px;
+            --r:            12px;
+            --r-lg:         18px;
+            --t:            160ms ease;
+            --t-md:         260ms ease;
+            --font-d:       'Playfair Display', Georgia, serif;
+            --font-b:       'DM Sans', sans-serif;
+            --font-m:       'DM Mono', monospace;
+        }
+
+        html, body {
+            height: 100%;
+            background: var(--bg);
+            color: var(--text-1);
+            font-family: var(--font-b);
+            font-size: 15px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+        }
+
+        /* Grain overlay */
+        body::after {
+            content: '';
+            position: fixed; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+            opacity: 0.35;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* ── LAYOUT ── */
+        .app { display: flex; height: 100vh; overflow: hidden; }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            height: 100vh;
+            transition: transform var(--t-md);
+            z-index: 100;
+        }
+
+        .sidebar-head {
+            padding: 18px 14px 14px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .logo {
+            display: flex; align-items: center; gap: 9px;
+            text-decoration: none; margin-bottom: 13px;
+        }
+        .logo-mark {
+            width: 33px; height: 33px;
+            background: linear-gradient(135deg, var(--accent), var(--teal));
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+            font-family: var(--font-m); font-size: 12px; font-weight: 500;
+            color: #fff; flex-shrink: 0;
+            box-shadow: 0 4px 14px var(--accent-glow);
+        }
+        .logo-name {
+            font-family: var(--font-d); font-size: 16.5px; font-weight: 600;
+            color: var(--text-1); letter-spacing: -0.02em;
+        }
+        .logo-name em { color: var(--accent); font-style: normal; }
+
+        .new-btn {
+            width: 100%; padding: 8px 13px;
+            background: var(--accent-dim);
+            border: 1px solid rgba(124,106,247,0.28);
+            border-radius: var(--r);
+            color: #b0a9fc; font-family: var(--font-b);
+            font-size: 13.5px; font-weight: 500;
+            cursor: pointer;
+            display: flex; align-items: center; gap: 7px;
+            transition: all var(--t-md);
+        }
+        .new-btn:hover {
+            background: rgba(124,106,247,0.22);
+            border-color: rgba(124,106,247,0.48);
+            color: #ccc8ff;
+        }
+        .new-btn svg { width: 15px; height: 15px; }
+
+        .sidebar-body {
+            flex: 1; overflow-y: auto; padding: 14px 10px 8px;
+            scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent;
+        }
+
+        .sec-label {
+            font-size: 10px; font-weight: 600; letter-spacing: 0.11em;
+            text-transform: uppercase; color: var(--text-3);
+            padding: 0 4px 7px;
+        }
+
+        .hist-item {
+            display: flex; align-items: flex-start; gap: 8px;
+            padding: 7px 8px; border-radius: 8px; cursor: pointer;
+            transition: background var(--t); color: var(--text-2);
+            font-size: 13px; line-height: 1.4; margin-bottom: 1px;
+        }
+        .hist-item:hover  { background: rgba(255,255,255,0.04); color: var(--text-1); }
+        .hist-item.active { background: var(--accent-dim); color: #c4bffd; }
+        .hist-item svg    { width: 13px; height: 13px; flex-shrink: 0; margin-top: 2px; opacity: 0.45; }
+
+        .hist-name  { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 164px; }
+        .hist-meta  { font-size: 10.5px; color: var(--text-3); font-family: var(--font-m); }
+
+        .s-divider { height: 1px; background: var(--border); margin: 10px 10px; }
+
+        .sidebar-foot {
+            padding: 10px 12px;
+            border-top: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .user-pill {
+            display: flex; align-items: center; gap: 7px;
+            padding: 3px 8px 3px 3px; border-radius: 20px;
+            cursor: pointer; transition: background var(--t);
+        }
+        .user-pill:hover { background: rgba(255,255,255,0.05); }
+        .avatar {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent), var(--teal));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; font-weight: 600; color: #fff;
+        }
+        .user-name { font-size: 13px; color: var(--text-2); }
+
+        .foot-icons { display: flex; gap: 2px; }
+        .ico-btn {
+            width: 34px; height: 34px; border-radius: 8px;
+            background: transparent; border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--text-2); transition: all var(--t);
+            position: relative;
+        }
+        .ico-btn:hover { background: rgba(255,255,255,0.06); color: var(--text-1); }
+        .ico-btn svg { width: 17px; height: 17px; }
+
+        /* Tooltip */
+        .ico-btn::after {
+            content: attr(data-tip);
+            position: absolute; bottom: calc(100% + 6px); left: 50%;
+            transform: translateX(-50%);
+            background: #1e1e3a; color: var(--text-1);
+            font-size: 11px; padding: 4px 8px; border-radius: 6px;
+            white-space: nowrap; opacity: 0; pointer-events: none;
+            transition: opacity var(--t); border: 1px solid var(--border);
+            font-family: var(--font-b);
+        }
+        .ico-btn:hover::after { opacity: 1; }
+
+        /* ── MAIN ── */
+        .main {
+            flex: 1; display: flex; flex-direction: column;
+            overflow-y: auto; overflow-x: hidden;
+            scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.08) transparent;
+            position: relative;
+        }
+
+        /* Atmospheric top radial */
+        .main::before {
+            content: '';
+            position: fixed;
+            top: 0; left: var(--sidebar-w); right: 0;
+            height: 360px;
+            background: radial-gradient(ellipse 55% 50% at 50% -5%, rgba(124,106,247,0.13) 0%, transparent 70%);
+            pointer-events: none; z-index: 0;
+        }
+
+        .content {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            padding: 56px 24px 100px;
+            max-width: 780px; margin: 0 auto; width: 100%;
+            position: relative; z-index: 1;
+        }
+
+        /* ── HERO ── */
+        .hero {
+            text-align: center; margin-bottom: 40px;
+            animation: fadeUp 0.55s ease both;
+        }
+
+        .eyebrow {
+            display: inline-flex; align-items: center; gap: 7px;
+            font-family: var(--font-m); font-size: 10.5px;
+            letter-spacing: 0.13em; text-transform: uppercase;
+            color: var(--teal); margin-bottom: 18px;
+            padding: 5px 13px; border-radius: 20px;
+            border: 1px solid rgba(54,201,187,0.22);
+            background: rgba(54,201,187,0.06);
+        }
+        .eyebrow-dot {
+            width: 5px; height: 5px; border-radius: 50%;
+            background: var(--teal); animation: blink 2.2s ease infinite;
+        }
+
+        @keyframes blink {
+            0%,100% { opacity:1; transform:scale(1); }
+            50%      { opacity:0.4; transform:scale(0.7); }
+        }
+
+        .hero-title {
+            font-family: var(--font-d);
+            font-size: clamp(30px, 4.8vw, 50px);
+            font-weight: 700; line-height: 1.12;
+            letter-spacing: -0.026em;
+            color: var(--text-1); margin-bottom: 14px;
+        }
+        .hero-title .hl {
+            font-style: italic;
+            background: linear-gradient(130deg, #b8b0ff 0%, #36c9bb 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: 15px; color: var(--text-2);
+            max-width: 430px; margin: 0 auto;
+            line-height: 1.7; font-weight: 300;
+        }
+
+        .shortcut-hint {
+            display: inline-block; margin-top: 12px;
+            font-family: var(--font-m); font-size: 10.5px;
+            color: var(--text-3); letter-spacing: 0.04em;
+        }
+        .shortcut-hint kbd {
+            font-family: var(--font-m);
+            background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border);
+            border-radius: 4px; padding: 1px 5px;
+            color: var(--text-3); font-size: 10px;
+        }
+
+        /* ── SEARCH BAR ── */
+        .search-wrap {
+            width: 100%; position: relative; margin-bottom: 30px;
+            animation: fadeUp 0.55s ease 0.08s both;
+        }
+
+        .search-glow {
+            position: absolute; inset: -2px;
+            border-radius: calc(var(--r-lg) + 2px);
+            background: linear-gradient(135deg, rgba(124,106,247,0.45), rgba(54,201,187,0.45));
+            opacity: 0; transition: opacity var(--t-md);
+            filter: blur(10px); z-index: 0;
+        }
+        .search-wrap:focus-within .search-glow { opacity: 1; }
+
+        .search-box {
+            position: relative; z-index: 1;
+            background: var(--surface-2);
+            border: 1.5px solid var(--border-hover);
+            border-radius: var(--r-lg);
+            transition: border-color var(--t-md), box-shadow var(--t-md);
+        }
+        .search-wrap:focus-within .search-box {
+            border-color: rgba(124,106,247,0.48);
+            box-shadow: 0 0 0 3px rgba(124,106,247,0.09), 0 12px 44px rgba(0,0,0,0.45);
+        }
+
+        .search-ta {
+            width: 100%; background: transparent; border: none; outline: none;
+            padding: 18px 22px 6px;
+            font-family: var(--font-b); font-size: 15px;
+            color: var(--text-1); resize: none;
+            min-height: 62px; max-height: 200px; line-height: 1.65;
+        }
+        .search-ta::placeholder { color: var(--text-3); }
+
+        .search-bar-foot {
+            display: flex; align-items: center;
+            justify-content: space-between;
+            padding: 6px 12px 12px 18px;
+        }
+        .bar-left { display: flex; align-items: center; gap: 2px; }
+
+        .bar-icon-btn {
+            background: none; border: none; cursor: pointer;
+            padding: 6px; border-radius: 7px; color: var(--text-3);
+            transition: all var(--t); display: flex; align-items: center;
+        }
+        .bar-icon-btn:hover { background: rgba(255,255,255,0.05); color: var(--text-2); }
+        .bar-icon-btn svg { width: 16px; height: 16px; }
+
+        .char-count {
+            font-family: var(--font-m); font-size: 10.5px; color: var(--text-3);
+            padding-left: 4px;
+        }
+
+        .send-btn {
+            width: 36px; height: 36px; border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), #5b52e0);
+            border: none; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; transition: all var(--t-md);
+            box-shadow: 0 4px 16px var(--accent-glow);
+        }
+        .send-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 22px rgba(124,106,247,0.5);
+        }
+        .send-btn:active { transform: translateY(0); }
+        .send-btn svg { width: 15px; height: 15px; }
+
+        /* ── FILTERS ── */
+        .filters { width: 100%; animation: fadeUp 0.55s ease 0.16s both; }
+
+        .filter-grp { margin-bottom: 14px; }
+
+        .f-label {
+            font-size: 10.5px; font-weight: 600; letter-spacing: 0.09em;
+            text-transform: uppercase; color: var(--text-3);
+            margin-bottom: 8px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .f-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+        /* ── SMART TEXT INPUT BAR ── */
+        .smart-bar {
+            width: 100%;
+            display: flex; align-items: center; gap: 0;
+            background: var(--surface-2);
+            border: 1.5px solid var(--border-hover);
+            border-radius: var(--r);
+            padding: 8px 10px 8px 14px;
+            transition: border-color var(--t-md), box-shadow var(--t-md);
+            min-height: 44px; flex-wrap: wrap; gap: 6px;
+        }
+        .smart-bar:focus-within {
+            border-color: rgba(124,106,247,0.45);
+            box-shadow: 0 0 0 3px rgba(124,106,247,0.08);
+        }
+        .smart-bar-input {
+            flex: 1; min-width: 180px;
+            background: transparent; border: none; outline: none;
+            font-family: var(--font-b); font-size: 13.5px;
+            color: var(--text-1); line-height: 1.5;
+        }
+        .smart-bar-input::placeholder { color: var(--text-3); }
+
+        /* detected chips inside the bar */
+        .det-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 8px 3px 10px;
+            border-radius: 14px; font-size: 12px; font-weight: 500;
+            animation: chipPop 0.2s ease both;
+            flex-shrink: 0;
+        }
+        .det-chip.genre-chip   { background: var(--accent-dim);  border: 1px solid rgba(124,106,247,0.35); color: #c4bffd; }
+        .det-chip.audience-chip{ background: var(--teal-dim);    border: 1px solid rgba(54,201,187,0.35);  color: #80ebe3; }
+        .det-chip.comp-chip    { background: rgba(232,184,75,0.1); border: 1px solid rgba(232,184,75,0.3); color: #f0c875; }
+        .det-chip-x {
+            cursor: pointer; opacity: 0.55; font-size: 13px; line-height: 1;
+            transition: opacity var(--t);
+        }
+        .det-chip-x:hover { opacity: 1; }
+
+        @keyframes chipPop {
+            from { opacity: 0; transform: scale(0.8) translateY(2px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .chip {
+            padding: 5px 13px; border-radius: 20px;
+            font-size: 13px; font-weight: 500;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.025);
+            color: var(--text-2); cursor: pointer;
+            transition: all var(--t); user-select: none;
+        }
+        .chip:hover { border-color: var(--border-hover); background: rgba(255,255,255,0.055); color: var(--text-1); }
+
+        .chip.on        { border-color: rgba(124,106,247,0.5); background: var(--accent-dim); color: #c4bffd; }
+        .chip.on.teal   { border-color: rgba(54,201,187,0.45); background: var(--teal-dim);   color: #80ebe3; }
+        .chip.on.gold   { border-color: rgba(232,184,75,0.42); background: var(--gold-dim);   color: #f0c875; }
+
+        /* ── UPLOAD ── */
+        .upload-sec {
+            width: 100%; margin-top: 34px;
+            animation: fadeUp 0.55s ease 0.24s both;
+        }
+
+        .sec-head {
+            display: flex; align-items: center; gap: 10px; margin-bottom: 11px;
+        }
+        .sec-head-title {
+            font-size: 10.5px; font-weight: 600; letter-spacing: 0.09em;
+            text-transform: uppercase; color: var(--text-3); white-space: nowrap;
+        }
+        .sec-line { flex: 1; height: 1px; background: var(--border); }
+        .sec-opt { font-size: 10.5px; color: var(--text-3); white-space: nowrap; }
+
+        .upload-grid {
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+        }
+
+        .u-card {
+            border: 1.5px dashed rgba(255,255,255,0.09);
+            border-radius: var(--r); padding: 16px 12px;
+            text-align: center; cursor: pointer;
+            transition: all var(--t-md);
+            background: rgba(255,255,255,0.01);
+            position: relative; overflow: hidden;
+        }
+        .u-card::before {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(135deg, rgba(124,106,247,0.05), transparent);
+            opacity: 0; transition: opacity var(--t-md);
+        }
+        .u-card:hover { border-color: rgba(124,106,247,0.32); background: rgba(124,106,247,0.035); transform: translateY(-2px); }
+        .u-card:hover::before { opacity: 1; }
+        .u-card.has-file { border-style: solid; border-color: rgba(54,201,187,0.32); background: rgba(54,201,187,0.03); }
+
+        .u-badge {
+            position: absolute; top: 8px; right: 8px;
+            font-size: 9px; font-family: var(--font-m); font-weight: 500;
+            padding: 2px 6px; border-radius: 4px;
+        }
+
+        .u-icon {
+            width: 36px; height: 36px; margin: 0 auto 10px;
+            border-radius: 9px;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .u-icon svg { width: 18px; height: 18px; }
+
+        .u-title { font-size: 12.5px; font-weight: 600; color: var(--text-1); margin-bottom: 3px; }
+        .u-desc  { font-size: 11px; color: var(--text-3); line-height: 1.4; }
+
+        input[type="file"] { display: none; }
+
+        /* ── EXAMPLES ── */
+        .examples-sec {
+            width: 100%; margin-top: 38px;
+            animation: fadeUp 0.55s ease 0.32s both;
+        }
+
+        .or-line {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 12px; color: var(--text-3); margin-bottom: 13px;
+        }
+        .or-line::before,.or-line::after { content:''; flex:1; height:1px; background: var(--border); }
+
+        .ex-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+
+        .ex-card {
+            padding: 14px 16px; border: 1px solid var(--border);
+            border-radius: var(--r); cursor: pointer;
+            transition: all var(--t-md); background: rgba(255,255,255,0.018);
+            position: relative; overflow: hidden;
+        }
+        .ex-card::after {
+            content: '→'; position: absolute; right: 12px; bottom: 12px;
+            font-size: 14px; color: var(--text-3);
+            opacity: 0; transform: translateX(-5px); transition: all var(--t-md);
+        }
+        .ex-card:hover {
+            border-color: var(--border-hover); background: rgba(255,255,255,0.038);
+            transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,0.3);
+        }
+        .ex-card:hover::after { opacity:1; transform:translateX(0); }
+
+        .ex-tag {
+            font-size: 10px; font-family: var(--font-m); font-weight: 500;
+            letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 7px;
+        }
+        .ex-text { font-size: 12.5px; color: var(--text-2); line-height: 1.5; }
+
+        /* ── ANIMATIONS ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ── MOBILE ── */
+        .mob-toggle {
+            display: none; position: fixed; top: 14px; left: 14px; z-index: 200;
+            width: 36px; height: 36px; border-radius: 9px;
+            background: var(--surface); border: 1px solid var(--border);
+            align-items: center; justify-content: center;
+            cursor: pointer; color: var(--text-2);
+        }
+        .mob-toggle svg { width: 18px; height: 18px; }
+        .mob-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            z-index: 99; backdrop-filter: blur(4px);
+        }
+
+        @media (max-width: 800px) {
+            .sidebar { position: fixed; top:0; bottom:0; left:0; transform: translateX(-100%); }
+            .sidebar.open { transform: translateX(0); }
+            .mob-toggle { display: flex; }
+            .mob-overlay.show { display: block; }
+            .main::before { left: 0; }
+            .upload-grid { grid-template-columns: repeat(2,1fr); }
+            .ex-grid { grid-template-columns: 1fr 1fr; }
+            .content { padding-top: 70px; }
+        }
+        @media (max-width: 500px) {
+            .ex-grid { grid-template-columns: 1fr; }
+        }
+
+        ::-webkit-scrollbar       { width: 5px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.09); border-radius: 3px; }
+
+        /* ── SIGNUP SCREEN ── */
+        .signup-screen {
+            display: none;
+            position: fixed; inset: 0; z-index: 500;
+            background: var(--bg);
+            overflow-y: auto;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+        .signup-screen.visible { display: flex; align-items: flex-start; justify-content: center; }
+        .signup-screen.in      { opacity: 1; }
+
+        /* blurred agent teaser behind the card */
+        .signup-backdrop {
+            position: fixed; inset: 0; z-index: 0;
+            background: radial-gradient(ellipse 70% 60% at 50% 30%, rgba(124,106,247,0.1) 0%, transparent 70%);
+        }
+        .teaser-blur {
+            position: fixed; inset: 0; z-index: 1;
+            display: flex; align-items: center; justify-content: center;
+            pointer-events: none;
+        }
+        .teaser-rows {
+            width: 700px; max-width: 90vw;
+            display: flex; flex-direction: column; gap: 10px;
+            filter: blur(7px); opacity: 0.28;
+            transform: scale(0.96);
+        }
+        .teaser-row {
+            height: 68px; border-radius: 12px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            display: flex; align-items: center; gap: 14px;
+            padding: 0 18px;
+        }
+        .teaser-avatar {
+            width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+        }
+        .teaser-lines { flex: 1; display: flex; flex-direction: column; gap: 7px; }
+        .teaser-line {
+            height: 10px; border-radius: 5px;
+            background: rgba(255,255,255,0.12);
+        }
+        .teaser-tag {
+            width: 60px; height: 22px; border-radius: 6px;
+            background: var(--accent-dim); flex-shrink: 0;
+        }
+
+        /* signup card */
+        .signup-wrap {
+            position: relative; z-index: 2;
+            width: 100%; max-width: 420px;
+            padding: 40px 24px 60px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .su-back {
+            align-self: flex-start; margin-bottom: 24px;
+            display: flex; align-items: center; gap: 6px;
+            font-size: 13px; color: var(--text-2);
+            cursor: pointer; background: none; border: none;
+            transition: color var(--t);
+        }
+        .su-back:hover { color: var(--text-1); }
+        .su-back svg { width: 15px; height: 15px; }
+
+        .su-query-pill {
+            width: 100%; padding: 10px 14px;
+            background: var(--surface-2); border: 1px solid var(--border);
+            border-radius: var(--r); margin-bottom: 24px;
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+        .su-query-icon {
+            width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+            background: var(--accent-dim);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .su-query-icon svg { width: 14px; height: 14px; }
+        .su-query-text {
+            font-size: 12.5px; color: var(--text-2); line-height: 1.5;
+            overflow: hidden; display: -webkit-box;
+            -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        }
+
+        .su-match-badge {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 8px;
+        }
+        .su-match-count {
+            font-family: var(--font-d); font-size: 38px; font-weight: 700;
+            background: linear-gradient(130deg, #b8b0ff, var(--teal));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            background-clip: text; line-height: 1;
+        }
+        .su-match-label {
+            font-size: 14px; color: var(--text-2); line-height: 1.3; max-width: 100px;
+        }
+
+        .su-lock-msg {
+            font-family: var(--font-d); font-size: 22px; font-weight: 600;
+            text-align: center; line-height: 1.3; margin-bottom: 6px;
+            color: var(--text-1);
+        }
+        .su-sub {
+            font-size: 13.5px; color: var(--text-2); text-align: center;
+            margin-bottom: 28px; line-height: 1.6;
+        }
+
+        .su-card {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border-hover);
+            border-radius: var(--r-lg);
+            padding: 26px 24px;
+        }
+
+        .su-google-btn {
+            width: 100%; padding: 11px 16px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-hover);
+            border-radius: var(--r); cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px;
+            color: var(--text-1); font-family: var(--font-b);
+            font-size: 14px; font-weight: 500;
+            transition: all var(--t-md); margin-bottom: 18px;
+        }
+        .su-google-btn:hover {
+            background: rgba(255,255,255,0.09);
+            border-color: rgba(255,255,255,0.2);
+        }
+        .su-google-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+        .su-divider {
+            display: flex; align-items: center; gap: 10px;
+            font-size: 11.5px; color: var(--text-3);
+            margin-bottom: 18px;
+        }
+        .su-divider::before,.su-divider::after {
+            content:''; flex:1; height:1px; background: var(--border);
+        }
+
+        .su-field { margin-bottom: 12px; }
+        .su-label {
+            display: block; font-size: 11.5px; font-weight: 600;
+            color: var(--text-2); margin-bottom: 6px; letter-spacing: 0.04em;
+        }
+        .su-input {
+            width: 100%; padding: 11px 14px;
+            background: var(--surface-2);
+            border: 1.5px solid var(--border);
+            border-radius: var(--r); outline: none;
+            font-family: var(--font-b); font-size: 14px;
+            color: var(--text-1);
+            transition: border-color var(--t-md), box-shadow var(--t-md);
+        }
+        .su-input::placeholder { color: var(--text-3); }
+        .su-input:focus {
+            border-color: rgba(124,106,247,0.5);
+            box-shadow: 0 0 0 3px rgba(124,106,247,0.09);
+        }
+
+        .su-submit {
+            width: 100%; padding: 12px;
+            margin-top: 6px;
+            background: linear-gradient(135deg, var(--accent), #5b52e0);
+            border: none; border-radius: var(--r); cursor: pointer;
+            color: #fff; font-family: var(--font-b);
+            font-size: 14.5px; font-weight: 600;
+            letter-spacing: 0.01em;
+            transition: all var(--t-md);
+            box-shadow: 0 4px 18px var(--accent-glow);
+        }
+        .su-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 7px 24px rgba(124,106,247,0.5);
+        }
+        .su-submit:active { transform: translateY(0); }
+
+        .su-signin {
+            margin-top: 16px; font-size: 13px; color: var(--text-3);
+            text-align: center;
+        }
+        .su-signin a { color: var(--accent); text-decoration: none; }
+        .su-signin a:hover { text-decoration: underline; }
+
+        .su-terms {
+            margin-top: 12px; font-size: 11px; color: var(--text-3);
+            text-align: center; line-height: 1.5;
+        }
+        .su-terms a { color: var(--text-2); text-decoration: underline; }
+    </style>
+</head>
+<body>
+<div class="mob-overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<div class="app">
+
+    <!-- ══════════════════════════════
+         SIDEBAR
+    ══════════════════════════════ -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-head">
+            <a class="logo" href="../index.html">
+                <div class="logo-mark">AQ</div>
+                <span class="logo-name">Auto<em>Query</em></span>
+            </a>
+            <button class="new-btn" onclick="clearAll()">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                </svg>
+                New Search
+            </button>
+        </div>
+
+        <div class="sidebar-body">
+            <div class="sec-label">Recent Searches</div>
+
+            <div class="hist-item" onclick="loadHist(this, 'Fantasy novel, YA audience, 90k words — coming-of-age with memory magic')">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0118 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+                <div>
+                    <div class="hist-name">Fantasy novel, YA audience</div>
+                    <div class="hist-meta">2 days ago</div>
+                </div>
+            </div>
+
+            <div class="hist-item" onclick="loadHist(this, 'Literary fiction, adults, 75k — three generations of a Turkish-German family across Berlin and Istanbul')">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0118 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+                <div>
+                    <div class="hist-name">Literary fiction, adults</div>
+                    <div class="hist-meta">5 days ago</div>
+                </div>
+            </div>
+
+            <div class="hist-item" onclick="loadHist(this, 'Psychological thriller, adult readers, 85k — unreliable narrator, dark academia setting')">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0118 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+                <div>
+                    <div class="hist-name">Psychological thriller, adults</div>
+                    <div class="hist-meta">1 week ago</div>
+                </div>
+            </div>
+
+            <div class="hist-item" onclick="loadHist(this, 'Memoir, 60k — first-generation immigrant, food and identity themes')">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0118 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+                <div>
+                    <div class="hist-name">Non-fiction memoir, adults</div>
+                    <div class="hist-meta">2 weeks ago</div>
+                </div>
+            </div>
+
+            <div class="hist-item" onclick="loadHist(this, 'Contemporary romance, 82k — second chance, small-town setting, found family themes')">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0118 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+                <div>
+                    <div class="hist-name">Contemporary romance</div>
+                    <div class="hist-meta">3 weeks ago</div>
+                </div>
+            </div>
+
+            <div class="s-divider"></div>
+            <div class="sec-label">Saved Templates</div>
+
+            <div class="hist-item">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/></svg>
+                <div>
+                    <div class="hist-name">Epic fantasy query template</div>
+                    <div class="hist-meta">Saved</div>
+                </div>
+            </div>
+
+            <div class="hist-item">
+                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z"/></svg>
+                <div>
+                    <div class="hist-name">Literary fiction bio template</div>
+                    <div class="hist-meta">Saved</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-foot">
+            <div class="user-pill">
+                <div class="avatar">A</div>
+                <span class="user-name">Alex</span>
+            </div>
+            <div class="foot-icons">
+                <button class="ico-btn" data-tip="Help">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z"/></svg>
+                </button>
+                <button class="ico-btn" data-tip="Settings">
+                    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 010 .255c-.007.378.138.75.43.99l1.005.828c.424.35.534.954.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.932 6.932 0 010-.255c.007-.378-.138-.75-.43-.99l-1.004-.828a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.644-.869l.214-1.281z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Mobile toggle -->
+    <button class="mob-toggle" onclick="openSidebar()">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5"/>
+        </svg>
+    </button>
+
+    <!-- ══════════════════════════════
+         MAIN
+    ══════════════════════════════ -->
+    <main class="main" id="main">
+        <div class="content">
+
+            <!-- HERO -->
+            <section class="hero">
+                <div class="eyebrow">
+                    <span class="eyebrow-dot"></span>
+                    AI-Powered Agent Discovery
+                </div>
+                <h1 class="hero-title">
+                    Your story deserves<br>
+                    the <span class="hl">right agent</span>
+                </h1>
+                <p class="hero-sub">
+                    Describe your manuscript and let AutoQuery match you with agents actively seeking your story — then auto-format your query letters in seconds.
+                </p>
+                <span class="shortcut-hint">Press <kbd>⌘</kbd><kbd>K</kbd> to focus</span>
+            </section>
+
+            <!-- SEARCH -->
+            <div class="search-wrap">
+                <div class="search-glow"></div>
+                <div class="search-box">
+                    <textarea
+                        class="search-ta"
+                        id="searchInput"
+                        placeholder="Describe your manuscript — genre, word count, themes, comp titles, what makes it unique..."
+                        rows="2"
+                        oninput="onType(this)"
+                    ></textarea>
+                    <div class="search-bar-foot">
+                        <div class="bar-left">
+                            <button class="bar-icon-btn" title="Attach file" onclick="document.getElementById('attachFile').click()">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13"/></svg>
+                            </button>
+                            <button class="bar-icon-btn" title="Voice input">
+                                <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18.75a6 6 0 006-6v-1.5m-6 7.5a6 6 0 01-6-6v-1.5m6 7.5v3.75m-3.75 0h7.5M12 15.75a3 3 0 01-3-3V4.5a3 3 0 116 0v8.25a3 3 0 01-3 3z"/></svg>
+                            </button>
+                            <span class="char-count" id="charCount">0 / 2000</span>
+                        </div>
+                        <button class="send-btn" id="sendBtn" onclick="runSearch()">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <input type="file" id="attachFile" accept=".pdf,.doc,.docx,.txt">
+
+            <!-- FILTERS -->
+            <div class="filters">
+                <div class="filter-grp">
+                    <div class="f-label">Comparable Titles</div>
+                    <div class="smart-bar" id="compBar">
+                        <svg style="width:15px;height:15px;flex-shrink:0;color:var(--text-3);margin-right:2px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+                        <input
+                            class="smart-bar-input"
+                            id="compInput"
+                            placeholder="e.g. "The Name of the Wind", "The Poppy War", "Circe""
+                            autocomplete="off"
+                            onkeydown="addCompTitle(event)"
+                        >
+                    </div>
+                    <div style="font-size:11px;color:var(--text-3);margin-top:5px;padding-left:2px;">Press <kbd style="font-family:var(--font-m);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:10px;">Enter</kbd> or <kbd style="font-family:var(--font-m);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:10px;">,</kbd> after each title</div>
+                </div>
+
+                <div class="filter-grp">
+                    <div class="f-label">Genre</div>
+                    <div class="smart-bar" id="genreBar">
+                        <input
+                            class="smart-bar-input"
+                            id="genreInput"
+                            placeholder="List genre or describe — e.g. "dark fantasy with romance elements""
+                            autocomplete="off"
+                            oninput="detectGenres(this.value)"
+                        >
+                    </div>
+                </div>
+
+                <div class="filter-grp">
+                    <div class="f-label">Audience</div>
+                    <div class="smart-bar" id="audienceBar">
+                        <input
+                            class="smart-bar-input"
+                            id="audienceInput"
+                            placeholder="Describe your target audience — e.g. "adults who enjoy YA crossover""
+                            autocomplete="off"
+                            oninput="detectAudience(this.value)"
+                        >
+                    </div>
+                </div>
+
+                <div class="filter-grp">
+                    <div class="f-label">Language</div>
+                    <div class="chips" id="langChips">
+                        <div class="chip" onclick="toggleChip(this,'lang','gold')">English</div>
+                        <div class="chip" onclick="toggleChip(this,'lang','gold')">German</div>
+                        <div class="chip" onclick="toggleChip(this,'lang','gold')">French</div>
+                        <div class="chip" onclick="toggleChip(this,'lang','gold')">Spanish</div>
+                        <div class="chip" onclick="toggleChip(this,'lang','gold')">Italian</div>
+                        <div class="chip" onclick="toggleChip(this,'lang','gold')">Dutch</div>
+                        <div class="chip" onclick="toggleChip(this,'lang','gold')">Portuguese</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- UPLOAD -->
+            <div class="upload-sec">
+                <div class="sec-head">
+                    <span class="sec-head-title">Upload Materials</span>
+                    <div class="sec-line"></div>
+                    <span class="sec-opt">optional · improves matching</span>
+                </div>
+                <div class="upload-grid">
+
+                    <div class="u-card" onclick="trigUpload('ms')" ondragover="dOver(event,this)" ondragleave="dLeave(event,this)" ondrop="dDrop(event,this,'ms')">
+                        <span class="u-badge" id="b-ms" style="background:rgba(124,106,247,0.14);color:#b0a9fc;">PDF · DOCX</span>
+                        <div class="u-icon" style="background:rgba(124,106,247,0.12);">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="#a99ff9" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                        </div>
+                        <div class="u-title">Manuscript</div>
+                        <div class="u-desc">First 50 pages or full excerpt</div>
+                        <input type="file" id="f-ms" accept=".pdf,.docx,.txt">
+                    </div>
+
+                    <div class="u-card" onclick="trigUpload('bio')" ondragover="dOver(event,this)" ondragleave="dLeave(event,this)" ondrop="dDrop(event,this,'bio')">
+                        <span class="u-badge" id="b-bio" style="background:rgba(54,201,187,0.12);color:#7ae8e0;">PDF · TXT</span>
+                        <div class="u-icon" style="background:rgba(54,201,187,0.12);">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="#36c9bb" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"/></svg>
+                        </div>
+                        <div class="u-title">Author Bio</div>
+                        <div class="u-desc">Publishing history &amp; credentials</div>
+                        <input type="file" id="f-bio" accept=".pdf,.docx,.txt">
+                    </div>
+
+                    <div class="u-card" onclick="trigUpload('sum')" ondragover="dOver(event,this)" ondragleave="dLeave(event,this)" ondrop="dDrop(event,this,'sum')">
+                        <span class="u-badge" id="b-sum" style="background:rgba(232,184,75,0.12);color:#f0c875;">PDF · TXT</span>
+                        <div class="u-icon" style="background:rgba(232,184,75,0.12);">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="#e8b84b" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12"/></svg>
+                        </div>
+                        <div class="u-title">Book Summary</div>
+                        <div class="u-desc">Synopsis or chapter outline</div>
+                        <input type="file" id="f-sum" accept=".pdf,.docx,.txt">
+                    </div>
+
+                    <div class="u-card" onclick="trigUpload('ql')" ondragover="dOver(event,this)" ondragleave="dLeave(event,this)" ondrop="dDrop(event,this,'ql')">
+                        <span class="u-badge" id="b-ql" style="background:rgba(255,110,90,0.12);color:#ff9080;">PDF · TXT</span>
+                        <div class="u-icon" style="background:rgba(255,110,90,0.1);">
+                            <svg fill="none" viewBox="0 0 24 24" stroke="#ff7060" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 9v.906a2.25 2.25 0 01-1.183 1.981l-6.478 3.488M2.25 9v.906a2.25 2.25 0 001.183 1.981l6.478 3.488m8.839 2.51l-4.66-2.51m0 0l-1.023-.55a2.25 2.25 0 00-2.134 0l-1.022.55m0 0l-4.661 2.51m16.5 1.615a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V8.844a2.25 2.25 0 011.183-1.98l7.5-4.04a2.25 2.25 0 012.134 0l7.5 4.04a2.25 2.25 0 011.183 1.98V19.5z"/></svg>
+                        </div>
+                        <div class="u-title">Query Letter</div>
+                        <div class="u-desc">Existing draft to auto-improve</div>
+                        <input type="file" id="f-ql" accept=".pdf,.docx,.txt">
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- EXAMPLES -->
+            <div class="examples-sec">
+                <div class="or-line">or start with an example</div>
+                <div class="ex-grid">
+
+                    <div class="ex-card" onclick="useExample(this)">
+                        <div class="ex-tag" style="color:#b8b0ff;">Fantasy · YA · 92k words</div>
+                        <div class="ex-text">"A teenager discovers she can rewrite memories — but every edit carries a cost she cannot undo."</div>
+                    </div>
+
+                    <div class="ex-card" onclick="useExample(this)">
+                        <div class="ex-tag" style="color:#36c9bb;">Literary Fiction · Adults · 78k</div>
+                        <div class="ex-text">"Three generations of a Turkish-German family, unravelling across parallel timelines in Berlin and Istanbul."</div>
+                    </div>
+
+                    <div class="ex-card" onclick="useExample(this)">
+                        <div class="ex-tag" style="color:#e8b84b;">Thriller · Adults · 88k words</div>
+                        <div class="ex-text">"An archivist authenticating rare manuscripts realizes every book she approves is killing its readers."</div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div><!-- /content -->
+    </main>
+</div><!-- /app -->
+
+<!-- ══════════════════════════════
+     SIGNUP SCREEN
+══════════════════════════════ -->
+<div class="signup-screen" id="signupScreen">
+    <div class="signup-backdrop"></div>
+
+    <!-- blurred fake agent cards behind -->
+    <div class="teaser-blur">
+        <div class="teaser-rows">
+            <div class="teaser-row">
+                <div class="teaser-avatar" style="background:linear-gradient(135deg,#7c6af7,#36c9bb)"></div>
+                <div class="teaser-lines">
+                    <div class="teaser-line" style="width:55%"></div>
+                    <div class="teaser-line" style="width:35%"></div>
+                </div>
+                <div class="teaser-tag"></div>
+            </div>
+            <div class="teaser-row">
+                <div class="teaser-avatar" style="background:linear-gradient(135deg,#36c9bb,#e8b84b)"></div>
+                <div class="teaser-lines">
+                    <div class="teaser-line" style="width:48%"></div>
+                    <div class="teaser-line" style="width:30%"></div>
+                </div>
+                <div class="teaser-tag"></div>
+            </div>
+            <div class="teaser-row">
+                <div class="teaser-avatar" style="background:linear-gradient(135deg,#e8b84b,#7c6af7)"></div>
+                <div class="teaser-lines">
+                    <div class="teaser-line" style="width:62%"></div>
+                    <div class="teaser-line" style="width:40%"></div>
+                </div>
+                <div class="teaser-tag"></div>
+            </div>
+            <div class="teaser-row">
+                <div class="teaser-avatar" style="background:linear-gradient(135deg,#5b52e0,#36c9bb)"></div>
+                <div class="teaser-lines">
+                    <div class="teaser-line" style="width:44%"></div>
+                    <div class="teaser-line" style="width:28%"></div>
+                </div>
+                <div class="teaser-tag"></div>
+            </div>
+            <div class="teaser-row">
+                <div class="teaser-avatar" style="background:linear-gradient(135deg,#36c9bb,#7c6af7)"></div>
+                <div class="teaser-lines">
+                    <div class="teaser-line" style="width:50%"></div>
+                    <div class="teaser-line" style="width:33%"></div>
+                </div>
+                <div class="teaser-tag"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- signup card -->
+    <div class="signup-wrap">
+        <button class="su-back" onclick="closeSignup()">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+            </svg>
+            Back to search
+        </button>
+
+        <!-- search query preview -->
+        <div class="su-query-pill">
+            <div class="su-query-icon">
+                <svg fill="none" viewBox="0 0 24 24" stroke="#a99ff9" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 15.803 7.5 7.5 0 0016.803 15.803z"/>
+                </svg>
+            </div>
+            <div class="su-query-text" id="suQueryText">Your search</div>
+        </div>
+
+        <!-- match count -->
+        <div class="su-match-badge">
+            <div class="su-match-count" id="suCount">47</div>
+            <div class="su-match-label">agents match your manuscript</div>
+        </div>
+
+        <h2 class="su-lock-msg">Unlock your matches</h2>
+        <p class="su-sub">Create a free account to see all matching agents,<br>their submission preferences &amp; auto-formatted query letters.</p>
+
+        <div class="su-card">
+            <!-- Google -->
+            <button class="su-google-btn" onclick="handleSignup('google')">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                </svg>
+                Continue with Google
+            </button>
+
+            <div class="su-divider">or sign up with email</div>
+
+            <div class="su-field">
+                <label class="su-label">Email address</label>
+                <input type="email" class="su-input" placeholder="you@example.com" id="suEmail" autocomplete="email">
+            </div>
+            <div class="su-field">
+                <label class="su-label">Password</label>
+                <input type="password" class="su-input" placeholder="Min. 8 characters" id="suPassword" autocomplete="new-password">
+            </div>
+
+            <button class="su-submit" onclick="handleSignup('email')">Create free account &amp; see matches</button>
+
+            <div class="su-signin">Already have an account? <a href="#">Sign in</a></div>
+            <div class="su-terms">By signing up you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── textarea auto-resize + char count
+function onType(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+    document.getElementById('charCount').textContent = el.value.length + ' / 2000';
+}
+
+// ── chip toggle (language only now)
+function toggleChip(chip, grp, color) {
+    chip.classList.toggle('on');
+    if (color) chip.classList.toggle(color);
+}
+
+// ── smart genre / audience detection ──
+const GENRE_MAP = [
+    { keys: ['fantasy','magic','dragon','wizard','elven','elves','fae','faerie','sorcery','enchant'], label: 'Fantasy' },
+    { keys: ['literary fiction','literary novel','literary','character-driven','character driven'], label: 'Literary Fiction' },
+    { keys: ['thriller','suspense','page-turner','tension','chase'], label: 'Thriller' },
+    { keys: ['romance','love story','falling in love','second chance','enemies to lovers','swoon'], label: 'Romance' },
+    { keys: ['sci-fi','science fiction','scifi','space','dystopia','dystopian','robot','artificial intelligence','ai','future','cyberpunk'], label: 'Sci-Fi' },
+    { keys: ['horror','scary','ghost','haunted','monster','dark supernatural','terror'], label: 'Horror' },
+    { keys: ['ya ','young adult','ya,','ya.','ya\n'], label: 'YA' },
+    { keys: ['mystery','detective','whodunit','clue','investigation','sleuth'], label: 'Mystery' },
+    { keys: ['non-fiction','nonfiction','self-help','self help','true story','true crime','essay','journalism'], label: 'Non-Fiction' },
+    { keys: ['memoir','autobiography','personal story','personal narrative','my life'], label: 'Memoir' },
+    { keys: ['historical','history','period piece','victorian','edwardian','medieval','ancient'], label: 'Historical' },
+    { keys: ['crime','heist','noir','gangster'], label: 'Crime' },
+    { keys: ['middle grade','middle-grade'], label: 'Middle Grade' },
+];
+
+const AUDIENCE_MAP = [
+    { keys: ['young adult','ya ','ya,','ya\n','teen','teenager','high school'], label: 'Young Adult' },
+    { keys: ['middle grade','middle-grade','middle school','tween'], label: 'Middle Grade' },
+    { keys: ['children','picture book','kids','child'], label: 'Children' },
+    { keys: ['adult','grown-up','grown up','general audience'], label: 'Adults' },
+];
+
+// state: detected labels
+const detectedGenres   = new Set();
+const detectedAudience = new Set();
+
+function detectGenres(val) {
+    const v = ' ' + val.toLowerCase() + ' ';
+    const found = new Set();
+    for (const { keys, label } of GENRE_MAP) {
+        if (keys.some(k => v.includes(k))) found.add(label);
+    }
+    syncChips('genreBar', 'genreInput', found, detectedGenres, 'genre-chip');
+}
+
+function detectAudience(val) {
+    const v = ' ' + val.toLowerCase() + ' ';
+    const found = new Set();
+    for (const { keys, label } of AUDIENCE_MAP) {
+        if (keys.some(k => v.includes(k))) found.add(label);
+    }
+    syncChips('audienceBar', 'audienceInput', found, detectedAudience, 'audience-chip');
+}
+
+function syncChips(barId, inputId, found, state, cls) {
+    const bar   = document.getElementById(barId);
+    const input = document.getElementById(inputId);
+
+    // remove chips no longer detected
+    bar.querySelectorAll('.det-chip').forEach(el => {
+        if (!found.has(el.dataset.label)) {
+            el.style.animation = 'none';
+            el.style.opacity = '0';
+            el.style.transform = 'scale(0.8)';
+            el.style.transition = 'opacity 0.15s, transform 0.15s';
+            setTimeout(() => el.remove(), 150);
+            state.delete(el.dataset.label);
+        }
+    });
+
+    // add newly detected chips (before the input)
+    for (const label of found) {
+        if (!state.has(label)) {
+            state.add(label);
+            const chip = document.createElement('div');
+            chip.className = `det-chip ${cls}`;
+            chip.dataset.label = label;
+            chip.innerHTML = `${label}<span class="det-chip-x" onclick="removeDetChip(this,'${barId}','${label}')">×</span>`;
+            bar.insertBefore(chip, input);
+        }
+    }
+}
+
+function removeDetChip(x, barId, label) {
+    const chip = x.closest('.det-chip');
+    chip.style.transition = 'opacity 0.15s, transform 0.15s';
+    chip.style.opacity = '0'; chip.style.transform = 'scale(0.8)';
+    setTimeout(() => chip.remove(), 150);
+    detectedGenres.delete(label);
+    detectedAudience.delete(label);
+}
+
+// ── comp titles
+const compTitles = new Set();
+
+function addCompTitle(e) {
+    if (e.key !== 'Enter' && e.key !== ',') return;
+    e.preventDefault();
+    const input = document.getElementById('compInput');
+    const val = input.value.replace(/,/g, '').replace(/[""]/g, '"').trim();
+    if (!val || compTitles.has(val)) { input.value = ''; return; }
+    compTitles.add(val);
+
+    const bar = document.getElementById('compBar');
+    const chip = document.createElement('div');
+    chip.className = 'det-chip comp-chip';
+    chip.dataset.label = val;
+    chip.innerHTML = `<svg style="width:11px;height:11px;opacity:0.6;flex-shrink:0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0118 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>${val}<span class="det-chip-x" onclick="removeCompTitle(this,'${val.replace(/'/g,"\\'")}')">×</span>`;
+    bar.insertBefore(chip, input);
+    input.value = '';
+}
+
+function removeCompTitle(x, label) {
+    const chip = x.closest('.det-chip');
+    chip.style.transition = 'opacity 0.15s, transform 0.15s';
+    chip.style.opacity = '0'; chip.style.transform = 'scale(0.8)';
+    setTimeout(() => chip.remove(), 150);
+    compTitles.delete(label);
+}
+
+// expose detected values for runSearch
+function getDetectedFilters() {
+    return {
+        genres:   [...detectedGenres],
+        audience: [...detectedAudience],
+        langs:    [...document.querySelectorAll('#langChips .chip.on')].map(c => c.textContent),
+    };
+}
+
+// ── load history item
+function loadHist(el, text) {
+    document.querySelectorAll('.hist-item').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+    const ta = document.getElementById('searchInput');
+    ta.value = text;
+    onType(ta);
+    ta.focus();
+}
+
+// ── clear everything
+function clearAll() {
+    document.querySelectorAll('.hist-item').forEach(i => i.classList.remove('active'));
+    const ta = document.getElementById('searchInput');
+    ta.value = ''; ta.style.height = 'auto';
+    document.getElementById('charCount').textContent = '0 / 2000';
+    // reset language chips
+    document.querySelectorAll('.chip').forEach(c => c.className = 'chip');
+    // reset smart bars
+    document.getElementById('genreInput').value = '';
+    document.getElementById('audienceInput').value = '';
+    document.getElementById('compInput').value = '';
+    document.querySelectorAll('.det-chip').forEach(c => c.remove());
+    detectedGenres.clear(); detectedAudience.clear(); compTitles.clear();
+    // reset uploads
+    ['ms','bio','sum','ql'].forEach(k => {
+        document.getElementById('b-' + k).textContent = k === 'ms' ? 'PDF · DOCX' : 'PDF · TXT';
+        document.getElementById('f-' + k).value = '';
+        document.querySelector(`[onclick="trigUpload('${k}')"]`)?.classList.remove('has-file');
+    });
+}
+
+// ── file upload cards
+function trigUpload(k) { document.getElementById('f-' + k).click(); }
+
+['ms','bio','sum','ql'].forEach(k => {
+    document.getElementById('f-' + k).addEventListener('change', function() {
+        if (!this.files[0]) return;
+        markFile(k, this.files[0].name);
+    });
+});
+
+function markFile(k, name) {
+    const short = name.length > 14 ? name.slice(0, 13) + '…' : name;
+    document.getElementById('b-' + k).textContent = '✓ ' + short;
+    document.querySelector(`[onclick="trigUpload('${k}')"]`)?.classList.add('has-file');
+}
+
+function dOver(e, card) {
+    e.preventDefault();
+    card.style.borderColor = 'rgba(124,106,247,0.55)';
+    card.style.background = 'rgba(124,106,247,0.07)';
+}
+function dLeave(e, card) { card.style.borderColor = ''; card.style.background = ''; }
+function dDrop(e, card, k) {
+    e.preventDefault();
+    card.style.borderColor = ''; card.style.background = '';
+    const f = e.dataTransfer.files[0];
+    if (f) markFile(k, f.name);
+}
+
+// ── use example
+function useExample(card) {
+    const tag  = card.querySelector('.ex-tag').textContent;
+    const text = card.querySelector('.ex-text').textContent;
+    const ta   = document.getElementById('searchInput');
+    ta.value   = tag + '\n' + text.replace(/[""]/g, '"');
+    onType(ta);
+
+    // auto-populate smart bars from example tag
+    const tl = tag.toLowerCase();
+    document.getElementById('genreInput').value = tag.split('·')[0].trim();
+    detectGenres(document.getElementById('genreInput').value);
+    const audiencePart = tag.split('·')[1]?.trim() || '';
+    document.getElementById('audienceInput').value = audiencePart;
+    detectAudience(audiencePart);
+
+    document.querySelector('.main').scrollTo({ top: 0, behavior: 'smooth' });
+    ta.focus();
+}
+
+// ── search → signup
+function runSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (!q) { document.getElementById('searchInput').focus(); return; }
+
+    const btn = document.getElementById('sendBtn');
+    btn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="animation:spin .8s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"/></svg>`;
+    btn.disabled = true;
+
+    setTimeout(() => {
+        btn.innerHTML = `<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"/></svg>`;
+        btn.disabled = false;
+        openSignup(q);
+    }, 1400);
+}
+
+function openSignup(query) {
+    // populate query preview
+    const short = query.length > 110 ? query.slice(0, 108) + '…' : query;
+    document.getElementById('suQueryText').textContent = short;
+
+    // count based on detected filters + language chips
+    const filterCount = detectedGenres.size + detectedAudience.size
+        + document.querySelectorAll('#langChips .chip.on').length;
+    const count = 28 + Math.floor(Math.random() * 30) + filterCount * 4;
+    document.getElementById('suCount').textContent = count;
+
+    const screen = document.getElementById('signupScreen');
+    screen.classList.add('visible');
+    screen.scrollTop = 0;
+    requestAnimationFrame(() => requestAnimationFrame(() => screen.classList.add('in')));
+    document.body.style.overflow = 'hidden';
+}
+
+function closeSignup() {
+    const screen = document.getElementById('signupScreen');
+    screen.classList.remove('in');
+    setTimeout(() => {
+        screen.classList.remove('visible');
+        document.body.style.overflow = '';
+    }, 350);
+}
+
+function handleSignup(method) {
+    const btn = document.querySelector('.su-submit');
+    if (method === 'email') {
+        const email = document.getElementById('suEmail').value.trim();
+        if (!email) { document.getElementById('suEmail').focus(); return; }
+        btn.textContent = 'Creating your account…';
+        btn.disabled = true;
+    }
+    // placeholder — wire to real auth here
+}
+
+// ── mobile sidebar
+function openSidebar() {
+    document.getElementById('sidebar').classList.add('open');
+    document.getElementById('overlay').classList.add('show');
+}
+function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('show');
+}
+
+// ── keyboard shortcuts
+document.addEventListener('keydown', e => {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        document.getElementById('searchInput').focus();
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') runSearch();
+    if (e.key === 'Escape') {
+        if (document.getElementById('signupScreen').classList.contains('visible')) closeSignup();
+        else closeSidebar();
+    }
+});
+</script>
+</body>
+</html>

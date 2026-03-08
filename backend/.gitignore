@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Environment variables
+.env
+
+# Google credentials (NEVER commit this!)
+google-credentials.json
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
