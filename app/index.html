@@ -902,21 +902,6 @@
             <!-- FILTERS -->
             <div class="filters">
                 <div class="filter-grp">
-                    <div class="f-label">Comparable Titles</div>
-                    <div class="smart-bar" id="compBar">
-                        <svg style="width:15px;height:15px;flex-shrink:0;color:var(--text-3);margin-right:2px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
-                        <input
-                            class="smart-bar-input"
-                            id="compInput"
-                            placeholder="e.g. "The Name of the Wind", "The Poppy War", "Circe""
-                            autocomplete="off"
-                            onkeydown="addCompTitle(event)"
-                        >
-                    </div>
-                    <div style="font-size:11px;color:var(--text-3);margin-top:5px;padding-left:2px;">Press <kbd style="font-family:var(--font-m);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:10px;">Enter</kbd> or <kbd style="font-family:var(--font-m);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:10px;">,</kbd> after each title</div>
-                </div>
-
-                <div class="filter-grp">
                     <div class="f-label">Genre</div>
                     <div class="smart-bar" id="genreBar">
                         <input
@@ -1005,6 +990,24 @@
                         <input type="file" id="f-ql" accept=".pdf,.docx,.txt">
                     </div>
 
+                </div>
+            </div>
+
+            <!-- COMPARABLE TITLES -->
+            <div class="filters">
+                <div class="filter-grp">
+                    <div class="f-label">Comparable Titles</div>
+                    <div class="smart-bar" id="compBar">
+                        <svg style="width:15px;height:15px;flex-shrink:0;color:var(--text-3);margin-right:2px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/></svg>
+                        <input
+                            class="smart-bar-input"
+                            id="compInput"
+                            placeholder="e.g. "The Name of the Wind", "The Poppy War", "Circe""
+                            autocomplete="off"
+                            onkeydown="addCompTitle(event)"
+                        >
+                    </div>
+                    <div style="font-size:11px;color:var(--text-3);margin-top:5px;padding-left:2px;">Press <kbd style="font-family:var(--font-m);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:10px;">Enter</kbd> or <kbd style="font-family:var(--font-m);background:rgba(255,255,255,0.06);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-size:10px;">,</kbd> after each title</div>
                 </div>
             </div>
 
