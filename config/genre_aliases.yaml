@@ -1,0 +1,93 @@
+aliases:
+  literary_fiction:
+    - literary
+    - literary fiction
+    - lit fic
+    - literary fic
+  commercial_fiction:
+    - commercial
+    - commercial fiction
+    - commercial fic
+  science_fiction:
+    - sci-fi
+    - scifi
+    - sf
+    - science fiction
+    - sci fi
+  fantasy:
+    - epic fantasy
+    - urban fantasy
+    - dark fantasy
+  romance:
+    - rom-com
+    - romantic comedy
+    - contemporary romance
+  mystery:
+    - cozy mystery
+    - cozy mysteries
+    - mysteries
+  thriller:
+    - thrillers
+    - psychological thriller
+  horror:
+    - dark horror
+  historical_fiction:
+    - historical
+    - historical fiction
+    - hist fic
+    - historical fic
+  young_adult:
+    - ya
+    - YA
+    - young adult
+  middle_grade:
+    - mg
+    - MG
+    - middle-grade
+  picture_books:
+    - picture book
+    - pb
+    - PB
+  memoir:
+    - memoirs
+    - personal memoir
+  narrative_nonfiction:
+    - narrative non-fiction
+    - creative nonfiction
+    - creative non-fiction
+    - narrative nf
+  self_help:
+    - self-help
+    - personal development
+  biography:
+    - biographies
+    - bio
+  womens_fiction:
+    - women's fiction
+    - women's fic
+    - womens fic
+  upmarket_fiction:
+    - upmarket
+    - upmarket fic
+    - book club fiction
+  speculative_fiction:
+    - speculative
+    - spec fic
+  contemporary_fiction:
+    - contemporary
+    - contemporary fic
+  crime_fiction:
+    - crime
+    - crime fic
+  suspense:
+    - domestic suspense
+  true_crime:
+    - true-crime
+  graphic_novels:
+    - graphic novel
+    - comics
+    - graphic novels & comics
+  health_wellness:
+    - health & wellness
+    - health and wellness
+    - wellness

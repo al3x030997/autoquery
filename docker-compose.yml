@@ -1,0 +1,142 @@
+services:
+  db:
+    image: pgvector/pgvector:pg15
+    environment:
+      POSTGRES_USER: autoquery
+      POSTGRES_PASSWORD: autoquery
+      POSTGRES_DB: autoquery
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autoquery -d autoquery"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama_models:/root/.ollama
+    ports:
+      - "11434:11434"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:11434/api/tags || exit 1"]
+      interval: 5m
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: uvicorn autoquery.api.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://autoquery:autoquery@db:5432/autoquery
+      REDIS_URL: redis://redis:6379/0
+      OLLAMA_URL: http://ollama:11434
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-30}
+      GENRE_SCORE_WEIGHT: ${GENRE_SCORE_WEIGHT:-0.35}
+      FTS_SCORE_WEIGHT: ${FTS_SCORE_WEIGHT:-0.25}
+      SEMANTIC_SCORE_WEIGHT: ${SEMANTIC_SCORE_WEIGHT:-0.25}
+      AUDIENCE_SCORE_WEIGHT: ${AUDIENCE_SCORE_WEIGHT:-0.15}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-nomic-embed-text}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A autoquery.tasks.celery_app worker --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_URL: postgresql://autoquery:autoquery@db:5432/autoquery
+      REDIS_URL: redis://redis:6379/0
+      OLLAMA_URL: http://ollama:11434
+      GENRE_SCORE_WEIGHT: ${GENRE_SCORE_WEIGHT:-0.35}
+      FTS_SCORE_WEIGHT: ${FTS_SCORE_WEIGHT:-0.25}
+      SEMANTIC_SCORE_WEIGHT: ${SEMANTIC_SCORE_WEIGHT:-0.25}
+      AUDIENCE_SCORE_WEIGHT: ${AUDIENCE_SCORE_WEIGHT:-0.15}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-nomic-embed-text}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      ollama:
+        condition: service_started
+
+  beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A autoquery.tasks.celery_app beat --loglevel=info
+    volumes:
+      - .:/app
+    environment:
+      DATABASE_URL: postgresql://autoquery:autoquery@db:5432/autoquery
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+
+  review:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: streamlit run autoquery/review/app.py --server.port=8501 --server.address=0.0.0.0
+    volumes:
+      - .:/app
+    ports:
+      - "8501:8501"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://autoquery:autoquery@db:5432/autoquery}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    external: true
+    name: autoquery_implementation_postgres_data
+  redis_data:
+  ollama_models:
+    external: true
+    name: autoquery_implementation_ollama_models

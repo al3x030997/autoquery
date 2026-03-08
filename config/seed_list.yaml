@@ -1,0 +1,188 @@
+domains:
+  # --- US Agencies ---
+  - domain: janklow.com
+    agency_name: Janklow & Nesbit Associates
+    country: US
+  - domain: writershouse.com
+    agency_name: Writers House
+    country: US
+  - domain: wmeagency.com
+    agency_name: WME (William Morris Endeavor)
+    country: US
+  - domain: theliterarysalon.com
+    agency_name: The Literary Salon
+    country: US
+  - domain: dystel.com
+    agency_name: Dystel, Goderich & Bourret
+    country: US
+  - domain: foliolitmanagement.com
+    agency_name: Folio Literary Management
+    country: US
+  - domain: jabberwockyliterary.com
+    agency_name: JABberwocky Literary Agency
+    country: US
+  - domain: massieandmcquilkin.com
+    agency_name: Massie & McQuilkin
+    country: US
+  - domain: inkwellmanagement.com
+    agency_name: InkWell Management
+    country: US
+  - domain: tridentmediagroup.com
+    agency_name: Trident Media Group
+    country: US
+  - domain: aevitascreative.com
+    agency_name: Aevitas Creative Management
+    country: US
+  - domain: parkandfineliterary.com
+    agency_name: Park & Fine Literary and Media
+    country: US
+  - domain: thefriedrichagency.com
+    agency_name: The Friedrich Agency
+    country: US
+  - domain: bookendsliterary.com
+    agency_name: BookEnds Literary Agency
+    country: US
+  - domain: newleafliterary.com
+    agency_name: New Leaf Literary & Media
+    country: US
+  - domain: ktliterary.com
+    agency_name: kt literary
+    country: US
+  - domain: bradfordlit.com
+    agency_name: Bradford Literary Agency
+    country: US
+  - domain: sfreidliterary.com
+    agency_name: S.F. Reid Literary Agency
+    country: US
+  - domain: hsagency.net
+    agency_name: HSG Agency
+    country: US
+  - domain: andreabrownlit.com
+    agency_name: Andrea Brown Literary Agency
+    country: US
+  - domain: galltzacker.com
+    agency_name: Gallt & Zacker Literary Agency
+    country: US
+  - domain: emmalatterly.com
+    agency_name: Emma Latterly Literary Agency
+    country: US
+  - domain: nelsonagency.com
+    agency_name: Nelson Literary Agency
+    country: US
+  - domain: barriermethod.com
+    agency_name: Barrier Method Literary
+    country: US
+  - domain: brettadamsltd.com
+    agency_name: Brett Adams Ltd
+    country: US
+  - domain: thebookgroup.com
+    agency_name: The Book Group
+    country: US
+  - domain: defioreandco.com
+    agency_name: DeFiore and Company
+    country: US
+  - domain: dunhamlit.com
+    agency_name: Dunham Literary
+    country: US
+  - domain: empireliterary.com
+    agency_name: Empire Literary
+    country: US
+  - domain: fletcherandco.com
+    agency_name: Fletcher & Company
+    country: US
+  - domain: foundrylit.com
+    agency_name: Foundry Literary + Media
+    country: US
+  - domain: fullcircleliterary.com
+    agency_name: Full Circle Literary
+    country: US
+  - domain: gelfmanschneider.com
+    agency_name: Gelfman Schneider / ICM Partners
+    country: US
+  - domain: hmhbooks.com
+    agency_name: HMH Books (agency division)
+    country: US
+  - domain: jdeliterary.com
+    agency_name: JDE Literary
+    country: US
+  - domain: kimberlybrowerlit.com
+    agency_name: Kimberly Brower Literary Agency
+    country: US
+  - domain: lookoutagency.com
+    agency_name: Lookout Agency
+    country: US
+  - domain: mswlit.com
+    agency_name: MSW Literary Agency
+    country: US
+  - domain: ps-literary.com
+    agency_name: P.S. Literary Agency
+    country: US
+  - domain: redhouselit.com
+    agency_name: Red House Literary
+    country: US
+  - domain: salomonseassociates.com
+    agency_name: Salomonses & Associates
+    country: US
+
+  # --- UK Agencies ---
+  - domain: curtisbrown.co.uk
+    agency_name: Curtis Brown
+    country: UK
+  - domain: aitkenalexander.co.uk
+    agency_name: Aitken Alexander Associates
+    country: UK
+  - domain: unitedagents.co.uk
+    agency_name: United Agents
+    country: UK
+  - domain: amheath.com
+    agency_name: A.M. Heath
+    country: UK
+  - domain: felicitybryan.com
+    agency_name: Felicity Bryan Associates
+    country: UK
+  - domain: convilleandwalsh.com
+    agency_name: Conville & Walsh
+    country: UK
+  - domain: davidhigham.co.uk
+    agency_name: David Higham Associates
+    country: UK
+  - domain: petersfraserdunlop.com
+    agency_name: Peters Fraser + Dunlop
+    country: UK
+  - domain: georginaCapel.com
+    agency_name: Georgina Capel Associates
+    country: UK
+  - domain: hardmanandSwainson.com
+    agency_name: Hardman & Swainson
+    country: UK
+  - domain: madeleinemilburn.co.uk
+    agency_name: Madeleine Milburn Literary Agency
+    country: UK
+  - domain: rachelmill.co.uk
+    agency_name: Rachel Mills Literary
+    country: UK
+  - domain: rogercoleridge.com
+    agency_name: Rogers, Coleridge & White
+    country: UK
+  - domain: sheillandandassociates.co.uk
+    agency_name: Sheil Land Associates
+    country: UK
+  - domain: theblairapartnership.com
+    agency_name: The Blair Partnership
+    country: UK
+
+  # --- Canadian Agencies ---
+  - domain: transatlanticagency.com
+    agency_name: Transatlantic Agency
+    country: CA
+  - domain: westwoodnorton.com
+    agency_name: Westwood Creative Artists
+    country: CA
+
+  # --- Australian Agencies ---
+  - domain: curtisbrown.com.au
+    agency_name: Curtis Brown Australia
+    country: AU
+  - domain: theauthorsagent.com.au
+    agency_name: The Authors' Agent
+    country: AU

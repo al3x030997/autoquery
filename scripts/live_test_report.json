@@ -1,0 +1,72 @@
+{
+  "timestamp": "2026-03-08T17:02:23.744238+00:00",
+  "total_elapsed_s": 17.1,
+  "success_count": 0,
+  "total_profile_urls": 0,
+  "token_usage": {
+    "total": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "api_calls": 0,
+    "budget": 50000,
+    "budget_exceeded": false
+  },
+  "domains": [
+    {
+      "domain": "curtisbrown.co.uk",
+      "agency": "Curtis Brown (UK)",
+      "status": "needs_manual_review",
+      "steps_taken": 5,
+      "profile_urls": [],
+      "profile_count": 0,
+      "error": null,
+      "elapsed_s": 3.8,
+      "tokens": 0
+    },
+    {
+      "domain": "writershouse.com",
+      "agency": "Writers House",
+      "status": "needs_manual_review",
+      "steps_taken": 5,
+      "profile_urls": [],
+      "profile_count": 0,
+      "error": null,
+      "elapsed_s": 5.6,
+      "tokens": 0
+    },
+    {
+      "domain": "inkwellmanagement.com",
+      "agency": "InkWell Management",
+      "status": "error",
+      "steps_taken": 0,
+      "profile_urls": [],
+      "profile_count": 0,
+      "error": "Failed to load homepage: Page.goto: net::ERR_CERT_DATE_INVALID at https://inkwellmanagement.com/\nCall log:\n  - navigating to \"https://inkwellmanagement.com/\", waiting until \"networkidle\"\n",
+      "elapsed_s": 0.7,
+      "tokens": 0
+    },
+    {
+      "domain": "bookendsliterary.com",
+      "agency": "BookEnds Literary",
+      "status": "needs_manual_review",
+      "steps_taken": 5,
+      "profile_urls": [],
+      "profile_count": 0,
+      "error": null,
+      "elapsed_s": 4.4,
+      "tokens": 0
+    },
+    {
+      "domain": "nelsonagency.com",
+      "agency": "Nelson Literary Agency",
+      "status": "needs_manual_review",
+      "steps_taken": 5,
+      "profile_urls": [],
+      "profile_count": 0,
+      "error": null,
+      "elapsed_s": 2.6,
+      "tokens": 0
+    }
+  ],
+  "db_counts": {}
+}
