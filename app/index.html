@@ -356,6 +356,50 @@
 
         .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 
+        /* ── SMART TEXT INPUT BAR ── */
+        .smart-bar {
+            width: 100%;
+            display: flex; align-items: center; gap: 0;
+            background: var(--surface-2);
+            border: 1.5px solid var(--border-hover);
+            border-radius: var(--r);
+            padding: 8px 10px 8px 14px;
+            transition: border-color var(--t-md), box-shadow var(--t-md);
+            min-height: 44px; flex-wrap: wrap; gap: 6px;
+        }
+        .smart-bar:focus-within {
+            border-color: rgba(124,106,247,0.45);
+            box-shadow: 0 0 0 3px rgba(124,106,247,0.08);
+        }
+        .smart-bar-input {
+            flex: 1; min-width: 180px;
+            background: transparent; border: none; outline: none;
+            font-family: var(--font-b); font-size: 13.5px;
+            color: var(--text-1); line-height: 1.5;
+        }
+        .smart-bar-input::placeholder { color: var(--text-3); }
+
+        /* detected chips inside the bar */
+        .det-chip {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 8px 3px 10px;
+            border-radius: 14px; font-size: 12px; font-weight: 500;
+            animation: chipPop 0.2s ease both;
+            flex-shrink: 0;
+        }
+        .det-chip.genre-chip   { background: var(--accent-dim);  border: 1px solid rgba(124,106,247,0.35); color: #c4bffd; }
+        .det-chip.audience-chip{ background: var(--teal-dim);    border: 1px solid rgba(54,201,187,0.35);  color: #80ebe3; }
+        .det-chip-x {
+            cursor: pointer; opacity: 0.55; font-size: 13px; line-height: 1;
+            transition: opacity var(--t);
+        }
+        .det-chip-x:hover { opacity: 1; }
+
+        @keyframes chipPop {
+            from { opacity: 0; transform: scale(0.8) translateY(2px); }
+            to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
         .chip {
             padding: 5px 13px; border-radius: 20px;
             font-size: 13px; font-weight: 500;
@@ -858,29 +902,27 @@
             <div class="filters">
                 <div class="filter-grp">
                     <div class="f-label">Genre</div>
-                    <div class="chips" id="genreChips">
-                        <div class="chip" onclick="toggleChip(this,'genre')">Fantasy</div>
-                        <div class="chip" onclick="toggleChip(this,'genre')">Literary Fiction</div>
-                        <div class="chip" onclick="toggleChip(this,'genre')">Thriller</div>
-                        <div class="chip" onclick="toggleChip(this,'genre')">Romance</div>
-                        <div class="chip" onclick="toggleChip(this,'genre')">Sci-Fi</div>
-                        <div class="chip" onclick="toggleChip(this,'genre')">Horror</div>
-                        <div class="chip" onclick="toggleChip(this,'genre')">YA</div>
-                        <div class="chip" onclick="toggleChip(this,'genre')">Mystery</div>
-                        <div class="chip" onclick="toggleChip(this,'genre')">Non-Fiction</div>
-                        <div class="chip" onclick="toggleChip(this,'genre')">Memoir</div>
-                        <div class="chip" onclick="toggleChip(this,'genre')">Historical</div>
-                        <div class="chip" onclick="toggleChip(this,'genre')">Crime</div>
+                    <div class="smart-bar" id="genreBar">
+                        <input
+                            class="smart-bar-input"
+                            id="genreInput"
+                            placeholder="List genre or describe — e.g. "dark fantasy with romance elements""
+                            autocomplete="off"
+                            oninput="detectGenres(this.value)"
+                        >
                     </div>
                 </div>
 
                 <div class="filter-grp">
                     <div class="f-label">Audience</div>
-                    <div class="chips" id="audienceChips">
-                        <div class="chip" onclick="toggleChip(this,'audience','teal')">Adults</div>
-                        <div class="chip" onclick="toggleChip(this,'audience','teal')">Young Adult</div>
-                        <div class="chip" onclick="toggleChip(this,'audience','teal')">Middle Grade</div>
-                        <div class="chip" onclick="toggleChip(this,'audience','teal')">Children</div>
+                    <div class="smart-bar" id="audienceBar">
+                        <input
+                            class="smart-bar-input"
+                            id="audienceInput"
+                            placeholder="Describe your target audience — e.g. "adults who enjoy YA crossover""
+                            autocomplete="off"
+                            oninput="detectAudience(this.value)"
+                        >
                     </div>
                 </div>
 
@@ -1096,10 +1138,103 @@ function onType(el) {
     document.getElementById('charCount').textContent = el.value.length + ' / 2000';
 }
 
-// ── chip toggle
+// ── chip toggle (language only now)
 function toggleChip(chip, grp, color) {
     chip.classList.toggle('on');
     if (color) chip.classList.toggle(color);
+}
+
+// ── smart genre / audience detection ──
+const GENRE_MAP = [
+    { keys: ['fantasy','magic','dragon','wizard','elven','elves','fae','faerie','sorcery','enchant'], label: 'Fantasy' },
+    { keys: ['literary fiction','literary novel','literary','character-driven','character driven'], label: 'Literary Fiction' },
+    { keys: ['thriller','suspense','page-turner','tension','chase'], label: 'Thriller' },
+    { keys: ['romance','love story','falling in love','second chance','enemies to lovers','swoon'], label: 'Romance' },
+    { keys: ['sci-fi','science fiction','scifi','space','dystopia','dystopian','robot','artificial intelligence','ai','future','cyberpunk'], label: 'Sci-Fi' },
+    { keys: ['horror','scary','ghost','haunted','monster','dark supernatural','terror'], label: 'Horror' },
+    { keys: ['ya ','young adult','ya,','ya.','ya\n'], label: 'YA' },
+    { keys: ['mystery','detective','whodunit','clue','investigation','sleuth'], label: 'Mystery' },
+    { keys: ['non-fiction','nonfiction','self-help','self help','true story','true crime','essay','journalism'], label: 'Non-Fiction' },
+    { keys: ['memoir','autobiography','personal story','personal narrative','my life'], label: 'Memoir' },
+    { keys: ['historical','history','period piece','victorian','edwardian','medieval','ancient'], label: 'Historical' },
+    { keys: ['crime','heist','noir','gangster'], label: 'Crime' },
+    { keys: ['middle grade','middle-grade'], label: 'Middle Grade' },
+];
+
+const AUDIENCE_MAP = [
+    { keys: ['young adult','ya ','ya,','ya\n','teen','teenager','high school'], label: 'Young Adult' },
+    { keys: ['middle grade','middle-grade','middle school','tween'], label: 'Middle Grade' },
+    { keys: ['children','picture book','kids','child'], label: 'Children' },
+    { keys: ['adult','grown-up','grown up','general audience'], label: 'Adults' },
+];
+
+// state: detected labels
+const detectedGenres   = new Set();
+const detectedAudience = new Set();
+
+function detectGenres(val) {
+    const v = ' ' + val.toLowerCase() + ' ';
+    const found = new Set();
+    for (const { keys, label } of GENRE_MAP) {
+        if (keys.some(k => v.includes(k))) found.add(label);
+    }
+    syncChips('genreBar', 'genreInput', found, detectedGenres, 'genre-chip');
+}
+
+function detectAudience(val) {
+    const v = ' ' + val.toLowerCase() + ' ';
+    const found = new Set();
+    for (const { keys, label } of AUDIENCE_MAP) {
+        if (keys.some(k => v.includes(k))) found.add(label);
+    }
+    syncChips('audienceBar', 'audienceInput', found, detectedAudience, 'audience-chip');
+}
+
+function syncChips(barId, inputId, found, state, cls) {
+    const bar   = document.getElementById(barId);
+    const input = document.getElementById(inputId);
+
+    // remove chips no longer detected
+    bar.querySelectorAll('.det-chip').forEach(el => {
+        if (!found.has(el.dataset.label)) {
+            el.style.animation = 'none';
+            el.style.opacity = '0';
+            el.style.transform = 'scale(0.8)';
+            el.style.transition = 'opacity 0.15s, transform 0.15s';
+            setTimeout(() => el.remove(), 150);
+            state.delete(el.dataset.label);
+        }
+    });
+
+    // add newly detected chips (before the input)
+    for (const label of found) {
+        if (!state.has(label)) {
+            state.add(label);
+            const chip = document.createElement('div');
+            chip.className = `det-chip ${cls}`;
+            chip.dataset.label = label;
+            chip.innerHTML = `${label}<span class="det-chip-x" onclick="removeDetChip(this,'${barId}','${label}')">×</span>`;
+            bar.insertBefore(chip, input);
+        }
+    }
+}
+
+function removeDetChip(x, barId, label) {
+    const chip = x.closest('.det-chip');
+    chip.style.transition = 'opacity 0.15s, transform 0.15s';
+    chip.style.opacity = '0'; chip.style.transform = 'scale(0.8)';
+    setTimeout(() => chip.remove(), 150);
+    detectedGenres.delete(label);
+    detectedAudience.delete(label);
+}
+
+// expose detected values for runSearch
+function getDetectedFilters() {
+    return {
+        genres:   [...detectedGenres],
+        audience: [...detectedAudience],
+        langs:    [...document.querySelectorAll('#langChips .chip.on')].map(c => c.textContent),
+    };
 }
 
 // ── load history item
@@ -1116,10 +1251,16 @@ function loadHist(el, text) {
 function clearAll() {
     document.querySelectorAll('.hist-item').forEach(i => i.classList.remove('active'));
     const ta = document.getElementById('searchInput');
-    ta.value = '';
-    ta.style.height = 'auto';
+    ta.value = ''; ta.style.height = 'auto';
     document.getElementById('charCount').textContent = '0 / 2000';
+    // reset language chips
     document.querySelectorAll('.chip').forEach(c => c.className = 'chip');
+    // reset smart bars
+    document.getElementById('genreInput').value = '';
+    document.getElementById('audienceInput').value = '';
+    document.querySelectorAll('.det-chip').forEach(c => c.remove());
+    detectedGenres.clear(); detectedAudience.clear();
+    // reset uploads
     ['ms','bio','sum','ql'].forEach(k => {
         document.getElementById('b-' + k).textContent = k === 'ms' ? 'PDF · DOCX' : 'PDF · TXT';
         document.getElementById('f-' + k).value = '';
@@ -1164,14 +1305,13 @@ function useExample(card) {
     ta.value   = tag + '\n' + text.replace(/[""]/g, '"');
     onType(ta);
 
-    // auto-select matching chips
+    // auto-populate smart bars from example tag
     const tl = tag.toLowerCase();
-    document.querySelectorAll('#genreChips .chip').forEach(c => {
-        if (tl.includes(c.textContent.toLowerCase())) { c.classList.add('on'); }
-    });
-    document.querySelectorAll('#audienceChips .chip').forEach(c => {
-        if (tl.includes(c.textContent.toLowerCase())) { c.classList.add('on','teal'); }
-    });
+    document.getElementById('genreInput').value = tag.split('·')[0].trim();
+    detectGenres(document.getElementById('genreInput').value);
+    const audiencePart = tag.split('·')[1]?.trim() || '';
+    document.getElementById('audienceInput').value = audiencePart;
+    detectAudience(audiencePart);
 
     document.querySelector('.main').scrollTo({ top: 0, behavior: 'smooth' });
     ta.focus();
@@ -1198,9 +1338,10 @@ function openSignup(query) {
     const short = query.length > 110 ? query.slice(0, 108) + '…' : query;
     document.getElementById('suQueryText').textContent = short;
 
-    // random-ish count based on selected chips to feel personalised
-    const activeChips = document.querySelectorAll('.chip.on').length;
-    const count = 28 + Math.floor(Math.random() * 30) + activeChips * 3;
+    // count based on detected filters + language chips
+    const filterCount = detectedGenres.size + detectedAudience.size
+        + document.querySelectorAll('#langChips .chip.on').length;
+    const count = 28 + Math.floor(Math.random() * 30) + filterCount * 4;
     document.getElementById('suCount').textContent = count;
 
     const screen = document.getElementById('signupScreen');
