@@ -113,6 +113,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
+    environment:
+      NEXT_PUBLIC_API_URL: http://api:8000
 
   review:
     build:
@@ -140,3 +142,4 @@ volumes:
   ollama_models:
     external: true
     name: autoquery_implementation_ollama_models
+  backups:

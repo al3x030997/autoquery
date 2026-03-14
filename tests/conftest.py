@@ -9,6 +9,7 @@ import os
 os.environ.setdefault("DATABASE_URL", "sqlite:///:memory:")
 
 import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, Text, TypeDecorator, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -53,6 +54,7 @@ def _adapt_pg_types_for_sqlite():
     Replace PostgreSQL-specific types with SQLite-compatible ones
     at the column level before create_all.
     """
+    from sqlalchemy import BigInteger, Integer
     from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR
     from pgvector.sqlalchemy import Vector
 
@@ -66,10 +68,13 @@ def _adapt_pg_types_for_sqlite():
             elif col_type is TSVECTOR:
                 column.type = Text()
             elif col_type is Vector:
-                column.type = Text()
+                column.type = JSONEncodedList()
+            elif col_type is BigInteger and column.primary_key:
+                # SQLite only auto-increments INTEGER PRIMARY KEY, not BIGINT
+                column.type = Integer()
 
 
-_adapted = False
+_adapted = False  # Reset to re-run adaptations after code changes
 
 
 @pytest.fixture
@@ -93,3 +98,41 @@ def db_session():
     finally:
         session.close()
         Base.metadata.drop_all(engine)
+
+
+class _FakeEmbeddingModel:
+    """Fake embedding model for tests — returns zero vector."""
+    dimensions = 1024
+
+    async def embed(self, text: str) -> list[float]:
+        return [0.0] * 1024
+
+    async def embed_batch(self, texts: list[str]) -> list[list[float]]:
+        return [[0.0] * 1024 for _ in texts]
+
+
+@pytest.fixture
+def fake_embedding_model():
+    return _FakeEmbeddingModel()
+
+
+@pytest.fixture
+def client(db_session):
+    """TestClient with DB and embedding model overrides."""
+    from autoquery.api.main import app
+    from autoquery.database.db import get_db
+    from autoquery.api.deps import get_embedding_model
+
+    def _override_db():
+        try:
+            yield db_session
+        finally:
+            pass
+
+    app.dependency_overrides[get_db] = _override_db
+    app.dependency_overrides[get_embedding_model] = lambda: _FakeEmbeddingModel()
+
+    with TestClient(app) as c:
+        yield c
+
+    app.dependency_overrides.clear()

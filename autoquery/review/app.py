@@ -79,7 +79,7 @@ def _quality_color(score: float | None) -> str:
 # ---------------------------------------------------------------------------
 page = st.sidebar.radio(
     "Navigation",
-    ["Review Queue", "Domain Management", "Statistics"],
+    ["Domain Management", "Review Queue", "Statistics"],
     index=0,
 )
 
@@ -281,32 +281,31 @@ if page == "Review Queue":
 elif page == "Domain Management":
     st.header("Domain Management")
 
-    # Single domain entry
-    st.subheader("Add Single Domain")
-    with st.form("add_domain_form"):
-        domain = st.text_input("Domain (e.g. example-agency.com)")
-        agency_name = st.text_input("Agency Name")
-        country = st.text_input("Country (e.g. US, UK)")
-        submitted = st.form_submit_button("Add Domain")
+    # CSV upload (primary method)
+    st.subheader("Import Domains from CSV")
+    st.markdown(
+        """
+Upload a CSV file with agency domains for the crawler to scrape.
 
-        if submitted and domain:
-            error = validate_domain(domain.strip().lower())
-            if error:
-                st.error(error)
-            else:
-                added = add_domains_to_seed_list([{
-                    "domain": domain.strip().lower(),
-                    "agency_name": agency_name.strip(),
-                    "country": country.strip(),
-                }])
-                if added > 0:
-                    st.success(f"Added {domain} to seed list.")
-                else:
-                    st.info(f"{domain} already in seed list.")
+**Required columns:** `domain`, `agency_name`, `country`
 
-    # CSV upload
-    st.subheader("CSV Upload")
-    st.caption("CSV format: `domain,agency_name,country`")
+| Column | Description | Example |
+|--------|------------|---------|
+| `domain` | Agency website domain (no `https://`, no trailing `/`) | `janklow.com` |
+| `agency_name` | Full agency name | `Janklow & Nesbit Associates` |
+| `country` | Two-letter country code | `US`, `UK`, `CA`, `AU` |
+
+**Example CSV:**
+```
+domain,agency_name,country
+janklow.com,Janklow & Nesbit Associates,US
+curtisbrown.co.uk,Curtis Brown,UK
+writershouse.com,Writers House,US
+```
+
+Duplicates are automatically skipped. Aggregator domains (QueryTracker, MSWL, etc.) are blocked.
+"""
+    )
     uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
 
     if uploaded_file is not None:
@@ -330,6 +329,30 @@ elif page == "Domain Management":
             if st.button("Import Valid Domains", type="primary"):
                 added = add_domains_to_seed_list(valid)
                 st.success(f"Imported {added} new domains to seed list.")
+
+    # Single domain entry
+    st.markdown("---")
+    st.subheader("Add Single Domain")
+    with st.form("add_domain_form"):
+        domain = st.text_input("Domain (e.g. example-agency.com)")
+        agency_name = st.text_input("Agency Name")
+        country = st.text_input("Country (e.g. US, UK)")
+        submitted = st.form_submit_button("Add Domain")
+
+        if submitted and domain:
+            error = validate_domain(domain.strip().lower())
+            if error:
+                st.error(error)
+            else:
+                added = add_domains_to_seed_list([{
+                    "domain": domain.strip().lower(),
+                    "agency_name": agency_name.strip(),
+                    "country": country.strip(),
+                }])
+                if added > 0:
+                    st.success(f"Added {domain} to seed list.")
+                else:
+                    st.info(f"{domain} already in seed list.")
 
     # Browser Agent
     st.markdown("---")

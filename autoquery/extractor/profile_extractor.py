@@ -10,10 +10,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
-import yaml
 from sqlalchemy.orm import Session
 
 from autoquery.database.models import Agent, REVIEW_STATUS_PENDING, REVIEW_STATUS_EXTRACTION_FAILED
+from autoquery.matching.genre_utils import load_genre_aliases
 from autoquery.extractor.prompts import (
     EXTRACTION_SYSTEM_PROMPT,
     EXTRACTION_USER_PROMPT,
@@ -36,25 +36,7 @@ class ProfileExtractor:
     ):
         self.ollama_url = ollama_url or os.environ.get("OLLAMA_URL", "http://ollama:11434")
         self.model = model or os.environ.get("EXTRACTOR_MODEL", "llama3.1:8b")
-        self._genre_aliases = self._load_genre_aliases(genre_config_path or _GENRE_CONFIG_PATH)
-
-    @staticmethod
-    def _load_genre_aliases(path: str | Path) -> dict[str, str]:
-        """Build reverse lookup: alias → canonical genre name."""
-        try:
-            with open(path) as f:
-                data = yaml.safe_load(f) or {}
-            aliases = data.get("aliases", {})
-            reverse: dict[str, str] = {}
-            for canonical, alias_list in aliases.items():
-                canonical_lower = canonical.lower().strip()
-                reverse[canonical_lower] = canonical_lower
-                if isinstance(alias_list, list):
-                    for alias in alias_list:
-                        reverse[alias.lower().strip()] = canonical_lower
-            return reverse
-        except Exception:
-            return {}
+        self._genre_aliases = load_genre_aliases(genre_config_path or _GENRE_CONFIG_PATH)
 
     async def extract(
         self,

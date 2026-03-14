@@ -95,6 +95,7 @@ class Manuscript(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("users.id", ondelete="SET NULL"))
+    session_id: Mapped[str | None] = mapped_column(String(36))
     title: Mapped[str] = mapped_column(String(500), nullable=False)
     genre: Mapped[str | None] = mapped_column(String(255))
     audience: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
@@ -189,7 +190,7 @@ class OptOutRequest(Base):
     contact_email: Mapped[str] = mapped_column(String(255), nullable=False)
     agent_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("agents.id", ondelete="SET NULL"))
     reason: Mapped[str | None] = mapped_column(Text)
-    processed: Mapped[bool] = mapped_column(Boolean, server_default="false", nullable=False)
+    processed: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false", nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
