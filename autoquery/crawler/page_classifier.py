@@ -13,9 +13,11 @@ from autoquery.crawler.content_extractor import extract_text
 
 _PROMPT_TEMPLATE = """\
 You are classifying a literary agency webpage.
-Respond with JSON only: {{"page_type": "INDEX" | "CONTENT" | "UNKNOWN"}}
-INDEX = page listing multiple agents (e.g. /our-agents, /team)
+Respond with JSON only: {{"page_type": "INDEX" | "CONTENT" | "MULTI_AGENT" | "UNKNOWN"}}
+INDEX = page listing multiple agents with links to individual pages (e.g. /our-agents, /team)
 CONTENT = page for a single agent with their bio/wishlist
+MULTI_AGENT = page with detailed info (bios, wishlists, submission preferences) about MULTIPLE agents on one page (e.g. /about with multiple bios, /submissions with per-agent wishlists)
+UNKNOWN = none of the above
 URL: {url}
 Page text (first 2000 chars):
 {text}
@@ -25,6 +27,7 @@ Page text (first 2000 chars):
 class PageType(str, Enum):
     INDEX = "INDEX"
     CONTENT = "CONTENT"
+    MULTI_AGENT = "MULTI_AGENT"
     UNKNOWN = "UNKNOWN"
 
 

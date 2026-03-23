@@ -136,6 +136,8 @@ async def _process_page(
         discovered_links = extract_links(result.html, result.final_url)
     elif page_type == PageType.CONTENT:
         crawl_run.pages_content += 1
+    elif page_type == PageType.MULTI_AGENT:
+        crawl_run.pages_content += 1
 
     # Persist CrawledPage
     domain = urlparse(url).netloc.lower()
@@ -154,8 +156,8 @@ async def _process_page(
             quality_issues=quality.issues,
         ))
 
-        # Persist KnownProfileUrl for CONTENT pages that pass quality
-        if quality.passed and page_type == PageType.CONTENT:
+        # Persist KnownProfileUrl for CONTENT/MULTI_AGENT pages that pass quality
+        if quality.passed and page_type in (PageType.CONTENT, PageType.MULTI_AGENT):
             existing = db.query(KnownProfileUrl).filter_by(url=url).first()
             if not existing:
                 db.add(KnownProfileUrl(
@@ -166,8 +168,25 @@ async def _process_page(
 
         db.commit()
 
-        # Extract agent profile for CONTENT pages that pass quality
-        if quality.passed and page_type == PageType.CONTENT:
+        # Extract agent profile(s) for CONTENT / MULTI_AGENT pages that pass quality
+        if quality.passed and page_type == PageType.MULTI_AGENT:
+            try:
+                extractor = ProfileExtractor(ollama_url=ollama_url)
+                agents = await extractor.extract_multi(
+                    clean_text=text,
+                    source_url=canonical or url,
+                    quality_score=quality.score,
+                    quality_action=action,
+                    db=db,
+                )
+                for agent in agents:
+                    if agent.review_status == "pending":
+                        crawl_run.profiles_new += 1
+                    else:
+                        crawl_run.profiles_updated += 1
+            except Exception as exc:
+                logger.error("Multi-agent extraction failed for %s: %s", url, exc)
+        elif quality.passed and page_type == PageType.CONTENT:
             try:
                 extractor = ProfileExtractor(ollama_url=ollama_url)
                 agent = await extractor.extract(

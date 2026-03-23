@@ -41,7 +41,46 @@ Rules:
 - "hard_nos_raw": Extract the full "what I don't want" text as a coherent block. If not found, use null.
 - "is_open": true if accepting queries, false if closed, null if unclear
 - "submission_req": JSON object with submission requirements (pages count, synopsis, query letter, etc.)
+- "response_time": Agency/agent response time as stated on the page, e.g. "6-8 weeks", "2 months", or null
+- "country": Two-letter country code if determinable (US, UK, CA, AU), or null
+- "closed_to": Comma-separated string of genres/categories the agent does NOT want, e.g. "MG, YA, screenplays"
 - For any field you cannot determine, use null (for strings/objects) or empty list [] (for arrays)
 
 Profile text:
+{clean_text}"""
+
+MULTI_AGENT_ROSTER_SYSTEM_PROMPT = """\
+You are a data extraction specialist for literary agent profiles.
+This page contains information about MULTIPLE literary agents at the same agency.
+Extract only the agent names and agency metadata. Respond with valid JSON only — no markdown, no commentary."""
+
+MULTI_AGENT_ROSTER_USER_PROMPT = """\
+Extract the list of literary agents on this page.
+Return JSON:
+
+{{
+  "agency_info": {{
+    "name": "Agency name",
+    "exclusive_query": true/false,
+    "response_time": "2 months or null",
+    "submission_url": "https://querymanager.com/... or null",
+    "country": "US or null"
+  }},
+  "agents": [
+    {{
+      "name": "Agent Full Name",
+      "section_hint": "first few words of their section"
+    }}
+  ]
+}}
+
+Rules:
+- Extract EVERY agent named on the page
+- "name" is REQUIRED for each agent — use their full name as written
+- "section_hint": Copy the first 5-10 words of text that starts their individual section (bio, wishlist, etc.)
+- Do NOT extract full profiles, genres, or wishlists — only names and section hints
+- For agency-wide policies (response time, exclusive queries, submission portal), put them in "agency_info"
+- For any field you cannot determine, use null
+
+Page text:
 {clean_text}"""

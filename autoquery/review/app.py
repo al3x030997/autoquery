@@ -23,6 +23,7 @@ from autoquery.database.models import (
 from autoquery.review.operations import (
     approve_agent,
     reject_agent,
+    normalize_domain,
     validate_domain,
     parse_csv_domains,
     add_domains_to_seed_list,
@@ -117,6 +118,10 @@ if page == "Review Queue":
                 "quality_score": a.quality_score,
                 "quality_action": a.quality_action,
                 "email": a.email,
+                "genres_raw": list(a.genres_raw or []),
+                "closed_to": list(a.closed_to or []),
+                "closed_to_raw": a.closed_to_raw,
+                "response_time": a.response_time,
             })
 
     if not agent_data:
@@ -209,10 +214,13 @@ if page == "Review Queue":
                 )
 
                 # Raw text expandable sections
-                with st.expander("Wishlist (raw text)"):
+                wl = agent["wishlist_raw"] or ""
+                wl_words = len(wl.split()) if wl else 0
+                wl_label = f"Wishlist (raw text) — {wl_words} words" if wl_words > 0 else "Wishlist (raw text) — MISSING"
+                with st.expander(wl_label):
                     st.text_area(
                         "Wishlist",
-                        value=agent["wishlist_raw"] or "(none)",
+                        value=wl or "(none)",
                         height=200,
                         key=f"wishlist_{aid}",
                         label_visibility="collapsed",
@@ -340,12 +348,13 @@ Duplicates are automatically skipped. Aggregator domains (QueryTracker, MSWL, et
         submitted = st.form_submit_button("Add Domain")
 
         if submitted and domain:
-            error = validate_domain(domain.strip().lower())
+            clean_domain = normalize_domain(domain)
+            error = validate_domain(clean_domain)
             if error:
                 st.error(error)
             else:
                 added = add_domains_to_seed_list([{
-                    "domain": domain.strip().lower(),
+                    "domain": clean_domain,
                     "agency_name": agency_name.strip(),
                     "country": country.strip(),
                 }])

@@ -18,17 +18,31 @@ aliases:
     - epic fantasy
     - urban fantasy
     - dark fantasy
+    - cozy fantasy
+    - contemporary fantasy
+    - high fantasy
+    - low fantasy
   romance:
     - rom-com
+    - romcom
     - romantic comedy
     - contemporary romance
+    - spicy romance
+    - dark romance
+    - romantic suspense
+    - why-choose
+    - why choose
+    - romantasy
   mystery:
     - cozy mystery
     - cozy mysteries
+    - cozies
     - mysteries
+    - locked room mystery
   thriller:
     - thrillers
     - psychological thriller
+    - domestic thriller
   horror:
     - dark horror
   historical_fiction:
@@ -66,10 +80,12 @@ aliases:
     - women's fiction
     - women's fic
     - womens fic
+    - chick-lit
+    - chick lit
+    - book club fiction
   upmarket_fiction:
     - upmarket
     - upmarket fic
-    - book club fiction
   speculative_fiction:
     - speculative
     - spec fic
@@ -91,3 +107,17 @@ aliases:
     - health & wellness
     - health and wellness
     - wellness
+  paranormal:
+    - paranormal romance
+    - paranormal fiction
+  dystopian:
+    - dystopia
+    - post-apocalyptic
+  adventure:
+    - adventure fiction
+  humor:
+    - comedy
+    - humorous fiction
+  essay_collection:
+    - essays
+    - personal essays

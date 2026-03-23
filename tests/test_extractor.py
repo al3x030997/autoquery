@@ -260,3 +260,240 @@ class TestValidation:
         is_valid, errors = extractor._validate({**VALID_PROFILE, "keywords": ["a"]})
         assert not is_valid
         assert any("keyword" in e for e in errors)
+
+
+class TestExtractSection:
+    @pytest.fixture
+    def extractor(self):
+        return ProfileExtractor(
+            ollama_url="http://test:11434",
+            model="test-model",
+        )
+
+    def test_splits_by_agent_name(self, extractor):
+        text = (
+            "About Our Agents\n\n"
+            "Alice Johnson is a literary agent who loves fantasy and science fiction. "
+            "She is looking for epic worldbuilding and diverse voices.\n\n"
+            "Bob Martinez represents thriller and mystery authors. "
+            "He wants fast-paced plots with unreliable narrators.\n\n"
+            "Carol Chen focuses on romance and women's fiction. "
+            "She is drawn to emotional depth and family sagas."
+        )
+        all_names = ["Alice Johnson", "Bob Martinez", "Carol Chen"]
+
+        alice_section = extractor._extract_section(text, "Alice Johnson", all_names=all_names)
+        assert "Alice Johnson" in alice_section
+        assert "epic worldbuilding" in alice_section
+        assert "Bob Martinez" not in alice_section
+
+        bob_section = extractor._extract_section(text, "Bob Martinez", all_names=all_names)
+        assert "Bob Martinez" in bob_section
+        assert "fast-paced plots" in bob_section
+        assert "Carol Chen" not in bob_section
+
+        carol_section = extractor._extract_section(text, "Carol Chen", all_names=all_names)
+        assert "Carol Chen" in carol_section
+        assert "family sagas" in carol_section
+
+    def test_section_hint_fallback(self, extractor):
+        text = "Team Members\n\nShe loves fantasy and sci-fi. Looking for bold voices.\n\nHe represents thrillers."
+        section = extractor._extract_section(
+            text, "Unknown Agent", section_hint="She loves fantasy",
+            all_names=["Unknown Agent"],
+        )
+        assert "fantasy" in section
+
+    def test_returns_full_text_if_not_found(self, extractor):
+        text = "Some page text about agents."
+        section = extractor._extract_section(text, "Nonexistent Person", all_names=[])
+        assert section == text
+
+
+class TestValidateGrounding:
+    @pytest.fixture
+    def extractor(self):
+        return ProfileExtractor(
+            ollama_url="http://test:11434",
+            model="test-model",
+        )
+
+    def test_name_present_no_warnings(self, extractor):
+        data = {"name": "Jane Smith", "email": "jane@example.com"}
+        source = "Jane Smith is a literary agent at Example Agency. Contact: jane@example.com"
+        warnings = extractor._validate_grounding(data, source)
+        assert len(warnings) == 0
+        assert "_grounding_failed" not in data
+
+    def test_name_absent_sets_grounding_failed(self, extractor):
+        data = {"name": "Sarah Johnson"}
+        source = "Alice Williams is a literary agent specializing in fantasy."
+        warnings = extractor._validate_grounding(data, source)
+        assert any("name" in w for w in warnings)
+        assert data.get("_grounding_failed") is True
+
+    def test_email_present_kept(self, extractor):
+        data = {"name": "Jane Smith", "email": "jane@smithlit.com"}
+        source = "Jane Smith. Email: jane@smithlit.com"
+        extractor._validate_grounding(data, source)
+        assert data["email"] == "jane@smithlit.com"
+
+    def test_email_absent_removed(self, extractor):
+        data = {"name": "Jane Smith", "email": "fake@hallucinated.com"}
+        source = "Jane Smith is a literary agent."
+        warnings = extractor._validate_grounding(data, source)
+        assert data["email"] is None
+        assert any("email" in w for w in warnings)
+
+    def test_wishlist_low_overlap_warns(self, extractor):
+        data = {
+            "name": "Jane Smith",
+            "wishlist_raw": "I am seeking manuscripts about quantum physics and interdimensional travel with complex mathematical proofs and alien civilizations exploring deep space",
+        }
+        source = "Jane Smith represents romance and women's fiction. She loves emotional stories with strong heroines."
+        warnings = extractor._validate_grounding(data, source)
+        assert any("overlap" in w for w in warnings)
+
+    def test_wishlist_high_overlap_no_warning(self, extractor):
+        data = {
+            "name": "Jane Smith",
+            "wishlist_raw": "I am looking for bold literary fiction with diverse voices and unreliable narrators set in contemporary settings",
+        }
+        source = "Jane Smith is looking for bold literary fiction with diverse voices and unreliable narrators set in contemporary settings and beyond."
+        warnings = extractor._validate_grounding(data, source)
+        assert not any("overlap" in w for w in warnings)
+
+
+class TestValidateWishlist:
+    @pytest.fixture
+    def extractor(self):
+        return ProfileExtractor(
+            ollama_url="http://test:11434",
+            model="test-model",
+        )
+
+    def test_short_wishlist_warns(self, extractor):
+        data = {"wishlist_raw": "fantasy"}
+        warnings = extractor._validate_wishlist(data, section_word_count=500)
+        assert len(warnings) == 1
+        assert "suspiciously short" in warnings[0]
+
+    def test_adequate_wishlist_no_warning(self, extractor):
+        data = {"wishlist_raw": " ".join(["word"] * 50)}
+        warnings = extractor._validate_wishlist(data, section_word_count=500)
+        assert len(warnings) == 0
+
+    def test_short_section_no_warning(self, extractor):
+        data = {"wishlist_raw": "fantasy"}
+        warnings = extractor._validate_wishlist(data, section_word_count=50)
+        assert len(warnings) == 0
+
+
+class TestTwoPassExtractMulti:
+    @pytest.fixture
+    def extractor(self):
+        return ProfileExtractor(
+            ollama_url="http://test:11434",
+            model="test-model",
+            genre_config_path="config/genre_aliases.yaml",
+        )
+
+    @pytest.mark.asyncio
+    async def test_two_pass_calls(self, extractor, db_session):
+        """Roster call + 3 per-agent calls = 4 total Ollama calls."""
+        roster_response = {
+            "agency_info": {"name": "Test Agency", "exclusive_query": True, "response_time": "2 months"},
+            "agents": [
+                {"name": "Alice Johnson", "section_hint": "Alice loves fantasy"},
+                {"name": "Bob Martinez", "section_hint": "Bob represents thrillers"},
+                {"name": "Carol Chen", "section_hint": "Carol focuses on romance"},
+            ],
+        }
+
+        agent_responses = [
+            {
+                "name": "Alice Johnson", "agency": "Test Agency",
+                "genres": ["fantasy"], "keywords": ["epic worldbuilding", "diverse voices", "magic systems"],
+                "audience": ["adult"], "hard_nos_keywords": [],
+                "is_open": True, "wishlist_raw": "I love epic fantasy with diverse voices and complex magic systems.",
+                "bio_raw": "Alice has been agenting for 10 years.", "hard_nos_raw": None,
+                "email": "alice@testagency.com",
+            },
+            {
+                "name": "Bob Martinez", "agency": "Test Agency",
+                "genres": ["thriller", "mystery"], "keywords": ["fast-paced", "unreliable narrator", "dark secrets"],
+                "audience": ["adult"], "hard_nos_keywords": ["erotica"],
+                "is_open": True, "wishlist_raw": "Looking for fast-paced thrillers with unreliable narrators and dark secrets.",
+                "bio_raw": "Bob joined the agency in 2020.", "hard_nos_raw": "No erotica.",
+                "email": "bob@testagency.com",
+            },
+            {
+                "name": "Carol Chen", "agency": "Test Agency",
+                "genres": ["romance", "womens_fiction"], "keywords": ["emotional depth", "family sagas", "strong heroines"],
+                "audience": ["adult"], "hard_nos_keywords": [],
+                "is_open": True, "wishlist_raw": "Carol focuses on romance with emotional depth and family sagas.",
+                "bio_raw": "Carol is passionate about women's stories.", "hard_nos_raw": None,
+                "email": "carol@testagency.com",
+            },
+        ]
+
+        page_text = (
+            "Test Agency - Our Agents\n\n"
+            "Alice Johnson loves fantasy and science fiction. She is looking for epic worldbuilding "
+            "and diverse voices and complex magic systems. Contact: alice@testagency.com\n\n"
+            "Bob Martinez represents thrillers and mystery. He wants fast-paced thrillers with "
+            "unreliable narrators and dark secrets. No erotica. Contact: bob@testagency.com\n\n"
+            "Carol Chen focuses on romance and women's fiction. She is drawn to emotional depth "
+            "and family sagas and strong heroines. Contact: carol@testagency.com"
+        )
+
+        call_count = 0
+
+        def _make_response(data):
+            mock_resp = MagicMock()
+            mock_resp.json.return_value = {"response": json.dumps(data)}
+            mock_resp.raise_for_status = MagicMock()
+            return mock_resp
+
+        async def _mock_post(*args, **kwargs):
+            nonlocal call_count
+            prompt = kwargs.get("json", {}).get("prompt", "")
+            system = kwargs.get("json", {}).get("system", "")
+
+            if "list of literary agents" in prompt or "ROSTER" in system.upper():
+                # Pass 1: roster call
+                resp = _make_response(roster_response)
+            else:
+                # Pass 2: per-agent calls (in order)
+                idx = min(call_count - 1, len(agent_responses) - 1)
+                resp = _make_response(agent_responses[idx])
+            call_count += 1
+            return resp
+
+        mock_client = AsyncMock()
+        mock_client.post = _mock_post
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=False)
+
+        with patch("autoquery.extractor.profile_extractor.httpx.AsyncClient", return_value=mock_client):
+            agents = await extractor.extract_multi(
+                clean_text=page_text,
+                source_url="https://testagency.com/about",
+                quality_score=0.8,
+                quality_action="extract",
+                db=db_session,
+            )
+
+        # 1 roster call + 3 per-agent calls = 4 total
+        assert call_count == 4
+        assert len(agents) == 3
+
+        # Each agent should have non-empty wishlist
+        for agent in agents:
+            assert agent.wishlist_raw is not None
+            assert len(agent.wishlist_raw.split()) > 5
+
+        # Agency should be set
+        for agent in agents:
+            assert agent.agency == "Test Agency"
+            assert agent.agency_id is not None

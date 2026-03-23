@@ -41,21 +41,43 @@ class User(Base):
     interaction_events = relationship("InteractionEvent", back_populates="user")
 
 
+class Agency(Base):
+    __tablename__ = "agencies"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    domain: Mapped[str | None] = mapped_column(String(255), unique=True)
+    country: Mapped[str | None] = mapped_column(String(10))
+    exclusive_query: Mapped[bool] = mapped_column(Boolean, server_default="false", nullable=False)
+    submission_url: Mapped[str | None] = mapped_column(Text)
+    response_time: Mapped[str | None] = mapped_column(String(100))
+    notes: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    agents = relationship("Agent", back_populates="agency_rel")
+
+
 class Agent(Base):
     __tablename__ = "agents"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     agency: Mapped[str | None] = mapped_column(String(255))
+    agency_id: Mapped[int | None] = mapped_column(Integer, ForeignKey("agencies.id"))
     profile_url: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
 
     # Extracted / structured fields
     genres: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
+    genres_raw: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
     keywords: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
     audience: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
     hard_nos_keywords: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
     submission_req: Mapped[dict | None] = mapped_column(JSONB)
     is_open: Mapped[bool | None] = mapped_column(Boolean)
+    closed_to_raw: Mapped[str | None] = mapped_column(Text)
+    closed_to: Mapped[list[str] | None] = mapped_column(ARRAY(Text))
+    response_time: Mapped[str | None] = mapped_column(String(100))
 
     # Raw scraped text — internal only, never expose on public routes
     wishlist_raw: Mapped[str | None] = mapped_column(Text, comment="internal-only: raw scraped wishlist text")
@@ -85,6 +107,7 @@ class Agent(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
+    agency_rel = relationship("Agency", back_populates="agents")
     matching_results = relationship("MatchingResult", back_populates="agent")
     interaction_events = relationship("InteractionEvent", back_populates="agent")
     recrawl_queue_entries = relationship("RecrawlQueue", back_populates="agent")

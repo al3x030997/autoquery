@@ -221,7 +221,12 @@ class CrawlRun:
 
     async def __aenter__(self) -> "CrawlRun":
         self._db = SessionLocal()
-        run = CrawlRunModel(status="running", domain=self._domain, run_type=self._run_type)
+        run = CrawlRunModel(
+            status="running",
+            domain=self._domain,
+            run_type=self._run_type,
+            started_at=datetime.now(timezone.utc),
+        )
         self._db.add(run)
         self._db.commit()
         self._db.refresh(run)

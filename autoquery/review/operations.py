@@ -60,11 +60,22 @@ def reject_agent(db: Session, agent_id: int, reason: str, reviewed_by: str = "ad
     return agent
 
 
+def normalize_domain(domain: str) -> str:
+    """Strip protocol, www prefix, and trailing slashes from a domain."""
+    domain = domain.strip().lower()
+    for prefix in ("https://", "http://"):
+        if domain.startswith(prefix):
+            domain = domain[len(prefix):]
+    if domain.startswith("www."):
+        domain = domain[4:]
+    return domain.rstrip("/")
+
+
 def validate_domain(domain: str) -> str | None:
     """Validate a domain string. Returns error message or None if valid."""
     if not domain or not domain.strip():
         return "Domain is empty"
-    domain = domain.strip().lower()
+    domain = normalize_domain(domain)
     if "." not in domain:
         return f"Invalid domain format: '{domain}' (no TLD)"
     if " " in domain:
@@ -83,7 +94,7 @@ def parse_csv_domains(csv_content: str) -> list[dict]:
     reader = csv.DictReader(io.StringIO(csv_content))
     results: list[dict] = []
     for row in reader:
-        domain = (row.get("domain") or "").strip()
+        domain = normalize_domain((row.get("domain") or ""))
         agency_name = (row.get("agency_name") or "").strip()
         country = (row.get("country") or "").strip()
 
