@@ -8,6 +8,78 @@
 3. **Backend vor Frontend.** API-Endpunkte stehen und sind getestet bevor das Frontend gebaut wird.
 4. **MVP-Scope strikt.** Nur Features die in `00_mvp_definition.md` stehen. Alles andere ist Sprint 2.
 ---
+## Daten-Pipeline-Architektur (L0–L3)
+> Die Datenaufbereitung ist in diskrete Schichten gegliedert. Jede Schicht hat einen klar definierten Input, Output und eine einzige Verantwortung. Dieses Schichtmodell ersetzt den ursprünglich geplanten HTML-Crawl-Ansatz sowie das einstufige Embedding-Modell.
+### Überblick
+```
+L0    Screenshot-Capture        (PNG pro Abschnitt)
+  │
+L0.3  Raw-Text-Extraktion       (document.body.innerText → .txt)
+  │
+L0.6  Text-Cleaning             (Nav/Footer/Sidebar strippen)
+  │
+L1    Note-Taker                (strukturierte natürliche Sprache)
+  │
+L1-V  Fact-Checker              (Verifikation gegen Quelltext)
+  │
+L2    Kanonisierung             (Tags + Boolean-Regeln)        [IN RECHERCHE]
+  │
+L3    Per-Section Embeddings    (ein Vektor pro Wishlist-Abschnitt) [IN RECHERCHE]
+```
+### L0 — Screenshot-Capture
+**Zweck:** Vollständige visuelle Erfassung der Agenten-Seite als PNG-Abschnitte. Dient als QA-Fallback für den Fact-Checker bei Zweifelsfällen.
+**Input:** Agent-URL (aus CSV)
+**Output:** `screenshots/{agent_name}/section_NN.png`
+**Implementierung:** `autoquery/simulation/page_capture.py` (Playwright, headless Chromium, 1920×1080 Viewport, device_scale_factor=2)
+**Status:** DONE
+### L0.3 — Raw-Text-Extraktion
+**Zweck:** Extraktion des gerenderten DOM-Texts (kein Vision-OCR). Text-zu-Text, nicht Bild-zu-Text.
+**Input:** Gerenderter DOM während derselben Playwright-Session wie L0
+**Output:** `text_content/{agent_name}.txt` (via `document.body.innerText`)
+**Implementierung:** Teil von `autoquery/simulation/page_capture.py`
+**Status:** DONE
+### L0.6 — Text-Cleaning
+**Zweck:** Entfernung von Site-Chrome (Navigation, Footer, Sidebar-UI-Labels). Ergebnis ist reiner Profil-Text, bereit für den Note-Taker.
+**Input:** `text_content/{agent_name}.txt`
+**Output:** `cleaned/{agent_name}.txt`
+**Implementierung:** `autoquery/simulation/text_cleaner.py` (regelbasiert, keine LLM)
+**Status:** DONE
+### L1 — Semi-strukturierte Extraktion (Note-Taker)
+**Zweck:** Umwandlung des bereinigten Rohtexts in eine strukturierte, aber natürlich-sprachliche Darstellung. Keine Kanonisierung, keine induzierten Genres — die Sprache des Agenten bleibt erhalten.
+**Input:** `cleaned/{agent_name}.txt`
+**Output:** Strukturierter Text mit Feldern: Identity, Global Conditions, Preference Sections (mit Wants/Does-Not-Want/Conditions/Comp Titles), Hard Nos, Submission Requirements, Taste References, Cross-Cutting Themes, Confidence Flags
+**Implementierung:** Erweiterung von `autoquery/extractor/profile_extractor.py` mit neuem System Prompt
+**System Prompt:** Entwurf unter `/Users/alex/Downloads/extraction_system_prompt.txt`
+**Beispiel-Output:** `/Users/alex/Downloads/aashna_avachat_structured.txt`
+**Status:** SYSTEM PROMPT ENTWORFEN, INTEGRATION OFFEN
+**Qualitätsmessung:** 4 Dimensionen
+- Completeness: ≥95% Hard-Nos, ≥90% Comp Titles, 100% Sections
+- Faithfulness: 100% (jede Zeile im Quelltext belegbar — keine Halluzinationen)
+- Condition Preservation: 100% (Klauseln wie "only if X", "where Y", "but not Z" bleiben erhalten)
+- Structural Linkage: korrekte Section-Grenzen, Comps zu Wants verknüpft
+**Benchmark:** 8 manuell gecheckte MSWL-Profile als permanente Testsuite (`/Users/alex/autoquery/batch_capture_output/cleaned/`)
+### L1-V — Verifikation (Fact-Checker)
+**Zweck:** Unabhängiger zweiter Agent prüft L1-Output gegen den Quelltext. Flaggt Halluzinationen, fehlende Felder und gedropte Conditions. Liefert Korrekturreport.
+**Input:** L1-Output + `cleaned/{agent_name}.txt` (+ Screenshots als optionaler QA-Fallback)
+**Output:** Verifikationsreport (JSON) mit Scores, Misses, Hallucinations + korrigiertes L1
+**Architektur:** Claude (stärkeres Reasoning als Note-Taker) — läuft einmal pro Profil, nicht pro Query
+**Status:** DESIGN, NOCH NICHT IMPLEMENTIERT
+### L2 — Kanonisierung (Platzhalter)
+**Zweck:** Verifiziertes L1 → kanonische Genre-Tags, Audience-Enums, Hard-No-Keyword-Listen, strukturierte Conditions. Ermöglicht günstige Boolean-Filterung (3000 → 50 Kandidaten in Millisekunden).
+**Status:** IN RECHERCHE — konkrete Methode (LLM-basierte Kanonisierung vs. Alias-Dictionary vs. Hybrid) noch nicht entschieden
+**Offen:** Umgang mit mehrdeutigen Genres, Erweiterbarkeit des kanonischen Vokabulars, Confidence-Scoring pro Tag
+### L3 — Per-Section Embeddings (Platzhalter)
+**Zweck:** Ein Embedding pro Preference Section (nicht pro Agent). Matching via `max(cosine_similarity(manuscript, section_i))`. Ersetzt das alte 70/30 gewichtete Gesamt-Embedding und löst das Wishlist-Blurring-Problem.
+**Status:** IN RECHERCHE — Section-Granularität, Embedding-Modell für kurze Textsegmente und Aggregationsstrategie noch nicht entschieden
+### Verbindung zu den 10 Schritten
+| Layer | Schritt im Plan | Status |
+|---|---|---|
+| L0, L0.3, L0.6 | Schritt 2 (neu interpretiert) | DONE |
+| L1, L1-V | Schritt 3 (neu interpretiert) | In Arbeit |
+| L2 | Neu — Zwischenschicht vor Schritt 5 | In Recherche |
+| L3 | Schritt 5 (ersetzt altes Modell) | In Recherche |
+**Hinweis:** Die Schritte 2, 3 und 5 sind laut STATUS.md formal "DONE", wurden aber architektonisch durch das Schichtmodell ersetzt. Der alte Code (HTML-Crawler in `autoquery/crawler/`, einstufiger Extractor, gewichtetes Gesamt-Embedding) existiert weiterhin, gilt aber als deprecated zugunsten der Screenshot-basierten Pipeline.
+---
 ## Übersicht: 10 Schritte
 ```
 Schritt 1:  Infrastruktur & Datenbank           ░░░░░░░░░░░░░░░░░░░░
@@ -40,40 +112,43 @@ Schritt 10: Qualitätssicherung & Soft Launch      ░░░░░░░░░�
 - Ein manueller INSERT in `agents` funktioniert inkl. Embedding-Vektor
 - FTS-Trigger befüllt `fts_vector` automatisch
 ---
-## Schritt 2 — Crawler & Content Extraction
-**Ziel:** Eine einzelne Agentur-Domain kann gecrawlt werden und liefert sauberen Text mit Quality Gate Score.
+## Schritt 2 — Capture & Text-Cleaning (L0 / L0.3 / L0.6)
+> **Architektur-Update:** Dieser Schritt deckt nun die Schichten **L0 / L0.3 / L0.6** der neuen Daten-Pipeline ab. Die Implementierung erfolgt durch `autoquery/simulation/page_capture.py` (Screenshot + DOM-Text) und `autoquery/simulation/text_cleaner.py` (Chrome-Stripping). Der ursprünglich geplante HTML-Crawl mit BeautifulSoup + Quality Gate (7 Dimensionen) wurde durch den Screenshot-basierten Ansatz ersetzt. Siehe Abschnitt "Daten-Pipeline-Architektur (L0–L3)".
+> **Archivierte Entwürfe:** siehe `IMPLEMENTATION_PLAN_ARCHIVE.md` (Schritt 2 deprecated).
+**Ziel:** Eine einzelne Agentur-URL kann erfasst werden und liefert bereinigten, profilfokussierten Text — bereit für den Note-Taker (L1).
 **Was gebaut wird:**
-- `crawler_engine.py`: Playwright-Crawler mit robots.txt-Parser, URL-Normalisierung, Rate Limiting (2s/Domain), Blacklist-Check
+- `crawler_engine.py`: Playwright-basiert mit robots.txt-Parser, URL-Normalisierung, Rate Limiting (2s/Domain), Blacklist-Check
 - `blacklist.yaml` mit Aggregatoren (MSWL, QueryTracker, PublishersMarketplace)
-- `page_classifier.py`: Ollama-basiert, INDEX vs. CONTENT
-- `content_extractor.py`: HTML → sauberer Text, CSS-Klassen-Filter, Canonical URL
-- Quality Gate: alle 7 Dimensionen (Mindestlänge, Signal-Rausch, Struktur, Rausch, Encoding, Sprache, Duplikat)
+- `autoquery/simulation/page_capture.py` (L0 + L0.3): Sektionsweise PNG-Screenshots + `document.body.innerText` → `text_content/{agent}.txt`
+- `autoquery/simulation/text_cleaner.py` (L0.6): regelbasiertes Strippen von Nav/Footer/Sidebar-Labels → `cleaned/{agent}.txt`
 - Crawl-Run-Logging in `crawl_runs`-Tabelle
 **Nicht in diesem Schritt:** Browser Agent (Schritt 4), Sitemap/BFS (nur für manuelle Tests nötig), monatlicher Re-Crawl (Post-MVP)
-**Feature-Dateien:** `02_crawler_engine.md`, `04_content_extractor.md`
+**Feature-Dateien:** `02_crawler_engine.md`
 **Testbar wenn:**
-- Crawler fetcht 1 Seite einer bekannten Agentur (z.B. janklow.com/agents)
+- Crawler fetcht 1 Seite einer bekannten Agentur unter Beachtung von robots.txt und Rate Limit
 - Blacklist-Check wirft Exception bei QueryTracker-URL
-- Page Classifier unterscheidet Agenten-Übersicht von Einzel-Profil (≥ 80% auf 10 Testseiten)
-- Quality Gate produziert Score + Issues für 5 verschiedene Seiten
-- Content Extractor liefert sauberen Text ohne Nav/Footer/Cookie-Rauschen
+- `page_capture.py` liefert vollständige PNG-Abschnitte + innerText-Datei für 5 verschiedene Agenten-Seiten
+- `text_cleaner.py` entfernt Nav/Footer/Sidebar zuverlässig (manuelle Stichprobe gegen 5 Profile)
 - Crawl-Run wird in DB protokolliert
 ---
-## Schritt 3 — LLM-Extraktion & Review-Interface
-**Ziel:** Aus bereinigtem Text werden strukturierte Profile extrahiert und können im Review-Interface geprüft werden.
+## Schritt 3 — Note-Taker & Fact-Checker (L1 / L1-V)
+> **Architektur-Update:** Dieser Schritt deckt nun die Schichten **L1 (Note-Taker)** und **L1-V (Fact-Checker)** ab. Statt einer einstufigen JSON-Extraktion mit kanonischen Genres ist das Ziel ein zweistufiger agentischer Flow: Note-Taker erzeugt semi-strukturierten natürlich-sprachlichen Output, Fact-Checker verifiziert gegen den Quelltext und produziert einen Korrekturreport. Die Kanonisierung (Mapping auf feste Genre-Tags) wird in L2 verschoben. Siehe Abschnitt "Daten-Pipeline-Architektur (L0–L3)".
+> **Archivierte Entwürfe:** siehe `IMPLEMENTATION_PLAN_ARCHIVE.md` (Schritt 3 deprecated).
+**Ziel:** Aus bereinigtem Text (L0.6) entsteht ein strukturierter, verifizierter, natürlich-sprachlicher Profil-Output, der im Review-Interface geprüft werden kann.
 **Was gebaut wird:**
-- `profile_extractor.py`: Ollama-basierte Extraktion aller Felder (Name, Agency, Genres, Audience, Keywords, Hard-Nos, Submission-Req, Wishlist/Bio/Hard-Nos als Rohtext)
-- `prompts.py`: Versionierte Prompts, JSON-Format erzwungen, Keywords-Prompt mit Fließtext-Verbot
-- Qualitätsprüfung nach Extraktion (Name vorhanden, Genres min. 1, Keywords min. 3)
-- Streamlit Review-Interface: Profil-Anzeige (Fakten + Keywords + Rohtext), Editieren, Genehmigen/Ablehnen/Überspringen, Quality Gate Anzeige, Link zur Originalseite
+- **L1 — Note-Taker:** `profile_extractor.py` wird auf den neuen System Prompt umgestellt (`/Users/alex/Downloads/extraction_system_prompt.txt`). Output: strukturierte natürliche Sprache mit Feldern Identity / Global Conditions / Preference Sections (mit Wants, Does-Not-Want, Conditions, Tropes, Comp Titles) / Hard Nos / Submission Requirements / Taste References / Cross-Cutting Themes / Confidence Flags. Keine induzierten Genres.
+- **L1-V — Fact-Checker:** unabhängiger zweiter Agent (Claude) prüft L1 gegen `cleaned/{agent}.txt`, liefert Korrekturreport (Halluzinationen, fehlende Felder, gedropte Conditions) + korrigiertes L1.
+- **Benchmark-Suite:** 8 manuell gecheckte MSWL-Profile in `batch_capture_output/cleaned/` als permanente Testsuite für die 4 Qualitätsdimensionen (Completeness, Faithfulness, Condition Preservation, Structural Linkage).
+- **Streamlit Review-Interface:** Anzeige von L1-Output + L1-V-Report nebeneinander, Editieren, Genehmigen/Ablehnen/Überspringen, Link zur Originalseite. Dient als QA-Oberfläche für den Fact-Checker.
 - Domain-Verwaltung im Streamlit: Einzel-URL + CSV-Upload
 **Feature-Dateien:** `05_llm_extraction.md`, `06_review_interface.md`
 **Testbar wenn:**
-- Extractor produziert valides JSON für 5 verschiedene Agenten-Seiten
-- Alle Pflichtfelder befüllt (Name, min. 1 Genre)
-- Keywords sind kompakte Begriffe (keine ganzen Sätze)
-- Rohtext-Felder (`wishlist_raw`, `bio_raw`, `hard_nos_raw`) korrekt befüllt
-- Streamlit zeigt extrahiertes Profil an + erlaubt Edit + Approve
+- L1-Output für alle 8 Benchmark-Profile entspricht der definierten Struktur (alle anwendbaren Sections vorhanden)
+- Faithfulness = 100% auf Benchmark (jede Zeile aus Quelltext belegbar — keine Halluzinationen)
+- Completeness ≥ 95% Hard-Nos, ≥ 90% Comp Titles, 100% Sections auf Benchmark
+- Condition Preservation = 100% (Klauseln wie "only if X", "not set in Rome" bleiben erhalten)
+- L1-V findet injizierte Halluzinationen in einem Adversarial-Test (≥ 3 künstliche Fehler pro Profil)
+- Streamlit zeigt L1 + L1-V-Report + erlaubt Edit + Approve
 - CSV-Upload mit 5 Domains funktioniert (Validierung, Vorschau, Import)
 ---
 ## Schritt 4 — Daten befüllen (≥ 200 Profile)
@@ -98,41 +173,44 @@ Schritt 10: Qualitätssicherung & Soft Launch      ░░░░░░░░░�
 - `genre_aliases.yaml` hat ≥ 30 Einträge und wird beim Server-Start geladen
 **Hinweis:** Dies ist der zeitaufwändigste Schritt. Der Browser Agent spart Arbeit, aber das Review ist manuell. Parallelisierbar: während Profile reviewed werden, können weitere Domains gecrawlt werden.
 ---
-## Schritt 5 — Embedding-Pipeline
-**Ziel:** Alle 200+ genehmigten Agenten haben Embeddings, und ein Test-Manuskript kann eingebettet werden.
+## Schritt 5 — Per-Section Embeddings (L3)
+> **Architektur-Update:** Dieser Schritt wird zu **L3 (Per-Section Embeddings)**. Das ursprünglich geplante Gesamt-Embedding pro Agent (70/30 gewichtet aus `wishlist_raw` + `bio_raw`) wird ersetzt durch ein Embedding pro Preference Section, mit Matching via `max(cosine_similarity(manuscript, section_i))`. Konkrete Methode noch IN RECHERCHE. Siehe Abschnitt "Daten-Pipeline-Architektur (L0–L3)".
+> **Archivierte Entwürfe:** siehe `IMPLEMENTATION_PLAN_ARCHIVE.md` (Schritt 5 deprecated).
+**Ziel:** Alle 200+ genehmigten Agenten haben pro Preference Section ein Embedding, und ein Test-Manuskript kann eingebettet + über `max(cosine_similarity)` gematcht werden.
 **Was gebaut wird:**
 - `model.py`: Abstrakte Embedding-Schnittstelle, BGE-large-en-v1.5 Implementierung, Instruction Prefixes
-- `pipeline.py`: Agenten-Embedding (aus `wishlist_raw` + `bio_raw`), Manuskript-Embedding (zweistufig: Volltext + Query Expansion), L2-Normalisierung, Gewichtung 70/30
+- `pipeline.py`: **pro Preference Section** ein Embedding (statt eines Gesamtvektors pro Agent); Manuskript-Embedding zweistufig (Volltext + Query Expansion); Matching-Score pro Agent = `max_i cosine(manuscript, section_i)`
 - Query Expansion via Ollama: 12 Keywords in Agenten-Sprache
-- `recompute_all_embeddings` Skript (für Modell-Wechsel oder Bulk-Update)
-- Embedding-Trigger bei Review-Approval (Integration mit Schritt 3)
+- `recompute_all_embeddings` Skript (für Modell-Wechsel oder Bulk-Update aller Sections)
+- Embedding-Trigger bei Review-Approval (Integration mit Schritt 3 / L1-V)
+- **Offen (IN RECHERCHE):** Section-Granularität (nur Preference Sections? auch Cross-Cutting Themes separat?), Embedding-Modell-Wahl für kurze Textsegmente, Aggregationsstrategie (max vs. top-k-Mittel)
 **Feature-Dateien:** `07_embedding_pipeline.md`
 **Testbar wenn:**
-- Alle ≥ 200 genehmigten Agenten haben `embedding IS NOT NULL`
-- Cosine Similarity zwischen einem Fantasy-Manuskript und einem Fantasy-Agenten ist höher als zu einem Non-Fiction-Agenten
+- Alle ≥ 200 genehmigten Agenten haben ≥ 1 Section-Embedding (`embedding IS NOT NULL` pro Section)
+- Bei einem Agenten mit sowohl "YA Horror" als auch "PB STEAM": Horror-Manuskript matcht die Horror-Section deutlich stärker als die PB-Section
+- Cosine Similarity zwischen Fantasy-Manuskript und einer Fantasy-Section ist höher als zu jeder Non-Fiction-Section
 - Query Expansion produziert 12 sinnvolle Keywords für 3 Test-Manuskripte
-- Gewichtetes Embedding (70/30) liegt im erwarteten Wertebereich
 - `recompute_all_embeddings` läuft ohne Fehler durch
 ---
 ## Schritt 6 — Matching-Algorithmus
-**Ziel:** Für ein Test-Manuskript kommen sinnvoll gerankte Ergebnisse zurück. Alle 4 Scoring-Signale funktionieren.
+> **Architektur-Update:** Hard-Nos werden nicht mehr per Cosine-Threshold (0.75) gefiltert, sondern deterministisch via L2-Keyword-Listen. Die finalen Scoring-Gewichte (vorher hand-tuned 0.35/0.25/0.25/0.15) werden neu bestimmt, sobald L2- und L3-Signale vorliegen — die alte Konvexkombination passt nicht mehr zur veränderten Signal-Struktur.
+> **Archivierte Entwürfe:** siehe `IMPLEMENTATION_PLAN_ARCHIVE.md` (Schritt 6 deprecated — teilweise).
+**Ziel:** Für ein Test-Manuskript kommen sinnvoll gerankte Ergebnisse zurück. Alle Scoring-Signale funktionieren; Hard-Nos werden deterministisch erzwungen.
 **Was gebaut wird:**
-- `filter.py`: Harte Constraints (is_open, opted_out, review_status, Hard-Nos-Threshold 0.75)
-- `scorer.py`: Konvexkombination mit DBSF-Normalisierung (Genre 0.35, FTS 0.25, Semantic 0.25, Audience 0.15), Fallback bei fehlendem Signal
+- `filter.py`: Harte Constraints (`is_open`, `opted_out`, `review_status`) + **Hard-Nos-Filter via L2-Keyword-Listen** (deterministischer Boolean-Check, kein Cosine)
+- `scorer.py`: kombiniert L2-Boolean-Signale (Genre-/Audience-Match), FTS (`ts_rank_cd` auf `fts_vector`) und L3-Semantic-Score (`max cosine` über Section-Embeddings). Gewichte und Normalisierung werden festgelegt, sobald L2/L3 stabil sind.
 - `reranker.py`: MMR mit λ=0.7, max. 3 pro Agentur in Top-10
-- Genre-Alias-Matching: Exakt → Alias → Embedding-Fallback
+- Genre-Alias-Matching (aus L2): Exakt → Alias → Embedding-Fallback
 - Audience-Proximity-Score: Stufenmodell
-- FTS: `ts_rank_cd` auf `fts_vector`
 - Match-Tags-Berechnung (serverseitig): ✓/~/✗ pro Dimension
 **Feature-Dateien:** `08_matching_algorithm.md`
 **Testbar wenn:**
 - Precision@10 > 0.5 auf Rückwärtstest (≥ 20 bekannte Agent-Autor-Beziehungen)
-- Hard-Nos Violation Rate = 0%
+- Hard-Nos Violation Rate = 0% (deterministisch über L2-Keyword-Filter geprüft)
 - Max. 3 Agenten derselben Agentur in Top-10
 - Genre "Cozy Fantasy" matcht auf Agent mit "Cozy Mystery" niedriger als auf "Cozy Fantasy"
 - Match-Tags sind spezifisch (nicht generisch)
 - Ergebnis in < 3 Sekunden (200+ Agenten)
-- DBSF-Normalisierung: Scores liegen in [0,1]
 ---
 ## Schritt 7 — Backend-API
 **Ziel:** Alle API-Endpunkte stehen und sind mit Testdaten verifiziert. Frontend kann gebaut werden.
@@ -261,15 +339,16 @@ Schritte 1–4 sind sequentiell (jeder braucht den vorherigen). Ab Schritt 5 ist
 Einzige Ausnahme: Innerhalb von Schritt 4 können Crawling und Review parallelisiert werden (Admin reviewed während neue Domains gecrawlt werden).
 ---
 ## Schnellreferenz: Schritt → Feature-Dateien
-| Schritt | Baut auf | Feature-Dateien |
-|---|---|---|
-| 1. Infrastruktur & DB | — | `01_database_schema`, `15_infrastructure` |
-| 2. Crawler | Schritt 1 | `02_crawler_engine`, `04_content_extractor` |
-| 3. Extraktion & Review | Schritt 2 | `05_llm_extraction`, `06_review_interface` |
-| 4. Daten befüllen | Schritt 3 | `03_browser_agent`, `06_review_interface` |
-| 5. Embeddings | Schritt 4 | `07_embedding_pipeline` |
-| 6. Matching | Schritt 5 | `08_matching_algorithm` |
-| 7. Backend-API | Schritt 6 | `09_auth_and_users`, `10_author_input_flow`, `12_interaction_logging` |
-| 8. Frontend | Schritt 7 | `00_mvp_definition`, `11_results_display` |
-| 9. Integration | Schritt 8 | `12_interaction_logging`, `14_compliance_and_gdpr`, `15_infrastructure` |
-| 10. QA & Launch | Schritt 9 | `00_mvp_definition` |
+| Schritt | Baut auf | Layer | Feature-Dateien |
+|---|---|---|---|
+| 1. Infrastruktur & DB | — | — | `01_database_schema`, `15_infrastructure` |
+| 2. Capture & Cleaning | Schritt 1 | L0, L0.3, L0.6 | `02_crawler_engine` |
+| 3. Extraktion & Review | Schritt 2 | L1, L1-V | `05_llm_extraction`, `06_review_interface` |
+| 4. Daten befüllen | Schritt 3 | — (nutzt L0–L1-V) | `03_browser_agent`, `06_review_interface` |
+| — | — | L2 (Kanonisierung) | in Recherche |
+| 5. Embeddings | Schritt 4 | L3 | `07_embedding_pipeline` |
+| 6. Matching | Schritt 5 | nutzt L2 + L3 (+ optional L1) | `08_matching_algorithm` |
+| 7. Backend-API | Schritt 6 | — | `09_auth_and_users`, `10_author_input_flow`, `12_interaction_logging` |
+| 8. Frontend | Schritt 7 | — | `00_mvp_definition`, `11_results_display` |
+| 9. Integration | Schritt 8 | — | `12_interaction_logging`, `14_compliance_and_gdpr`, `15_infrastructure` |
+| 10. QA & Launch | Schritt 9 | — | `00_mvp_definition` |

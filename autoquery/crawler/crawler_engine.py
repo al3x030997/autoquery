@@ -58,11 +58,14 @@ class CrawlResult:
 # URL normalization
 # ---------------------------------------------------------------------------
 def normalize_url(url: str) -> str:
-    """Strip fragments, lowercase scheme/host, remove trailing slash."""
+    """Strip fragments, lowercase scheme/host, strip www., remove trailing slash."""
     parsed = urlparse(url)
+    netloc = parsed.netloc.lower()
+    if netloc.startswith("www."):
+        netloc = netloc[4:]
     normalized = parsed._replace(
         scheme=parsed.scheme.lower(),
-        netloc=parsed.netloc.lower(),
+        netloc=netloc,
         fragment="",
         path=parsed.path.rstrip("/") or "/",
     )
@@ -138,13 +141,13 @@ class RateLimiter:
 # ---------------------------------------------------------------------------
 # fetch_page
 # ---------------------------------------------------------------------------
-async def fetch_page(url: str, rate_limiter: RateLimiter) -> CrawlResult:
+async def fetch_page(url: str, rate_limiter: RateLimiter, *, skip_blacklist: bool = False) -> CrawlResult:
     """Fetch a page with Playwright Chromium (headless), respecting blacklist and rate limit."""
     parsed = urlparse(url)
     domain = parsed.netloc.lower()
 
-    # Blacklist check — hard exception
-    if domain in _BLACKLISTED_DOMAINS:
+    # Blacklist check — hard exception (skipped for explicit single-page crawls)
+    if not skip_blacklist and domain in _BLACKLISTED_DOMAINS:
         raise BlacklistError(f"Domain '{domain}' is blacklisted")
 
     # Rate limit

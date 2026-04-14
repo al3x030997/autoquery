@@ -1,5 +1,5 @@
 """
-Tests for ProfileExtractor: Ollama-based agent profile extraction.
+Tests for ProfileExtractor: agent profile extraction (Ollama & Claude backends).
 """
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from autoquery.extractor.profile_extractor import ProfileExtractor
+from autoquery.extractor.prompts import EXTRACTION_SYSTEM_PROMPT
 from autoquery.database.models import Agent, REVIEW_STATUS_PENDING, REVIEW_STATUS_EXTRACTION_FAILED
 
 
@@ -39,6 +40,7 @@ def extractor():
         ollama_url="http://test:11434",
         model="test-model",
         genre_config_path="config/genre_aliases.yaml",
+        extractor_backend="ollama",
     )
 
 
@@ -94,8 +96,7 @@ class TestProfileExtractor:
                 db=db_session,
             )
 
-        assert agent is not None
-        assert agent.review_status == REVIEW_STATUS_EXTRACTION_FAILED
+        assert agent is None
 
     @pytest.mark.asyncio
     async def test_missing_genres_fails(self, extractor, db_session):
@@ -111,8 +112,7 @@ class TestProfileExtractor:
                 db=db_session,
             )
 
-        assert agent is not None
-        assert agent.review_status == REVIEW_STATUS_EXTRACTION_FAILED
+        assert agent is None
 
     @pytest.mark.asyncio
     async def test_few_keywords_fails(self, extractor, db_session):
@@ -128,12 +128,11 @@ class TestProfileExtractor:
                 db=db_session,
             )
 
-        assert agent is not None
-        assert agent.review_status == REVIEW_STATUS_EXTRACTION_FAILED
+        assert agent is None
 
     @pytest.mark.asyncio
     async def test_json_parse_error(self, extractor, db_session):
-        """Ollama returns garbage — handled gracefully."""
+        """Ollama returns garbage — returns None, no Agent record created."""
         mock_response = MagicMock()
         mock_response.json.return_value = {"response": "not valid json at all {{{"}
         mock_response.raise_for_status = MagicMock()
@@ -152,8 +151,10 @@ class TestProfileExtractor:
                 db=db_session,
             )
 
-        assert agent is not None
-        assert agent.review_status == REVIEW_STATUS_EXTRACTION_FAILED
+        assert agent is None
+        # No Agent record should exist
+        count = db_session.query(Agent).filter_by(profile_url="https://example.com/agent4").count()
+        assert count == 0
 
     @pytest.mark.asyncio
     async def test_input_truncation(self, extractor):
@@ -177,7 +178,7 @@ class TestProfileExtractor:
 
         with patch("autoquery.extractor.profile_extractor.httpx.AsyncClient", return_value=mock_client):
             agent1 = await extractor.extract(
-                clean_text="Text v1",
+                clean_text="Jane Smith is a literary agent at Smith Literary Agency. Contact: jane@smithlit.com",
                 source_url="https://example.com/agent-dup",
                 quality_score=0.7,
                 quality_action="extract",
@@ -189,7 +190,7 @@ class TestProfileExtractor:
 
         with patch("autoquery.extractor.profile_extractor.httpx.AsyncClient", return_value=mock_client2):
             agent2 = await extractor.extract(
-                clean_text="Text v2",
+                clean_text="Jane Updated is a literary agent at Smith Literary Agency. Contact: jane@smithlit.com",
                 source_url="https://example.com/agent-dup",
                 quality_score=0.8,
                 quality_action="extract",
@@ -210,6 +211,7 @@ class TestGenreCanonicalization:
             ollama_url="http://test:11434",
             model="test-model",
             genre_config_path="config/genre_aliases.yaml",
+            extractor_backend="ollama",
         )
 
     def test_exact_match(self, extractor):
@@ -239,6 +241,7 @@ class TestValidation:
         return ProfileExtractor(
             ollama_url="http://test:11434",
             model="test-model",
+            extractor_backend="ollama",
         )
 
     def test_valid_data_passes(self, extractor):
@@ -268,6 +271,7 @@ class TestExtractSection:
         return ProfileExtractor(
             ollama_url="http://test:11434",
             model="test-model",
+            extractor_backend="ollama",
         )
 
     def test_splits_by_agent_name(self, extractor):
@@ -316,6 +320,7 @@ class TestValidateGrounding:
         return ProfileExtractor(
             ollama_url="http://test:11434",
             model="test-model",
+            extractor_backend="ollama",
         )
 
     def test_name_present_no_warnings(self, extractor):
@@ -370,6 +375,7 @@ class TestValidateWishlist:
         return ProfileExtractor(
             ollama_url="http://test:11434",
             model="test-model",
+            extractor_backend="ollama",
         )
 
     def test_short_wishlist_warns(self, extractor):
@@ -396,6 +402,7 @@ class TestTwoPassExtractMulti:
             ollama_url="http://test:11434",
             model="test-model",
             genre_config_path="config/genre_aliases.yaml",
+            extractor_backend="ollama",
         )
 
     @pytest.mark.asyncio
@@ -497,3 +504,362 @@ class TestTwoPassExtractMulti:
         for agent in agents:
             assert agent.agency == "Test Agency"
             assert agent.agency_id is not None
+
+
+# ------------------------------------------------------------------
+# Claude backend tests
+# ------------------------------------------------------------------
+
+
+def _mock_claude_response(data: dict):
+    """Build a mock anthropic Messages response."""
+    block = MagicMock()
+    block.text = json.dumps(data)
+    resp = MagicMock()
+    resp.content = [block]
+    return resp
+
+
+class TestClaudeBackend:
+    @pytest.fixture
+    def extractor(self):
+        return ProfileExtractor(
+            ollama_url="http://test:11434",
+            model="test-model",
+            genre_config_path="config/genre_aliases.yaml",
+            extractor_backend="claude",
+            anthropic_api_key="test-key",
+        )
+
+    @pytest.mark.asyncio
+    async def test_claude_extraction(self, extractor, db_session):
+        """Claude backend produces the same Agent structure as Ollama."""
+        mock_create = AsyncMock(return_value=_mock_claude_response(VALID_PROFILE))
+        extractor._claude = MagicMock()
+        extractor._claude.messages = MagicMock()
+        extractor._claude.messages.create = mock_create
+
+        agent = await extractor.extract(
+            clean_text="Jane Smith is a literary agent at Smith Literary Agency...",
+            source_url="https://smithlit.com/agents/jane-claude",
+            quality_score=0.85,
+            quality_action="extract",
+            db=db_session,
+        )
+
+        assert agent is not None
+        assert agent.name == "Jane Smith"
+        assert agent.agency == "Smith Literary Agency"
+        assert agent.review_status == REVIEW_STATUS_PENDING
+        assert "literary_fiction" in agent.genres
+        assert len(agent.keywords) >= 3
+        assert agent.wishlist_raw is not None
+
+        # Verify Claude API was called with correct model
+        mock_create.assert_called_once()
+        call_kwargs = mock_create.call_args.kwargs
+        assert call_kwargs["model"] == "claude-haiku-4-5-20251001"
+        assert call_kwargs["system"] == EXTRACTION_SYSTEM_PROMPT
+
+    @pytest.mark.asyncio
+    async def test_claude_roster(self, extractor, db_session):
+        """Claude backend two-pass multi-agent extraction."""
+        roster_response = {
+            "agency_info": {"name": "Claude Agency", "exclusive_query": False},
+            "agents": [
+                {"name": "Alice Johnson", "section_hint": "Alice loves fantasy"},
+                {"name": "Bob Martinez", "section_hint": "Bob represents thrillers"},
+            ],
+        }
+        agent_alice = {
+            "name": "Alice Johnson", "agency": "Claude Agency",
+            "genres": ["fantasy"], "keywords": ["epic worldbuilding", "diverse voices", "magic systems"],
+            "audience": ["adult"], "hard_nos_keywords": [],
+            "is_open": True, "wishlist_raw": "I love epic fantasy with diverse voices and complex magic systems.",
+            "bio_raw": "Alice has been agenting for 10 years.", "hard_nos_raw": None,
+            "email": "alice@claude.com",
+        }
+        agent_bob = {
+            "name": "Bob Martinez", "agency": "Claude Agency",
+            "genres": ["thriller", "mystery"], "keywords": ["fast-paced", "unreliable narrator", "dark secrets"],
+            "audience": ["adult"], "hard_nos_keywords": ["erotica"],
+            "is_open": True, "wishlist_raw": "Looking for fast-paced thrillers with unreliable narrators and dark secrets.",
+            "bio_raw": "Bob joined the agency in 2020.", "hard_nos_raw": "No erotica.",
+            "email": "bob@claude.com",
+        }
+
+        call_count = 0
+
+        async def _mock_create(**kwargs):
+            nonlocal call_count
+            call_count += 1
+            system = kwargs.get("system", "")
+            if "MULTIPLE" in system.upper() or "ROSTER" in system.upper():
+                return _mock_claude_response(roster_response)
+            elif call_count == 2:
+                return _mock_claude_response(agent_alice)
+            else:
+                return _mock_claude_response(agent_bob)
+
+        extractor._claude = MagicMock()
+        extractor._claude.messages = MagicMock()
+        extractor._claude.messages.create = _mock_create
+
+        page_text = (
+            "Claude Agency - Our Agents\n\n"
+            "Alice Johnson loves fantasy and science fiction. She is looking for epic worldbuilding "
+            "and diverse voices and complex magic systems. Contact: alice@claude.com\n\n"
+            "Bob Martinez represents thrillers and mystery. He wants fast-paced thrillers with "
+            "unreliable narrators and dark secrets. No erotica. Contact: bob@claude.com"
+        )
+
+        agents = await extractor.extract_multi(
+            clean_text=page_text,
+            source_url="https://claudeagency.com/about",
+            quality_score=0.9,
+            quality_action="extract",
+            db=db_session,
+        )
+
+        assert call_count == 3  # 1 roster + 2 per-agent
+        assert len(agents) == 2
+        assert agents[0].name == "Alice Johnson"
+        assert agents[1].name == "Bob Martinez"
+        for agent in agents:
+            assert agent.wishlist_raw is not None
+            assert agent.agency == "Claude Agency"
+
+
+class TestClientBioDetection:
+    @pytest.fixture
+    def extractor(self):
+        return ProfileExtractor(
+            ollama_url="http://test:11434",
+            model="test-model",
+            extractor_backend="ollama",
+        )
+
+    def test_client_bio_detected(self, extractor):
+        text = (
+            "J.L. Seegars is an indie romance author and co-founder of a bookish subscription box. "
+            "Represented by Taj McCoy at Laura Dail Literary Agency."
+        )
+        assert ProfileExtractor._is_likely_client_bio(text) is True
+
+    def test_client_bio_agent_colon(self, extractor):
+        text = "Alyssa Osasere is an artist and illustrator. Agent: Taj McCoy"
+        assert ProfileExtractor._is_likely_client_bio(text) is True
+
+    def test_agent_page_not_client_bio(self, extractor):
+        text = (
+            "Taj McCoy is a literary agent at LDLA. "
+            "Query me at submissions@ldlainc.com. Looking for romance, fiction, and memoir."
+        )
+        assert ProfileExtractor._is_likely_client_bio(text) is False
+
+    def test_submission_page_not_client_bio(self, extractor):
+        text = (
+            "Represented by our team of agents. Submission guidelines: "
+            "We are looking for literary fiction and memoir. Query me at query@agency.com."
+        )
+        assert ProfileExtractor._is_likely_client_bio(text) is False
+
+    def test_no_signals_not_client_bio(self, extractor):
+        text = "This is a random page about literary events and book fairs."
+        assert ProfileExtractor._is_likely_client_bio(text) is False
+
+
+class TestClosedAgentValidation:
+    @pytest.fixture
+    def extractor(self):
+        return ProfileExtractor(
+            ollama_url="http://test:11434",
+            model="test-model",
+            extractor_backend="ollama",
+        )
+
+    def test_closed_agent_passes_validation(self, extractor):
+        data = {"name": "Laura Dail", "is_open": False, "genres": [], "keywords": []}
+        is_valid, errors = extractor._validate(data)
+        assert is_valid
+        assert errors == []
+
+    def test_open_agent_still_requires_genres(self, extractor):
+        data = {"name": "Laura Dail", "is_open": True, "genres": [], "keywords": []}
+        is_valid, errors = extractor._validate(data)
+        assert not is_valid
+        assert any("genre" in e for e in errors)
+
+    def test_null_is_open_still_requires_genres(self, extractor):
+        data = {"name": "Laura Dail", "is_open": None, "genres": [], "keywords": []}
+        is_valid, errors = extractor._validate(data)
+        assert not is_valid
+
+
+class TestUpsertDedup:
+    """Tests for name+agency deduplication and richer-wins merge."""
+
+    @pytest.fixture
+    def extractor(self):
+        return ProfileExtractor(
+            ollama_url="http://test:11434",
+            model="test-model",
+            genre_config_path="config/genre_aliases.yaml",
+            extractor_backend="ollama",
+        )
+
+    def test_upsert_deduplicates_by_name_agency(self, extractor, db_session):
+        """Same name+agency from different URLs → single record."""
+        ProfileExtractor._upsert_agent(
+            db_session, "https://example.com/about#agent-jane-smith",
+            {"name": "Jane Smith", "agency": "Acme Lit", "genres": ["fantasy"],
+             "keywords": ["magic"], "audience": [], "hard_nos_keywords": []},
+            quality_score=0.8, quality_action="extract",
+            review_status=REVIEW_STATUS_PENDING,
+        )
+        assert db_session.query(Agent).count() == 1
+
+        ProfileExtractor._upsert_agent(
+            db_session, "https://example.com/submissions#agent-jane-smith",
+            {"name": "Jane Smith", "agency": "Acme Lit",
+             "genres": ["fantasy", "sci-fi", "memoir"],
+             "keywords": ["magic", "space", "family"],
+             "audience": ["adult"], "hard_nos_keywords": []},
+            quality_score=0.9, quality_action="extract",
+            review_status=REVIEW_STATUS_PENDING,
+        )
+
+        assert db_session.query(Agent).count() == 1
+        agent = db_session.query(Agent).first()
+        assert agent.name == "Jane Smith"
+        # Richer data kept
+        assert len(agent.genres) == 3
+        assert len(agent.keywords) == 3
+
+    def test_upsert_richer_data_wins(self, extractor, db_session):
+        """Richer list always wins regardless of insert order."""
+        # Insert with 5 genres
+        ProfileExtractor._upsert_agent(
+            db_session, "https://example.com/page1",
+            {"name": "Bob Agent", "agency": "Big Agency",
+             "genres": ["fantasy", "sci-fi", "memoir", "thriller", "romance"],
+             "keywords": ["a", "b", "c", "d", "e"],
+             "audience": ["adult", "ya"], "hard_nos_keywords": ["erotica"]},
+            quality_score=0.8, quality_action="extract",
+            review_status=REVIEW_STATUS_PENDING,
+        )
+
+        # Update with 2 genres from different URL → old 5 genres should win
+        ProfileExtractor._upsert_agent(
+            db_session, "https://example.com/page2",
+            {"name": "Bob Agent", "agency": "Big Agency",
+             "genres": ["fantasy", "sci-fi"],
+             "keywords": ["a", "b"],
+             "audience": [], "hard_nos_keywords": []},
+            quality_score=0.9, quality_action="extract",
+            review_status=REVIEW_STATUS_PENDING,
+        )
+
+        agent = db_session.query(Agent).first()
+        assert len(agent.genres) == 5
+        assert len(agent.keywords) == 5
+        assert len(agent.audience) == 2
+        assert len(agent.hard_nos_keywords) == 1
+
+    def test_upsert_profile_url_updated_when_richer(self, extractor, db_session):
+        """profile_url changes to richer source."""
+        ProfileExtractor._upsert_agent(
+            db_session, "https://example.com/about#agent-jane",
+            {"name": "Jane Doe", "agency": "Test Lit",
+             "genres": ["fantasy"], "keywords": ["magic"],
+             "audience": [], "hard_nos_keywords": []},
+            quality_score=0.8, quality_action="extract",
+            review_status=REVIEW_STATUS_PENDING,
+        )
+
+        ProfileExtractor._upsert_agent(
+            db_session, "https://example.com/submissions#agent-jane",
+            {"name": "Jane Doe", "agency": "Test Lit",
+             "genres": ["fantasy", "sci-fi", "memoir"],
+             "keywords": ["magic", "space", "family"],
+             "audience": ["adult"], "hard_nos_keywords": []},
+            quality_score=0.9, quality_action="extract",
+            review_status=REVIEW_STATUS_PENDING,
+        )
+
+        agent = db_session.query(Agent).first()
+        assert agent.profile_url == "https://example.com/submissions#agent-jane"
+
+    def test_upsert_profile_url_kept_when_old_richer(self, extractor, db_session):
+        """profile_url stays if existing data is richer."""
+        ProfileExtractor._upsert_agent(
+            db_session, "https://example.com/submissions#agent-jane",
+            {"name": "Jane Doe", "agency": "Test Lit",
+             "genres": ["fantasy", "sci-fi", "memoir"],
+             "keywords": ["magic", "space", "family"],
+             "audience": ["adult"], "hard_nos_keywords": []},
+            quality_score=0.8, quality_action="extract",
+            review_status=REVIEW_STATUS_PENDING,
+        )
+
+        ProfileExtractor._upsert_agent(
+            db_session, "https://example.com/about#agent-jane",
+            {"name": "Jane Doe", "agency": "Test Lit",
+             "genres": ["fantasy"], "keywords": ["magic"],
+             "audience": [], "hard_nos_keywords": []},
+            quality_score=0.9, quality_action="extract",
+            review_status=REVIEW_STATUS_PENDING,
+        )
+
+        agent = db_session.query(Agent).first()
+        assert agent.profile_url == "https://example.com/submissions#agent-jane"
+
+    def test_scalar_non_null_preserved(self, extractor, db_session):
+        """Scalar fields: existing non-null preserved when new is null."""
+        ProfileExtractor._upsert_agent(
+            db_session, "https://example.com/about#agent-jane",
+            {"name": "Jane Doe", "agency": "Test Lit",
+             "genres": ["fantasy"], "keywords": ["magic"],
+             "audience": [], "hard_nos_keywords": [],
+             "wishlist_raw": "I love epic fantasy.",
+             "bio_raw": "Jane is great.", "is_open": True},
+            quality_score=0.8, quality_action="extract",
+            review_status=REVIEW_STATUS_PENDING,
+        )
+
+        ProfileExtractor._upsert_agent(
+            db_session, "https://example.com/submissions#agent-jane",
+            {"name": "Jane Doe", "agency": "Test Lit",
+             "genres": ["fantasy", "sci-fi"],
+             "keywords": ["magic", "space", "family"],
+             "audience": ["adult"], "hard_nos_keywords": [],
+             "wishlist_raw": None, "bio_raw": None, "is_open": None},
+            quality_score=0.9, quality_action="extract",
+            review_status=REVIEW_STATUS_PENDING,
+        )
+
+        agent = db_session.query(Agent).first()
+        assert agent.wishlist_raw == "I love epic fantasy."
+        assert agent.bio_raw == "Jane is great."
+        assert agent.is_open is True
+
+    @pytest.mark.asyncio
+    async def test_extract_failure_returns_none(self, extractor, db_session):
+        """Failed extraction returns None and creates no Agent record."""
+        data = {**VALID_PROFILE, "name": "", "genres": [], "keywords": []}
+        mock_client = _mock_httpx_post(data)
+
+        with patch("autoquery.extractor.profile_extractor.httpx.AsyncClient", return_value=mock_client):
+            result = await extractor.extract(
+                clean_text="Some non-agent page text",
+                source_url="https://example.com/some-author-page",
+                quality_score=0.5,
+                quality_action="extract",
+                db=db_session,
+            )
+
+        assert result is None
+        count = db_session.query(Agent).filter_by(
+            profile_url="https://example.com/some-author-page"
+        ).count()
+        assert count == 0

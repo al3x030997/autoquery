@@ -36,7 +36,7 @@ Rules:
 - "keywords": Compact terms only (1-3 words each). NOT full sentences. Minimum 3 keywords. Examples: "diverse voices", "unreliable narrator", "found family", "magical realism"
 - "hard_nos_keywords": Compact terms the agent does NOT want. Examples: "erotica", "fan fiction", "screenplays"
 - "audience": From this list only: adult, ya, middle_grade, children, picture_books
-- "wishlist_raw": Extract the full wishlist/MSWL text as a coherent block. If not found, use null.
+- "wishlist_raw": Extract ALL text describing what the agent wants, is seeking, or is looking for. Include genre preferences, themes, styles, and types of books. This includes text labeled as "wishlist", "MSWL", "what I'm looking for", or any descriptive prose about their interests. This is the most important field — extract generously. Only use null if there is truly no information about what the agent seeks.
 - "bio_raw": Extract bio/about text as a coherent block. If not found, use null.
 - "hard_nos_raw": Extract the full "what I don't want" text as a coherent block. If not found, use null.
 - "is_open": true if accepting queries, false if closed, null if unclear

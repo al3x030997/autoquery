@@ -15,3 +15,7 @@ build/
 frontend/.next/
 frontend/node_modules/
 node_modules/
+
+# Screenshot/capture outputs (scraped content — not for repo)
+batch_capture_output/
+test_capture_output/

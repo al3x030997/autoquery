@@ -18,7 +18,7 @@ _REMOVE_TAGS = [
 # CSS selectors for noise elements (cookie banners, popups, etc.)
 _REMOVE_SELECTORS = [
     "[class*=cookie]",
-    "[class*=banner]",
+    ".banner",
     "[class*=popup]",
     "[id*=cookie]",
     "[id*=nav]",
@@ -65,6 +65,8 @@ def extract_links(html: str, base_url: str) -> list[str]:
     """
     soup = BeautifulSoup(html, "lxml")
     base_domain = urlparse(base_url).netloc.lower()
+    if base_domain.startswith("www."):
+        base_domain = base_domain[4:]
     seen: set[str] = set()
     links: list[str] = []
 
@@ -74,7 +76,10 @@ def extract_links(html: str, base_url: str) -> list[str]:
             continue
         full = urljoin(base_url, href)
         parsed = urlparse(full)
-        if parsed.netloc.lower() != base_domain:
+        link_domain = parsed.netloc.lower()
+        if link_domain.startswith("www."):
+            link_domain = link_domain[4:]
+        if link_domain != base_domain:
             continue
         normed = normalize_url(full)
         if normed not in seen:

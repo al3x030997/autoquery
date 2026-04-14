@@ -1,15 +1,22 @@
 """
-Ollama-based profile extraction: clean text → structured Agent fields.
+Profile extraction: clean text → structured Agent fields.
+
+Supports two backends:
+  - "claude" (default): Anthropic Messages API — better quality for structured extraction
+  - "ollama": Local Ollama /api/generate — used for lightweight tasks
 """
 from __future__ import annotations
 
 import json
 import logging
 import os
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 
+import anthropic
 import httpx
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from autoquery.database.models import Agent, Agency, REVIEW_STATUS_PENDING, REVIEW_STATUS_EXTRACTION_FAILED
@@ -28,17 +35,51 @@ _GENRE_CONFIG_PATH = Path(__file__).parent.parent.parent / "config" / "genre_ali
 
 
 class ProfileExtractor:
-    """Extract structured agent profiles from clean text using Ollama."""
+    """Extract structured agent profiles using Claude or Ollama."""
 
     def __init__(
         self,
         ollama_url: str | None = None,
         model: str | None = None,
         genre_config_path: str | Path | None = None,
+        anthropic_api_key: str | None = None,
+        extractor_backend: str | None = None,
     ):
+        # Ollama config (always initialised — used as fallback)
         self.ollama_url = ollama_url or os.environ.get("OLLAMA_URL", "http://ollama:11434")
         self.model = model or os.environ.get("EXTRACTOR_MODEL", "llama3.1:8b")
         self._genre_aliases = load_genre_aliases(genre_config_path or _GENRE_CONFIG_PATH)
+
+        # Backend selection
+        self._backend = extractor_backend or os.environ.get("EXTRACTOR_BACKEND", "claude")
+
+        # Claude config
+        if self._backend == "claude":
+            api_key = anthropic_api_key or os.environ.get("ANTHROPIC_API_KEY")
+            self._claude = anthropic.AsyncAnthropic(api_key=api_key)
+            self._claude_model = os.environ.get(
+                "EXTRACTOR_CLAUDE_MODEL", "claude-haiku-4-5-20251001"
+            )
+
+    @staticmethod
+    def _is_likely_client_bio(clean_text: str) -> bool:
+        """Return True if the text describes an author/illustrator client, not an agent."""
+        has_client_signal = bool(
+            re.search(
+                r"(?i)\b(?:represented by|(?:her|his|their)\s+agent\b|agent:\s*[A-Z])",
+                clean_text,
+            )
+        )
+        if not has_client_signal:
+            return False
+        # If the page also has agent-profile signals, it's not a client bio
+        has_agent_signal = bool(
+            re.search(
+                r"(?i)\b(?:query me|submission|wishlist|mswl|looking for|seeking)\b",
+                clean_text,
+            )
+        )
+        return not has_agent_signal
 
     async def extract(
         self,
@@ -53,16 +94,17 @@ class ProfileExtractor:
 
         Returns the Agent object, or None on total failure.
         """
+        if self._is_likely_client_bio(clean_text):
+            logger.info("Skipping likely client bio page: %s", source_url)
+            return None
+
         truncated = self._truncate(clean_text)
 
         try:
-            data = await self._call_ollama(truncated)
+            data = await self._call_llm(truncated)
         except Exception as exc:
-            logger.error("Ollama call failed for %s: %s", source_url, exc)
-            return self._upsert_agent(
-                db, source_url, {}, quality_score, quality_action,
-                review_status=REVIEW_STATUS_EXTRACTION_FAILED,
-            )
+            logger.error("LLM call failed for %s: %s", source_url, exc)
+            return None
 
         is_valid, errors = self._validate(data)
 
@@ -82,10 +124,7 @@ class ProfileExtractor:
 
             if data.get("_grounding_failed"):
                 logger.warning("Skipping hallucinated agent '%s' from %s", data.get("name"), source_url)
-                return self._upsert_agent(
-                    db, source_url, data, quality_score, quality_action,
-                    review_status=REVIEW_STATUS_EXTRACTION_FAILED,
-                )
+                return None
 
             # Wishlist validation
             wl_warnings = self._validate_wishlist(data, len(truncated.split()))
@@ -102,10 +141,7 @@ class ProfileExtractor:
             logger.warning(
                 "Extraction validation failed for %s: %s", source_url, errors
             )
-            return self._upsert_agent(
-                db, source_url, data, quality_score, quality_action,
-                review_status=REVIEW_STATUS_EXTRACTION_FAILED,
-            )
+            return None
 
     async def extract_multi(
         self,
@@ -126,9 +162,9 @@ class ProfileExtractor:
         roster_text = self._truncate(clean_text, max_words=8000)
 
         try:
-            roster = await self._call_ollama_roster(roster_text)
+            roster = await self._call_llm_roster(roster_text)
         except Exception as exc:
-            logger.error("Ollama roster call failed for %s: %s", source_url, exc)
+            logger.error("LLM roster call failed for %s: %s", source_url, exc)
             return []
 
         # Upsert agency record if agency_info is present
@@ -175,9 +211,9 @@ class ProfileExtractor:
             )
 
             try:
-                agent_data = await self._call_ollama(section)
+                agent_data = await self._call_llm(section)
             except Exception as exc:
-                logger.error("Ollama per-agent call failed for '%s' on %s: %s", agent_name, source_url, exc)
+                logger.error("LLM per-agent call failed for '%s' on %s: %s", agent_name, source_url, exc)
                 continue
 
             is_valid, errors = self._validate(agent_data)
@@ -228,6 +264,63 @@ class ProfileExtractor:
 
         return results
 
+    # ------------------------------------------------------------------
+    # Backend routing
+    # ------------------------------------------------------------------
+
+    async def _call_llm(self, clean_text: str) -> dict:
+        """Route single-agent extraction to the configured backend."""
+        if self._backend == "claude":
+            return await self._call_claude(clean_text)
+        return await self._call_ollama(clean_text)
+
+    async def _call_llm_roster(self, clean_text: str) -> dict:
+        """Route roster extraction to the configured backend."""
+        if self._backend == "claude":
+            return await self._call_claude_roster(clean_text)
+        return await self._call_ollama_roster(clean_text)
+
+    # ------------------------------------------------------------------
+    # Claude backend
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _parse_json_block(raw: str) -> dict:
+        """Extract and parse the first JSON object from a string."""
+        start = raw.find("{")
+        end = raw.rfind("}") + 1
+        if start == -1 or end == 0:
+            raise ValueError(f"No JSON found in response: {raw[:200]}")
+        return json.loads(raw[start:end])
+
+    async def _call_claude(self, clean_text: str) -> dict:
+        """Call Claude Messages API for single-agent extraction."""
+        prompt = EXTRACTION_USER_PROMPT.format(clean_text=clean_text)
+        response = await self._claude.messages.create(
+            model=self._claude_model,
+            max_tokens=4096,
+            system=EXTRACTION_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = response.content[0].text
+        return self._parse_json_block(raw)
+
+    async def _call_claude_roster(self, clean_text: str) -> dict:
+        """Call Claude Messages API for roster extraction."""
+        prompt = MULTI_AGENT_ROSTER_USER_PROMPT.format(clean_text=clean_text)
+        response = await self._claude.messages.create(
+            model=self._claude_model,
+            max_tokens=4096,
+            system=MULTI_AGENT_ROSTER_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        raw = response.content[0].text
+        return self._parse_json_block(raw)
+
+    # ------------------------------------------------------------------
+    # Ollama backend
+    # ------------------------------------------------------------------
+
     async def _call_ollama_roster(self, clean_text: str) -> dict:
         """POST to Ollama for lightweight roster extraction (Pass 1)."""
         prompt = MULTI_AGENT_ROSTER_USER_PROMPT.format(clean_text=clean_text)
@@ -245,12 +338,7 @@ class ProfileExtractor:
             )
             resp.raise_for_status()
             raw = resp.json().get("response", "")
-
-            start = raw.find("{")
-            end = raw.rfind("}") + 1
-            if start == -1 or end == 0:
-                raise ValueError(f"No JSON found in Ollama roster response: {raw[:200]}")
-            return json.loads(raw[start:end])
+            return self._parse_json_block(raw)
 
     @staticmethod
     def _extract_section(
@@ -352,13 +440,7 @@ class ProfileExtractor:
             )
             resp.raise_for_status()
             raw = resp.json().get("response", "")
-
-            # Parse JSON from response
-            start = raw.find("{")
-            end = raw.rfind("}") + 1
-            if start == -1 or end == 0:
-                raise ValueError(f"No JSON found in Ollama response: {raw[:200]}")
-            return json.loads(raw[start:end])
+            return self._parse_json_block(raw)
 
     def _validate(self, data: dict) -> tuple[bool, list[str]]:
         """Check required fields. Returns (is_valid, error_list)."""
@@ -367,6 +449,10 @@ class ProfileExtractor:
         name = data.get("name")
         if not name or not isinstance(name, str) or not name.strip():
             errors.append("missing or empty 'name'")
+
+        # Closed agents only need a name
+        if data.get("is_open") is False:
+            return (len(errors) == 0, errors)
 
         genres = data.get("genres", [])
         if not isinstance(genres, list) or len(genres) < 1:
@@ -474,6 +560,18 @@ class ProfileExtractor:
                 data[key] = None
 
     @staticmethod
+    def _pick_richer_list(old: list | None, new: list | None) -> list:
+        """Keep the longer list."""
+        old = old or []
+        new = new or []
+        return new if len(new) >= len(old) else old
+
+    @staticmethod
+    def _pick_non_null(old, new):
+        """Prefer new if non-null, else keep old."""
+        return new if new is not None else old
+
+    @staticmethod
     def _upsert_agent(
         db: Session,
         source_url: str,
@@ -483,12 +581,37 @@ class ProfileExtractor:
         review_status: str,
         agency_id: int | None = None,
     ) -> Agent:
-        """Insert or update Agent by profile_url."""
+        """Insert or update Agent by profile_url, with name+agency dedup."""
         ProfileExtractor._sanitize_llm_data(data)
 
         existing = db.query(Agent).filter_by(profile_url=source_url).first()
 
         name = data.get("name", "").strip() if data.get("name") else ""
+
+        # Second-pass dedup: same name + same agency (case-insensitive)
+        matched_by_name = False
+        if not existing and name:
+            # Try agency text match first
+            existing = (
+                db.query(Agent)
+                .filter(
+                    func.lower(Agent.name) == name.lower(),
+                    func.lower(Agent.agency) == (data.get("agency") or "").lower(),
+                )
+                .first()
+            )
+            # Fall back to agency_id match (handles "LDLA" vs "Laura Dail Literary Agency")
+            if not existing and agency_id is not None:
+                existing = (
+                    db.query(Agent)
+                    .filter(
+                        func.lower(Agent.name) == name.lower(),
+                        Agent.agency_id == agency_id,
+                    )
+                    .first()
+                )
+            if existing:
+                matched_by_name = True
 
         fields = {
             "name": name or "(extraction failed)",
@@ -514,7 +637,34 @@ class ProfileExtractor:
             "last_crawled_at": datetime.now(timezone.utc),
         }
 
-        if existing:
+        if existing and matched_by_name:
+            # Richer-wins merge for list fields
+            for list_key in ("genres", "genres_raw", "keywords", "audience", "hard_nos_keywords", "closed_to"):
+                fields[list_key] = ProfileExtractor._pick_richer_list(
+                    getattr(existing, list_key, None), fields[list_key]
+                )
+            # Non-null-wins for scalar fields
+            for scalar_key in ("wishlist_raw", "bio_raw", "hard_nos_raw", "email",
+                               "closed_to_raw", "response_time", "submission_req",
+                               "agency", "agency_id"):
+                fields[scalar_key] = ProfileExtractor._pick_non_null(
+                    getattr(existing, scalar_key, None), fields[scalar_key]
+                )
+            # is_open: prefer non-null new value
+            fields["is_open"] = ProfileExtractor._pick_non_null(
+                existing.is_open, data.get("is_open")
+            )
+            # Update profile_url if new data is richer
+            new_richness = len(data.get("genres") or []) + len(data.get("keywords") or [])
+            old_richness = len(existing.genres or []) + len(existing.keywords or [])
+            if new_richness >= old_richness:
+                existing.profile_url = source_url
+            for k, v in fields.items():
+                setattr(existing, k, v)
+            db.commit()
+            db.refresh(existing)
+            return existing
+        elif existing:
             for k, v in fields.items():
                 setattr(existing, k, v)
             db.commit()

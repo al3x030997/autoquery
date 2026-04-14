@@ -67,6 +67,8 @@ async def _process_page(
     crawl_run: CrawlRun,
     seen_hashes: set[str],
     ollama_url: str,
+    *,
+    skip_blacklist: bool = False,
 ) -> tuple[PageType | None, list[str]]:
     """
     Fetch, extract, quality-gate, and classify a single URL.
@@ -83,7 +85,7 @@ async def _process_page(
 
     # Fetch
     try:
-        result = await fetch_page(url, _rate_limiter)
+        result = await fetch_page(url, _rate_limiter, skip_blacklist=skip_blacklist)
     except BlacklistError:
         logger.info("Blacklisted: %s", url)
         crawl_run.pages_skipped += 1
@@ -289,6 +291,78 @@ async def backfill_known_urls() -> dict:
         }
 
 
+async def crawl_single_url(url: str) -> dict:
+    """
+    Crawl exactly one user-provided URL.  Bypasses the domain blacklist so
+    that individual agent pages on aggregator sites can be fetched.
+    """
+    ollama_url = os.environ.get("OLLAMA_URL", "http://ollama:11434")
+    seen_hashes: set[str] = set()
+    domain = urlparse(url).netloc.lower()
+
+    async with CrawlRun(domain=domain, run_type="single_url") as crawl_run:
+        page_type, _ = await _process_page(
+            url, crawl_run, seen_hashes, ollama_url,
+            skip_blacklist=True,
+        )
+
+        return {
+            "url": url,
+            "run_id": crawl_run.run_id,
+            "page_type": page_type.value if page_type else None,
+            "pages_fetched": crawl_run.pages_fetched,
+            "profiles_new": crawl_run.profiles_new,
+            "profiles_updated": crawl_run.profiles_updated,
+            "pages_error": crawl_run.pages_error,
+        }
+
+
+async def crawl_site(start_url: str, *, max_pages: int = 200) -> dict:
+    """
+    BFS crawl starting from *start_url*.  Follows same-domain links discovered
+    on INDEX pages, up to *max_pages*.  Respects the domain blacklist (BFS on
+    aggregator sites stays blocked).
+    """
+    ollama_url = os.environ.get("OLLAMA_URL", "http://ollama:11434")
+    seen_hashes: set[str] = set()
+    visited: set[str] = set()
+
+    start_norm = normalize_url(start_url)
+    start_domain = urlparse(start_norm).netloc.lower()
+    visited.add(start_norm)
+    queue: deque[str] = deque([start_norm])
+
+    async with CrawlRun(domain=start_domain, run_type="site_crawl") as crawl_run:
+        while queue and crawl_run.pages_fetched < max_pages:
+            url = queue.popleft()
+            logger.info("Processing: %s", url)
+
+            page_type, links = await _process_page(
+                url, crawl_run, seen_hashes, ollama_url,
+            )
+
+            # Only enqueue same-domain links from INDEX pages
+            if page_type == PageType.INDEX:
+                for link in links:
+                    normed = normalize_url(link)
+                    if urlparse(normed).netloc.lower() == start_domain and normed not in visited:
+                        visited.add(normed)
+                        queue.append(normed)
+
+        return {
+            "start_url": start_url,
+            "domain": start_domain,
+            "run_id": crawl_run.run_id,
+            "pages_fetched": crawl_run.pages_fetched,
+            "pages_index": crawl_run.pages_index,
+            "pages_content": crawl_run.pages_content,
+            "pages_skipped": crawl_run.pages_skipped,
+            "pages_error": crawl_run.pages_error,
+            "profiles_new": crawl_run.profiles_new,
+            "profiles_updated": crawl_run.profiles_updated,
+        }
+
+
 # ---------------------------------------------------------------------------
 # Celery task wrappers
 # ---------------------------------------------------------------------------
@@ -302,6 +376,16 @@ def backfill_task() -> dict:
     return asyncio.run(backfill_known_urls())
 
 
+@celery_app.task(name="autoquery.crawler.orchestrator.crawl_single_url_task")
+def crawl_single_url_task(url: str) -> dict:
+    return asyncio.run(crawl_single_url(url))
+
+
+@celery_app.task(name="autoquery.crawler.orchestrator.crawl_site_task")
+def crawl_site_task(start_url: str, max_pages: int = 200) -> dict:
+    return asyncio.run(crawl_site(start_url, max_pages=max_pages))
+
+
 # ---------------------------------------------------------------------------
 # CLI entry point
 # ---------------------------------------------------------------------------
@@ -312,10 +396,23 @@ if __name__ == "__main__":
         print("Usage:")
         print("  python -m autoquery.crawler.orchestrator <domain>")
         print("  python -m autoquery.crawler.orchestrator --backfill")
+        print("  python -m autoquery.crawler.orchestrator --url <url>        # single page")
+        print("  python -m autoquery.crawler.orchestrator --site <start_url>  # site crawl")
         sys.exit(1)
 
     if sys.argv[1] == "--backfill":
         result = asyncio.run(backfill_known_urls())
+    elif sys.argv[1] == "--url":
+        if len(sys.argv) < 3:
+            print("Error: --url requires a URL argument")
+            sys.exit(1)
+        result = asyncio.run(crawl_single_url(sys.argv[2]))
+    elif sys.argv[1] == "--site":
+        if len(sys.argv) < 3:
+            print("Error: --site requires a start URL argument")
+            sys.exit(1)
+        max_pages = int(sys.argv[3]) if len(sys.argv) > 3 else 200
+        result = asyncio.run(crawl_site(sys.argv[2], max_pages=max_pages))
     else:
         result = asyncio.run(crawl_domain(sys.argv[1]))
 
