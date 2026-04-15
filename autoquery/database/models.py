@@ -85,6 +85,13 @@ class Agent(Base):
     hard_nos_raw: Mapped[str | None] = mapped_column(Text, comment="internal-only: raw scraped hard-nos text")
     email: Mapped[str | None] = mapped_column(String(255), comment="internal-only: contact email")
 
+    # L1 Note-Taker output (prompt v2.0+) — section-structured profile notes.
+    # Flat columns above are populated as a best-effort projection until the
+    # matcher / embeddings / review UI are rewritten to consume these natively.
+    profile_notes: Mapped[dict | None] = mapped_column(JSONB)
+    profile_notes_raw: Mapped[str | None] = mapped_column(Text, comment="internal-only: raw LLM output")
+    prompt_version: Mapped[str | None] = mapped_column(String(16))
+
     # Embedding + FTS
     embedding: Mapped[list[float] | None] = mapped_column(Vector(1024))
     fts_vector: Mapped[str | None] = mapped_column(TSVECTOR)

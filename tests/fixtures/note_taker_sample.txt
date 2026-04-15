@@ -1,0 +1,107 @@
+STEP 1: IDENTITY
+-----------------
+Name: Aashna Avachat
+Organization: Neighborhood Literary Agency
+Role: Literary Agent
+Pronouns: she/her
+Email: aashna@neighborhoodlit.com
+Submission portal: QueryTracker
+Availability: OPEN
+
+STEP 2: GLOBAL CONDITIONS
+--------------------------
+- authors/illustrators of color only → REQUIRED
+- own-voices stories with protagonists of color → STRONGLY PREFERRED
+- queer representation, religious diversity, disability representation → PREFERRED
+
+STEP 3: PREFERENCE SECTIONS
+-----------------------------
+[Picture Books]
+  Audience: picture_books
+  Genres: contemporary, family, SEL
+  Wants:
+    - Laugh-out-loud funny with clever illustration potential
+    - Themes: family, culture, SEL, nature/environment
+  Does Not Want:
+    - Food-based books
+    - Non-fiction picture books
+    - Biographies
+  Conditions:
+    - Fiction only
+
+[Young Adult]
+  Audience: young_adult, new_adult
+  Genres: romance, mystery, thriller, dark academia, cozy fantasy
+  Wants:
+    - Romantic comedies where both leads are POC
+    - Plot-driven horror
+    - Dark academia with political critique of academia
+  Tropes Wanted:
+    - forced proximity
+    - enemies to lovers
+  Tropes Excluded:
+    - instalove
+  Comp Titles:
+    - I'd Tell You I Love You by Ally Carter — spy/heist YA tone
+
+[Adult]
+  Audience: adult
+  Genres: literary fiction, mystery, horror
+  Wants:
+    - Funny contemporary fiction
+    - Domestic thrillers
+  Does Not Want:
+    - Police-focused mysteries
+
+STEP 4: HARD NOS (Global)
+--------------------------
+Content nos:
+  - sexual violence on the page
+  - child abuse
+  - war novels
+Format nos:
+  - poetry collections
+  - short story collections
+  - board books
+  - epistolary formats
+Trope nos:
+  - non-consensual romance
+  - teacher x student
+Category nos:
+  - children's non-fiction
+
+STEP 5: SUBMISSION REQUIREMENTS
+---------------------------------
+Picture Books:
+  Submit via: QueryTracker
+  Materials: query letter, full PB text in writing sample field
+  Special notes: include dummy/art samples if applicable
+Young Adult:
+  Submit via: QueryTracker
+  Materials: query letter, synopsis, first 10 pages
+- Unsolicited queries via email are deleted unread
+
+STEP 6: COMP TITLES & TASTE REFERENCES
+----------------------------------------
+A) HIGH-PRIORITY COMPS
+  - The Clique by Lisi Harrison — but with protagonists of color
+  - Yellowjackets — YA wilderness camp horror tone
+
+B) TASTE REFERENCES (personal favorites — not submission comps)
+  Books: Pachinko by Min Jin Lee, Severance by Ling Ma
+  Film/TV: Yellowjackets, Fleabag
+  Music: Mitski
+
+STEP 7: CROSS-CUTTING THEMES
+------------------------------
+- found family
+- queer joy
+- morally grey characters
+- humor that makes you laugh AND cry
+
+STEP 8: CONFIDENCE FLAGS
+--------------------------
+INFERRED — country (US, inferred from agency)
+INFERRED — is_open (active MSWL page, no closed statement)
+NUANCED — fantasy is hard-no globally BUT cozy fantasy and light retellings explicitly wanted
+MISSING — response time not stated

@@ -1,37 +1,38 @@
-"""
-Profile extraction: clean text → structured Agent fields.
+"""Profile extraction: clean text → Note-Taker output → structured Agent.
 
-Supports two backends:
-  - "claude" (default): Anthropic Messages API — better quality for structured extraction
-  - "ollama": Local Ollama /api/generate — used for lightweight tasks
+Backends:
+  - "claude" (default): Anthropic Messages API
+  - "ollama": local Ollama /api/generate
+
+L1 prompt v2.0 (Note-Taker) emits plain text; we parse it via
+``autoquery.extractor.note_parser`` and persist the structured form
+(``profile_notes`` JSONB). Existing flat columns (genres, audience,
+hard_nos_keywords, keywords, wishlist_raw) are filled best-effort as a
+compatibility projection until the matcher / embeddings / review UI are
+rewritten to consume sections natively.
 """
 from __future__ import annotations
 
-import json
 import logging
 import os
 import re
 from datetime import datetime, timezone
-from pathlib import Path
 
 import anthropic
 import httpx
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
-from autoquery.database.models import Agent, Agency, REVIEW_STATUS_PENDING, REVIEW_STATUS_EXTRACTION_FAILED
-from autoquery.matching.genre_utils import load_genre_aliases
+from autoquery.database.models import Agent, Agency, REVIEW_STATUS_PENDING
+from autoquery.extractor import note_parser
 from autoquery.extractor.prompts import (
-    EXTRACTION_SYSTEM_PROMPT,
-    EXTRACTION_USER_PROMPT,
+    NOTE_TAKER_SYSTEM_PROMPT,
     MULTI_AGENT_ROSTER_SYSTEM_PROMPT,
     MULTI_AGENT_ROSTER_USER_PROMPT,
     PROMPT_VERSION,
 )
 
 logger = logging.getLogger(__name__)
-
-_GENRE_CONFIG_PATH = Path(__file__).parent.parent.parent / "config" / "genre_aliases.yaml"
 
 
 class ProfileExtractor:
@@ -41,19 +42,13 @@ class ProfileExtractor:
         self,
         ollama_url: str | None = None,
         model: str | None = None,
-        genre_config_path: str | Path | None = None,
         anthropic_api_key: str | None = None,
         extractor_backend: str | None = None,
     ):
-        # Ollama config (always initialised — used as fallback)
         self.ollama_url = ollama_url or os.environ.get("OLLAMA_URL", "http://ollama:11434")
         self.model = model or os.environ.get("EXTRACTOR_MODEL", "llama3.1:8b")
-        self._genre_aliases = load_genre_aliases(genre_config_path or _GENRE_CONFIG_PATH)
-
-        # Backend selection
         self._backend = extractor_backend or os.environ.get("EXTRACTOR_BACKEND", "claude")
 
-        # Claude config
         if self._backend == "claude":
             api_key = anthropic_api_key or os.environ.get("ANTHROPIC_API_KEY")
             self._claude = anthropic.AsyncAnthropic(api_key=api_key)
@@ -72,7 +67,6 @@ class ProfileExtractor:
         )
         if not has_client_signal:
             return False
-        # If the page also has agent-profile signals, it's not a client bio
         has_agent_signal = bool(
             re.search(
                 r"(?i)\b(?:query me|submission|wishlist|mswl|looking for|seeking)\b",
@@ -89,11 +83,7 @@ class ProfileExtractor:
         quality_action: str,
         db: Session,
     ) -> Agent | None:
-        """
-        Extract agent profile from clean text and upsert to DB.
-
-        Returns the Agent object, or None on total failure.
-        """
+        """Extract agent profile from clean text and upsert to DB."""
         if self._is_likely_client_bio(clean_text):
             logger.info("Skipping likely client bio page: %s", source_url)
             return None
@@ -101,47 +91,27 @@ class ProfileExtractor:
         truncated = self._truncate(clean_text)
 
         try:
-            data = await self._call_llm(truncated)
+            raw_text = await self._call_llm(truncated)
         except Exception as exc:
             logger.error("LLM call failed for %s: %s", source_url, exc)
             return None
 
-        is_valid, errors = self._validate(data)
-
-        if is_valid:
-            data["genres_raw"] = list(data.get("genres", []))
-            data["genres"] = self._canonicalize_genres(data.get("genres", []))
-            closed_to_str = data.get("closed_to") or ""
-            data["closed_to_raw"] = closed_to_str if isinstance(closed_to_str, str) else None
-            data["closed_to"] = self._canonicalize_genres(
-                [g.strip() for g in (closed_to_str if isinstance(closed_to_str, str) else "").split(",") if g.strip()]
-            )
-
-            # Grounding validation
-            grounding_warnings = self._validate_grounding(data, clean_text)
-            if grounding_warnings:
-                logger.warning("Grounding issues for %s: %s", source_url, grounding_warnings)
-
-            if data.get("_grounding_failed"):
-                logger.warning("Skipping hallucinated agent '%s' from %s", data.get("name"), source_url)
-                return None
-
-            # Wishlist validation
-            wl_warnings = self._validate_wishlist(data, len(truncated.split()))
-            if wl_warnings:
-                logger.warning("Wishlist issues for %s: %s", source_url, wl_warnings)
-
-            agent = self._upsert_agent(
-                db, source_url, data, quality_score, quality_action,
-                review_status=REVIEW_STATUS_PENDING,
-            )
-            logger.info("Extracted profile for %s: %s", source_url, data.get("name"))
-            return agent
-        else:
-            logger.warning(
-                "Extraction validation failed for %s: %s", source_url, errors
-            )
+        parsed = note_parser.parse(raw_text)
+        if not self._validate_notes(parsed):
+            logger.warning("Note-Taker output missing required identity for %s", source_url)
             return None
+
+        if not self._grounded(parsed, clean_text):
+            logger.warning("Skipping ungrounded extraction for %s", source_url)
+            return None
+
+        fields = self._project_to_columns(parsed, raw_text)
+        agent = self._upsert_agent(
+            db, source_url, fields, quality_score, quality_action,
+            review_status=REVIEW_STATUS_PENDING,
+        )
+        logger.info("Extracted profile for %s: %s", source_url, fields["name"])
+        return agent
 
     async def extract_multi(
         self,
@@ -151,14 +121,7 @@ class ProfileExtractor:
         quality_action: str,
         db: Session,
     ) -> list[Agent]:
-        """
-        Two-pass multi-agent extraction.
-
-        Pass 1: Roster extraction — get agent names + agency metadata (lightweight).
-        Pass 2: Per-agent detail extraction — slice page text per agent, run
-                 single-agent prompt on each section for full wishlist fidelity.
-        """
-        # Pass 1: roster (needs to see full page, use 8000 word limit)
+        """Two-pass multi-agent extraction (roster JSON, then per-agent Note-Taker)."""
         roster_text = self._truncate(clean_text, max_words=8000)
 
         try:
@@ -167,146 +130,109 @@ class ProfileExtractor:
             logger.error("LLM roster call failed for %s: %s", source_url, exc)
             return []
 
-        # Upsert agency record if agency_info is present
         agency_info = roster.get("agency_info") or {}
-        agency_obj = None
-        if agency_info.get("name"):
-            agency_obj = self._upsert_agency(db, source_url, agency_info)
+        agency_obj = self._upsert_agency(db, source_url, agency_info) if agency_info.get("name") else None
 
         agents_roster = roster.get("agents", [])
         if not isinstance(agents_roster, list) or not agents_roster:
             logger.warning("Roster extraction returned no agents for %s", source_url)
             return []
 
-        # Validate roster names against source text
-        agent_names = [e.get("name", "") for e in agents_roster if isinstance(e, dict)]
-        validated_roster = []
+        validated: list[dict] = []
         for entry in agents_roster:
             if not isinstance(entry, dict):
                 continue
-            name = entry.get("name", "").strip()
+            name = (entry.get("name") or "").strip()
             if not name:
                 continue
-            # Check last name appears in source
-            parts = name.split()
-            last_name = parts[-1].lower() if parts else ""
+            last_name = name.split()[-1].lower()
             if last_name and last_name not in clean_text.lower():
-                logger.warning("Roster name '%s' not found in source text — skipping", name)
+                logger.warning("Roster name '%s' not found in source — skipping", name)
                 continue
-            validated_roster.append(entry)
-
-        if not validated_roster:
-            logger.warning("No valid agent names in roster for %s", source_url)
+            validated.append(entry)
+        if not validated:
             return []
 
-        # Pass 2: per-agent detail extraction
         results: list[Agent] = []
-        for i, entry in enumerate(validated_roster):
+        for entry in validated:
             agent_name = entry["name"]
             section_hint = entry.get("section_hint")
-
             section = self._extract_section(
                 clean_text, agent_name, section_hint,
-                all_names=[e["name"] for e in validated_roster],
+                all_names=[e["name"] for e in validated],
             )
 
             try:
-                agent_data = await self._call_llm(section)
+                raw_text = await self._call_llm(section)
             except Exception as exc:
                 logger.error("LLM per-agent call failed for '%s' on %s: %s", agent_name, source_url, exc)
                 continue
 
-            is_valid, errors = self._validate(agent_data)
-            if not is_valid:
-                logger.warning(
-                    "Multi-agent validation failed for '%s' on %s: %s", agent_name, source_url, errors
-                )
+            parsed = note_parser.parse(raw_text)
+            if not self._validate_notes(parsed):
+                logger.warning("Note-Taker output invalid for '%s' on %s", agent_name, source_url)
+                continue
+            if not self._grounded(parsed, section):
+                logger.warning("Skipping ungrounded per-agent extraction for '%s' on %s", agent_name, source_url)
                 continue
 
-            # Grounding validation against the agent's section
-            grounding_warnings = self._validate_grounding(agent_data, section)
-            if grounding_warnings:
-                logger.warning("Grounding issues for '%s' on %s: %s", agent_name, source_url, grounding_warnings)
-            if agent_data.get("_grounding_failed"):
-                logger.warning("Skipping hallucinated agent '%s' from %s", agent_data.get("name"), source_url)
-                continue
+            fields = self._project_to_columns(parsed, raw_text)
+            if agency_info.get("name") and not fields.get("agency"):
+                fields["agency"] = agency_info["name"]
+            if agency_info.get("response_time") and not fields.get("response_time"):
+                fields["response_time"] = agency_info["response_time"]
 
-            # Build a unique profile_url per agent on the same page
-            agent_name_slug = (agent_data.get("name") or "unknown").lower().replace(" ", "-")
-            agent_url = f"{source_url}#agent-{agent_name_slug}"
-
-            agent_data["genres_raw"] = list(agent_data.get("genres", []))
-            agent_data["genres"] = self._canonicalize_genres(agent_data.get("genres", []))
-            closed_to_str = agent_data.get("closed_to") or ""
-            agent_data["closed_to_raw"] = closed_to_str if isinstance(closed_to_str, str) else None
-            agent_data["closed_to"] = self._canonicalize_genres(
-                [g.strip() for g in (closed_to_str if isinstance(closed_to_str, str) else "").split(",") if g.strip()]
-            )
-            # Carry agency name
-            if agency_info.get("name") and not agent_data.get("agency"):
-                agent_data["agency"] = agency_info["name"]
-            # Carry agency response_time as default
-            if agency_info.get("response_time") and not agent_data.get("response_time"):
-                agent_data["response_time"] = agency_info["response_time"]
-
-            # Wishlist validation
-            wl_warnings = self._validate_wishlist(agent_data, len(section.split()))
-            if wl_warnings:
-                logger.warning("Wishlist issues for '%s' on %s: %s", agent_name, source_url, wl_warnings)
+            slug = (fields.get("name") or "unknown").lower().replace(" ", "-")
+            agent_url = f"{source_url}#agent-{slug}"
 
             agent = self._upsert_agent(
-                db, agent_url, agent_data, quality_score, quality_action,
+                db, agent_url, fields, quality_score, quality_action,
                 review_status=REVIEW_STATUS_PENDING,
                 agency_id=agency_obj.id if agency_obj else None,
             )
             results.append(agent)
-            logger.info("Multi-extract (two-pass): %s from %s", agent_data.get("name"), source_url)
-
+            logger.info("Multi-extract: %s from %s", fields.get("name"), source_url)
         return results
 
     # ------------------------------------------------------------------
     # Backend routing
     # ------------------------------------------------------------------
 
-    async def _call_llm(self, clean_text: str) -> dict:
-        """Route single-agent extraction to the configured backend."""
+    async def _call_llm(self, clean_text: str) -> str:
         if self._backend == "claude":
             return await self._call_claude(clean_text)
         return await self._call_ollama(clean_text)
 
     async def _call_llm_roster(self, clean_text: str) -> dict:
-        """Route roster extraction to the configured backend."""
         if self._backend == "claude":
             return await self._call_claude_roster(clean_text)
         return await self._call_ollama_roster(clean_text)
 
-    # ------------------------------------------------------------------
-    # Claude backend
-    # ------------------------------------------------------------------
-
-    @staticmethod
-    def _parse_json_block(raw: str) -> dict:
-        """Extract and parse the first JSON object from a string."""
-        start = raw.find("{")
-        end = raw.rfind("}") + 1
-        if start == -1 or end == 0:
-            raise ValueError(f"No JSON found in response: {raw[:200]}")
-        return json.loads(raw[start:end])
-
-    async def _call_claude(self, clean_text: str) -> dict:
-        """Call Claude Messages API for single-agent extraction."""
-        prompt = EXTRACTION_USER_PROMPT.format(clean_text=clean_text)
+    async def _call_claude(self, clean_text: str) -> str:
         response = await self._claude.messages.create(
             model=self._claude_model,
             max_tokens=4096,
-            system=EXTRACTION_SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": prompt}],
+            system=NOTE_TAKER_SYSTEM_PROMPT,
+            messages=[{"role": "user", "content": clean_text}],
         )
-        raw = response.content[0].text
-        return self._parse_json_block(raw)
+        return response.content[0].text
+
+    async def _call_ollama(self, clean_text: str) -> str:
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            resp = await client.post(
+                f"{self.ollama_url}/api/generate",
+                json={
+                    "model": self.model,
+                    "system": NOTE_TAKER_SYSTEM_PROMPT,
+                    "prompt": clean_text,
+                    "stream": False,
+                },
+            )
+            resp.raise_for_status()
+            return resp.json().get("response", "")
 
     async def _call_claude_roster(self, clean_text: str) -> dict:
-        """Call Claude Messages API for roster extraction."""
+        import json
         prompt = MULTI_AGENT_ROSTER_USER_PROMPT.format(clean_text=clean_text)
         response = await self._claude.messages.create(
             model=self._claude_model,
@@ -315,16 +241,14 @@ class ProfileExtractor:
             messages=[{"role": "user", "content": prompt}],
         )
         raw = response.content[0].text
-        return self._parse_json_block(raw)
-
-    # ------------------------------------------------------------------
-    # Ollama backend
-    # ------------------------------------------------------------------
+        start, end = raw.find("{"), raw.rfind("}") + 1
+        if start == -1 or end == 0:
+            raise ValueError(f"No JSON in roster response: {raw[:200]}")
+        return json.loads(raw[start:end])
 
     async def _call_ollama_roster(self, clean_text: str) -> dict:
-        """POST to Ollama for lightweight roster extraction (Pass 1)."""
+        import json
         prompt = MULTI_AGENT_ROSTER_USER_PROMPT.format(clean_text=clean_text)
-
         async with httpx.AsyncClient(timeout=120.0) as client:
             resp = await client.post(
                 f"{self.ollama_url}/api/generate",
@@ -338,7 +262,107 @@ class ProfileExtractor:
             )
             resp.raise_for_status()
             raw = resp.json().get("response", "")
-            return self._parse_json_block(raw)
+            start, end = raw.find("{"), raw.rfind("}") + 1
+            if start == -1 or end == 0:
+                raise ValueError(f"No JSON in roster response: {raw[:200]}")
+            return json.loads(raw[start:end])
+
+    # ------------------------------------------------------------------
+    # Validation & projection
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _validate_notes(parsed: dict) -> bool:
+        name = (parsed.get("identity") or {}).get("name")
+        return bool(name and isinstance(name, str) and name.strip())
+
+    @staticmethod
+    def _grounded(parsed: dict, source_text: str) -> bool:
+        """Reject hallucinated names/emails."""
+        text_lower = source_text.lower()
+        ident = parsed.get("identity") or {}
+        name = (ident.get("name") or "").strip()
+        if name:
+            last = name.split()[-1].lower()
+            if last and last not in text_lower:
+                logger.warning("Name '%s' not found in source text", name)
+                return False
+        email = ident.get("email")
+        if email and email.lower() not in text_lower:
+            logger.warning("Email '%s' not found in source text — clearing", email)
+            ident["email"] = None
+        return True
+
+    @staticmethod
+    def _project_to_columns(parsed: dict, raw_text: str) -> dict:
+        """Best-effort projection from sections to legacy flat columns."""
+        ident = parsed.get("identity") or {}
+        sections = parsed.get("preference_sections") or []
+        hard_nos = parsed.get("hard_nos") or {}
+        themes = parsed.get("cross_cutting_themes") or []
+
+        def _flatten_unique(values):
+            seen, out = set(), []
+            for v in values:
+                if v and v not in seen:
+                    seen.add(v)
+                    out.append(v)
+            return out
+
+        genres_raw = _flatten_unique(g for s in sections for g in s.get("genres", []))
+        audiences = _flatten_unique(a for s in sections for a in s.get("audience", []))
+        hard_nos_flat = _flatten_unique(
+            list(hard_nos.get("content", []))
+            + list(hard_nos.get("format", []))
+            + list(hard_nos.get("trope", []))
+            + list(hard_nos.get("category", []))
+        )
+        keywords = _flatten_unique(
+            list(themes)
+            + [w for s in sections for w in s.get("wants", [])][:20]
+        )
+
+        availability = ident.get("availability")
+        is_open = None
+        if availability:
+            up = availability.upper()
+            if up == "OPEN":
+                is_open = True
+            elif up == "CLOSED":
+                is_open = False
+
+        return {
+            "name": (ident.get("name") or "").strip() or "(extraction failed)",
+            "agency": ident.get("organization"),
+            "email": ident.get("email"),
+            "is_open": is_open,
+            "genres": [],          # canonicalized form left empty until L2 runtime is wired
+            "genres_raw": genres_raw,
+            "audience": audiences,
+            "hard_nos_keywords": hard_nos_flat,
+            "keywords": keywords,
+            "submission_req": {"blocks": parsed.get("submission") or []} or None,
+            "wishlist_raw": raw_text,                        # whole notes used as wishlist surrogate
+            "bio_raw": None,
+            "hard_nos_raw": _join_hard_nos(hard_nos),
+            "closed_to": [],
+            "closed_to_raw": None,
+            "response_time": None,
+            "profile_notes": parsed,
+            "profile_notes_raw": raw_text,
+            "prompt_version": PROMPT_VERSION,
+        }
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _truncate(text: str, max_words: int = 4000) -> str:
+        words = text.split()
+        if len(words) <= max_words:
+            return text
+        return " ".join(words[:max_words])
 
     @staticmethod
     def _extract_section(
@@ -347,68 +371,40 @@ class ProfileExtractor:
         section_hint: str | None = None,
         all_names: list[str] | None = None,
     ) -> str:
-        """
-        Slice the page text to extract the section belonging to a specific agent.
-
-        Finds the agent's name in the text, then takes text from that position
-        until the next agent's name (or end of text). Falls back to section_hint
-        as anchor if name isn't found verbatim.
-        """
         text_lower = text.lower()
         name_lower = agent_name.lower()
-
-        # Find start position — try full name, then last name
         start = text_lower.find(name_lower)
         if start == -1:
-            # Try last name only
             parts = agent_name.split()
             if parts:
-                last_name = parts[-1].lower()
-                start = text_lower.find(last_name)
-
+                start = text_lower.find(parts[-1].lower())
         if start == -1 and section_hint:
-            # Fall back to section hint
-            hint_lower = section_hint.lower().strip()
-            if hint_lower:
-                start = text_lower.find(hint_lower)
-
+            start = text_lower.find(section_hint.lower().strip())
         if start == -1:
-            # Can't locate — return full text as fallback
             return text
-
-        # Find end position — next agent's name or end of text
         end = len(text)
         if all_names:
-            for other_name in all_names:
-                if other_name.lower() == name_lower:
+            for other in all_names:
+                if other.lower() == name_lower:
                     continue
-                other_pos = text_lower.find(other_name.lower(), start + len(agent_name))
-                if other_pos != -1 and other_pos < end:
-                    end = other_pos
-
+                pos = text_lower.find(other.lower(), start + len(agent_name))
+                if pos != -1 and pos < end:
+                    end = pos
         return text[start:end].strip()
 
     @staticmethod
     def _upsert_agency(db: Session, source_url: str, agency_info: dict) -> Agency:
-        """Insert or update Agency by name."""
         from urllib.parse import urlparse
-
         name = agency_info["name"].strip()
         domain = urlparse(source_url).netloc.lower()
-
-        existing = db.query(Agency).filter_by(name=name).first()
-        if not existing:
-            existing = db.query(Agency).filter_by(domain=domain).first()
-
+        existing = db.query(Agency).filter_by(name=name).first() or db.query(Agency).filter_by(domain=domain).first()
         fields = {
-            "name": name,
-            "domain": domain,
+            "name": name, "domain": domain,
             "country": agency_info.get("country"),
             "exclusive_query": bool(agency_info.get("exclusive_query", False)),
             "submission_url": agency_info.get("submission_url"),
             "response_time": agency_info.get("response_time"),
         }
-
         if existing:
             for k, v in fields.items():
                 if v is not None:
@@ -416,191 +412,43 @@ class ProfileExtractor:
             db.commit()
             db.refresh(existing)
             return existing
-        else:
-            agency = Agency(**fields)
-            db.add(agency)
-            db.commit()
-            db.refresh(agency)
-            return agency
-
-    async def _call_ollama(self, clean_text: str) -> dict:
-        """POST to Ollama /api/generate with JSON format enforced."""
-        prompt = EXTRACTION_USER_PROMPT.format(clean_text=clean_text)
-
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            resp = await client.post(
-                f"{self.ollama_url}/api/generate",
-                json={
-                    "model": self.model,
-                    "system": EXTRACTION_SYSTEM_PROMPT,
-                    "prompt": prompt,
-                    "stream": False,
-                    "format": "json",
-                },
-            )
-            resp.raise_for_status()
-            raw = resp.json().get("response", "")
-            return self._parse_json_block(raw)
-
-    def _validate(self, data: dict) -> tuple[bool, list[str]]:
-        """Check required fields. Returns (is_valid, error_list)."""
-        errors: list[str] = []
-
-        name = data.get("name")
-        if not name or not isinstance(name, str) or not name.strip():
-            errors.append("missing or empty 'name'")
-
-        # Closed agents only need a name
-        if data.get("is_open") is False:
-            return (len(errors) == 0, errors)
-
-        genres = data.get("genres", [])
-        if not isinstance(genres, list) or len(genres) < 1:
-            errors.append("need at least 1 genre")
-
-        keywords = data.get("keywords", [])
-        if not isinstance(keywords, list) or len(keywords) < 3:
-            errors.append("need at least 3 keywords")
-
-        return (len(errors) == 0, errors)
-
-    def _canonicalize_genres(self, genres: list[str]) -> list[str]:
-        """Map genres through alias lookup, deduplicate."""
-        canonical: list[str] = []
-        seen: set[str] = set()
-        for g in genres:
-            if not isinstance(g, str):
-                continue
-            key = g.lower().strip()
-            mapped = self._genre_aliases.get(key, key)
-            if mapped not in seen:
-                seen.add(mapped)
-                canonical.append(mapped)
-        return canonical
-
-    def _truncate(self, text: str, max_words: int = 4000) -> str:
-        """Truncate text to max_words."""
-        words = text.split()
-        if len(words) <= max_words:
-            return text
-        return " ".join(words[:max_words])
+        agency = Agency(**fields)
+        db.add(agency)
+        db.commit()
+        db.refresh(agency)
+        return agency
 
     @staticmethod
-    def _validate_wishlist(data: dict, section_word_count: int) -> list[str]:
-        """Warn if wishlist seems truncated relative to source text."""
-        warnings: list[str] = []
-        wishlist = data.get("wishlist_raw") or ""
-        if section_word_count > 100 and len(wishlist.split()) < 20:
-            warnings.append(
-                f"wishlist_raw suspiciously short ({len(wishlist.split())} words) "
-                f"for {section_word_count}-word section"
-            )
-        return warnings
-
-    @staticmethod
-    def _validate_grounding(data: dict, source_text: str) -> list[str]:
-        """Check that key extracted fields appear in the source text."""
-        warnings: list[str] = []
-        text_lower = source_text.lower()
-
-        # 1. Name must appear in source text (check last name at minimum)
-        name = (data.get("name") or "").strip()
-        if name:
-            parts = name.split()
-            last_name = parts[-1].lower() if parts else ""
-            if last_name and last_name not in text_lower:
-                warnings.append(f"name '{name}' not found in source text")
-                data["_grounding_failed"] = True
-
-        # 2. Email must appear in source text (if extracted)
-        email = data.get("email")
-        if isinstance(email, str) and email.strip().lower() == "null":
-            data["email"] = None
-            email = None
-        if email and email.lower() not in text_lower:
-            warnings.append(f"email '{email}' not found in source text — removing")
-            data["email"] = None
-
-        # 3. Wishlist should have substantial overlap with source text
-        wishlist = data.get("wishlist_raw") or ""
-        if wishlist and len(wishlist.split()) > 10:
-            wl_words = set(
-                w.lower().strip(".,;:!?\"'()")
-                for w in wishlist.split()
-                if len(w) > 3
-            )
-            if wl_words:
-                overlap = sum(1 for w in wl_words if w in text_lower)
-                overlap_ratio = overlap / len(wl_words)
-                if overlap_ratio < 0.3:
-                    warnings.append(
-                        f"wishlist_raw has low source overlap ({overlap_ratio:.0%}) — possible hallucination"
-                    )
-
-        return warnings
-
-    @staticmethod
-    def _sanitize_llm_data(data: dict) -> None:
-        """Coerce LLM string artifacts to proper Python types in-place.
-
-        LLMs sometimes return the literal string "null", "true", "false"
-        instead of JSON null/true/false.  Fix these before DB insertion.
-        """
-        # is_open: coerce to bool or None
-        is_open = data.get("is_open")
-        if isinstance(is_open, str):
-            low = is_open.strip().lower()
-            data["is_open"] = {"true": True, "false": False}.get(low)
-
-        # Text fields: convert literal "null" to None
-        for key in ("wishlist_raw", "bio_raw", "hard_nos_raw", "email",
-                     "closed_to_raw", "response_time", "agency", "country"):
-            val = data.get(key)
-            if isinstance(val, str) and val.strip().lower() == "null":
-                data[key] = None
-
-    @staticmethod
-    def _pick_richer_list(old: list | None, new: list | None) -> list:
-        """Keep the longer list."""
-        old = old or []
-        new = new or []
+    def _pick_richer_list(old, new):
+        old, new = old or [], new or []
         return new if len(new) >= len(old) else old
 
     @staticmethod
     def _pick_non_null(old, new):
-        """Prefer new if non-null, else keep old."""
         return new if new is not None else old
 
     @staticmethod
     def _upsert_agent(
         db: Session,
         source_url: str,
-        data: dict,
+        fields: dict,
         quality_score: float,
         quality_action: str,
         review_status: str,
         agency_id: int | None = None,
     ) -> Agent:
-        """Insert or update Agent by profile_url, with name+agency dedup."""
-        ProfileExtractor._sanitize_llm_data(data)
-
         existing = db.query(Agent).filter_by(profile_url=source_url).first()
-
-        name = data.get("name", "").strip() if data.get("name") else ""
-
-        # Second-pass dedup: same name + same agency (case-insensitive)
+        name = fields.get("name", "")
         matched_by_name = False
-        if not existing and name:
-            # Try agency text match first
+        if not existing and name and name != "(extraction failed)":
             existing = (
                 db.query(Agent)
                 .filter(
                     func.lower(Agent.name) == name.lower(),
-                    func.lower(Agent.agency) == (data.get("agency") or "").lower(),
+                    func.lower(Agent.agency) == (fields.get("agency") or "").lower(),
                 )
                 .first()
             )
-            # Fall back to agency_id match (handles "LDLA" vs "Laura Dail Literary Agency")
             if not existing and agency_id is not None:
                 existing = (
                     db.query(Agent)
@@ -610,27 +458,11 @@ class ProfileExtractor:
                     )
                     .first()
                 )
-            if existing:
-                matched_by_name = True
+            matched_by_name = existing is not None
 
-        fields = {
-            "name": name or "(extraction failed)",
-            "agency": data.get("agency"),
+        row = {
+            **fields,
             "agency_id": agency_id,
-            "genres": data.get("genres") or [],
-            "genres_raw": data.get("genres_raw") or [],
-            "keywords": data.get("keywords") or [],
-            "audience": data.get("audience") or [],
-            "hard_nos_keywords": data.get("hard_nos_keywords") or [],
-            "submission_req": data.get("submission_req"),
-            "is_open": data.get("is_open"),
-            "wishlist_raw": data.get("wishlist_raw"),
-            "bio_raw": data.get("bio_raw"),
-            "hard_nos_raw": data.get("hard_nos_raw"),
-            "email": data.get("email"),
-            "closed_to_raw": data.get("closed_to_raw"),
-            "closed_to": data.get("closed_to") or [],
-            "response_time": data.get("response_time"),
             "quality_score": quality_score,
             "quality_action": quality_action,
             "review_status": review_status,
@@ -638,41 +470,39 @@ class ProfileExtractor:
         }
 
         if existing and matched_by_name:
-            # Richer-wins merge for list fields
             for list_key in ("genres", "genres_raw", "keywords", "audience", "hard_nos_keywords", "closed_to"):
-                fields[list_key] = ProfileExtractor._pick_richer_list(
-                    getattr(existing, list_key, None), fields[list_key]
-                )
-            # Non-null-wins for scalar fields
+                row[list_key] = ProfileExtractor._pick_richer_list(getattr(existing, list_key, None), row[list_key])
             for scalar_key in ("wishlist_raw", "bio_raw", "hard_nos_raw", "email",
-                               "closed_to_raw", "response_time", "submission_req",
-                               "agency", "agency_id"):
-                fields[scalar_key] = ProfileExtractor._pick_non_null(
-                    getattr(existing, scalar_key, None), fields[scalar_key]
-                )
-            # is_open: prefer non-null new value
-            fields["is_open"] = ProfileExtractor._pick_non_null(
-                existing.is_open, data.get("is_open")
-            )
-            # Update profile_url if new data is richer
-            new_richness = len(data.get("genres") or []) + len(data.get("keywords") or [])
-            old_richness = len(existing.genres or []) + len(existing.keywords or [])
+                               "response_time", "submission_req", "agency",
+                               "profile_notes", "profile_notes_raw", "prompt_version"):
+                row[scalar_key] = ProfileExtractor._pick_non_null(getattr(existing, scalar_key, None), row.get(scalar_key))
+            row["is_open"] = ProfileExtractor._pick_non_null(existing.is_open, row.get("is_open"))
+            new_richness = len(row.get("genres_raw") or []) + len(row.get("keywords") or [])
+            old_richness = len(existing.genres_raw or []) + len(existing.keywords or [])
             if new_richness >= old_richness:
                 existing.profile_url = source_url
-            for k, v in fields.items():
+            for k, v in row.items():
                 setattr(existing, k, v)
             db.commit()
             db.refresh(existing)
             return existing
-        elif existing:
-            for k, v in fields.items():
+        if existing:
+            for k, v in row.items():
                 setattr(existing, k, v)
             db.commit()
             db.refresh(existing)
             return existing
-        else:
-            agent = Agent(profile_url=source_url, **fields)
-            db.add(agent)
-            db.commit()
-            db.refresh(agent)
-            return agent
+        agent = Agent(profile_url=source_url, **row)
+        db.add(agent)
+        db.commit()
+        db.refresh(agent)
+        return agent
+
+
+def _join_hard_nos(hard_nos: dict) -> str | None:
+    parts: list[str] = []
+    for bucket in ("content", "format", "trope", "category"):
+        items = hard_nos.get(bucket) or []
+        if items:
+            parts.append(f"{bucket.title()}: " + "; ".join(items))
+    return "\n".join(parts) if parts else None

@@ -4,15 +4,44 @@
 
 ## Scope
 
-Ollama-basierte Profil-Extraktion aus bereinigtem Text, Prompt-Management, Qualitätsprüfung. **Nicht** in diesem Feature: Review-Interface (→ 06), Embedding-Berechnung (→ 07).
+LLM-basierte Profil-Extraktion aus bereinigtem Text via dem **Note-Taker-Prompt (v2.0)**, Parser für die strukturierte Sektionsausgabe, Persistenz nach `agents.profile_notes` (JSONB) plus Best-Effort-Projektion in die bestehenden flachen Spalten. **Nicht** in diesem Feature: Review-Interface (→ 06), Embedding-Berechnung (→ 07), Matcher (→ 08), L2-Kanonisierung (→ 16).
 
 ## Dateien
 
 ```
 extractor/
-├── profile_extractor.py   # LLM-Extraktion
-└── prompts.py             # Alle Prompts zentral, versioniert
+├── profile_extractor.py        # LLM-Aufruf, Parser-Hookup, DB-Upsert
+├── note_parser.py              # plain-text → strukturiertes dict
+├── prompts.py                  # NOTE_TAKER_SYSTEM_PROMPT + Roster-Prompt
+└── prompts/note_taker_v1.txt   # Prompt-Asset (Quelle der Wahrheit)
 ```
+
+## L1-Output (Note-Taker, v2.0)
+
+Der Prompt erzwingt eine deterministische 8-Schritt-Sektionsstruktur:
+
+1. **IDENTITY** — Name, Organization, Role, Pronouns, Email, Submission portal, Availability
+2. **GLOBAL CONDITIONS** — sektionsübergreifende Bedingungen mit Stärke (REQUIRED/STRONGLY PREFERRED/PREFERRED)
+3. **PREFERENCE SECTIONS** — N offene Sektionen (nach Audience, Genre, Form oder Hybrid). Jede mit Audience, Genres, Wants, Conditions, Does Not Want, Tropes Wanted/Excluded, Comp Titles
+4. **HARD NOS** — content / format / trope / category Buckets
+5. **SUBMISSION REQUIREMENTS** — pro Kategorie oder global
+6. **COMP TITLES & TASTE REFERENCES** — A) High-Priority-Comps, B) Personal Favorites
+7. **CROSS-CUTTING THEMES** — sektionsübergreifende Soft-Boost-Signale
+8. **CONFIDENCE FLAGS** — INFERRED / NUANCED / MISSING
+
+`note_parser.parse(text)` produziert daraus ein dict mit eben diesen Top-Level-Keys. Fehlende Sektionen → leere Container, keine Exceptions.
+
+## Persistenz
+
+Neue Spalten (Migration `005_add_profile_notes`):
+
+| Spalte | Typ | Inhalt |
+|---|---|---|
+| `profile_notes` | JSONB | Vollständig geparste Sektionsstruktur |
+| `profile_notes_raw` | TEXT | Rohausgabe des LLM (Audit-Trail, Store-More-Show-Less) |
+| `prompt_version` | VARCHAR(16) | Welcher Prompt diese Notes erzeugt hat |
+
+**Kompatibilitäts-Projektion in flache Spalten** (`genres_raw`, `audience`, `hard_nos_keywords`, `keywords`, `wishlist_raw`, …) bleibt vorerst aktiv — siehe `_project_to_columns` in `profile_extractor.py`. Diese Projektion ist **temporär**; sie verschwindet, sobald Matcher (Step 6), Embeddings-Pipeline und Review-UI sektionsnativ umgebaut sind. Neuer Code darf sich nicht auf die flachen Spalten verlassen.
 
 ---
 
