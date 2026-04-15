@@ -69,7 +69,11 @@ autoquery/
 | Kostenloser Account | Freemium (Feature-Flags vorbereitet) |
 | Admin pflegt Domains | Nutzer schlagen Domains vor |
 | MMR Diversity | DPP + Calibration |
-| Genre-Aliases als YAML | Genre-Aliases als DB-Tabelle mit Admin-UI |
+| Genre-Aliases als YAML (`canon/aliases.yaml`, Thema-basiert) | Aliases + Extensions als DB-Tabelle mit Admin-UI |
+
+## L2 — Kanonisches Vokabular (Thema)
+
+Der kanonische Vokabularstand lebt im `canon/`-Verzeichnis (nicht in der DB, nicht im Code): Thema v1.6 (EDItEUR) als Backbone für Subject / Audience / Form, plus lokale `LOCAL:*`-Extensions für markt-relevante Terme, die Thema fehlen (romantasy, upmarket, women's fiction, dark_academia, …). Jeder Rohbegriff aus L1 wird via `canon/aliases.yaml` auf einen Canonical-Code abgebildet; unbekannte Terme gehen ins `unmapped_terms`-Review-Log und werden im Zyklus — **nicht zur Laufzeit** — entschieden. Design und Rationale: `docs/features/16_l2_canonicalization.md`.
 
 ## Referenzen
 

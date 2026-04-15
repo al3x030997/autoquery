@@ -22,7 +22,7 @@ L1    Note-Taker                (strukturierte natürliche Sprache)
   │
 L1-V  Fact-Checker              (Verifikation gegen Quelltext)
   │
-L2    Kanonisierung             (Tags + Boolean-Regeln)        [IN RECHERCHE]
+L2    Kanonisierung             (Thema-basiert, Upfront-Canon) [DESIGN LOCKED, v0 IN ARBEIT]
   │
 L3    Per-Section Embeddings    (ein Vektor pro Wishlist-Abschnitt) [IN RECHERCHE]
 ```
@@ -64,10 +64,13 @@ L3    Per-Section Embeddings    (ein Vektor pro Wishlist-Abschnitt) [IN RECHERCH
 **Output:** Verifikationsreport (JSON) mit Scores, Misses, Hallucinations + korrigiertes L1
 **Architektur:** Claude (stärkeres Reasoning als Note-Taker) — läuft einmal pro Profil, nicht pro Query
 **Status:** DESIGN, NOCH NICHT IMPLEMENTIERT
-### L2 — Kanonisierung (Platzhalter)
-**Zweck:** Verifiziertes L1 → kanonische Genre-Tags, Audience-Enums, Hard-No-Keyword-Listen, strukturierte Conditions. Ermöglicht günstige Boolean-Filterung (3000 → 50 Kandidaten in Millisekunden).
-**Status:** IN RECHERCHE — konkrete Methode (LLM-basierte Kanonisierung vs. Alias-Dictionary vs. Hybrid) noch nicht entschieden
-**Offen:** Umgang mit mehrdeutigen Genres, Erweiterbarkeit des kanonischen Vokabulars, Confidence-Scoring pro Tag
+### L2 — Kanonisierung
+**Zweck:** Verifiziertes L1 → kanonische Subject-Codes (Genre), Audience-Enums, Form-Codes, Hard-No-Tags, strukturierte Conditions. Ermöglicht günstige Boolean-Filterung (3000 → 50 Kandidaten in Millisekunden).
+**Methode:** **Upfront-Canon auf Basis von Thema v1.6 (EDItEUR).** Fünf unabhängige Facetten (subject / audience / form / hard_no / condition). Thema trennt Genre, Audience und Form in separate Qualifier — exakt die Struktur, die Schritt 6 benötigt. Lokale Ergänzungen (`LOCAL:*`) für markt-relevante Terme, die Thema fehlen (romantasy, dark_academia, upmarket_fiction, women's_fiction). Alias-Dictionary (`canon/aliases.yaml`) mappt Rohphrasen auf Canonical-Codes via normalisierter exakter Lookup — keine Fuzzy-Matches zur Laufzeit.
+**Governance:** Canon ist **versioniert** (`canon/VERSION`) und **keine Laufzeit-Auto-Erweiterung**. Unbekannte Terme werden in `unmapped_terms`-Log geschrieben und im periodischen Review-Zyklus entschieden (neuer Alias / neue LOCAL-Extension / Noise). Extension-Regel: ≥5 Profile + keine Kombination bestehender Codes.
+**Artefakte:** `canon/thema_{subjects,audience,form}.yaml`, `canon/extensions.yaml`, `canon/hard_nos.yaml`, `canon/aliases.yaml`, `scripts/canon_coverage.py`.
+**Status:** v0 Canon definiert (629 Subject-Codes, 27 Audience-Codes, 56 Form-Codes, 8 LOCAL-Extensions, 23 Hard-No-Tags). Pre-Step-4-Validierung via 50-Profile-MSWL-Stichprobe (interner One-Off-Capture, nicht im `agents`-Table, nicht im Produkt) — Skripte `scripts/harvest_mswl_sample.py` + `scripts/canon_dryrun.py`, Outputs unter `data/mswl_sample/`. Altes `scripts/canon_coverage.py` ist gegen das neue Note-Taker-Schema veraltet und wird durch `canon_dryrun.py` für diesen Pass ersetzt. **v1-Lock weiterhin nach Abschluss von Schritt 4** (≥200 Produktionsprofile via direct-to-source); die MSWL-Stichprobe ist eine First-Pass-Validierung, kein v1-Lock.
+**Details:** Siehe `docs/features/16_l2_canonicalization.md` für Design-Rationale, Alias-Algorithmus, Versionierungsregeln und Interaktion mit L1 / L1-V / L3.
 ### L3 — Per-Section Embeddings (Platzhalter)
 **Zweck:** Ein Embedding pro Preference Section (nicht pro Agent). Matching via `max(cosine_similarity(manuscript, section_i))`. Ersetzt das alte 70/30 gewichtete Gesamt-Embedding und löst das Wishlist-Blurring-Problem.
 **Status:** IN RECHERCHE — Section-Granularität, Embedding-Modell für kurze Textsegmente und Aggregationsstrategie noch nicht entschieden
@@ -76,7 +79,7 @@ L3    Per-Section Embeddings    (ein Vektor pro Wishlist-Abschnitt) [IN RECHERCH
 |---|---|---|
 | L0, L0.3, L0.6 | Schritt 2 (neu interpretiert) | DONE |
 | L1, L1-V | Schritt 3 (neu interpretiert) | In Arbeit |
-| L2 | Neu — Zwischenschicht vor Schritt 5 | In Recherche |
+| L2 | Neu — Zwischenschicht vor Schritt 5 | DESIGN LOCKED, v0 Canon in Arbeit |
 | L3 | Schritt 5 (ersetzt altes Modell) | In Recherche |
 **Hinweis:** Die Schritte 2, 3 und 5 sind laut STATUS.md formal "DONE", wurden aber architektonisch durch das Schichtmodell ersetzt. Der alte Code (HTML-Crawler in `autoquery/crawler/`, einstufiger Extractor, gewichtetes Gesamt-Embedding) existiert weiterhin, gilt aber als deprecated zugunsten der Screenshot-basierten Pipeline.
 ---
@@ -136,7 +139,7 @@ Schritt 10: Qualitätssicherung & Soft Launch      ░░░░░░░░░�
 > **Archivierte Entwürfe:** siehe `IMPLEMENTATION_PLAN_ARCHIVE.md` (Schritt 3 deprecated).
 **Ziel:** Aus bereinigtem Text (L0.6) entsteht ein strukturierter, verifizierter, natürlich-sprachlicher Profil-Output, der im Review-Interface geprüft werden kann.
 **Was gebaut wird:**
-- **L1 — Note-Taker:** `profile_extractor.py` wird auf den neuen System Prompt umgestellt (`/Users/alex/Downloads/extraction_system_prompt.txt`). Output: strukturierte natürliche Sprache mit Feldern Identity / Global Conditions / Preference Sections (mit Wants, Does-Not-Want, Conditions, Tropes, Comp Titles) / Hard Nos / Submission Requirements / Taste References / Cross-Cutting Themes / Confidence Flags. Keine induzierten Genres.
+- **L1 — Note-Taker (DONE 2026-04-15):** `profile_extractor.py` ruft den Note-Taker-Prompt auf (`autoquery/extractor/prompts/note_taker_v1.txt`, `PROMPT_VERSION = "2.0"`). Output: strukturierte natürliche Sprache mit Sektionen Identity / Global Conditions / Preference Sections (mit Wants, Does-Not-Want, Conditions, Tropes, Comp Titles) / Hard Nos / Submission Requirements / Taste References / Cross-Cutting Themes / Confidence Flags. `note_parser.py` wandelt das in JSON um, persistiert in `agents.profile_notes` (JSONB) plus `profile_notes_raw` und `prompt_version`. Eine temporäre Best-Effort-Projektion in die flachen Spalten (`genres_raw`, `audience`, `hard_nos_keywords`, `keywords`, `wishlist_raw`) hält Matcher / Embeddings / Review-UI lauffähig, bis diese Schichten sektionsnativ umgebaut sind. Keine induzierten Genres, keine L2-Kanonisierung in L1.
 - **L1-V — Fact-Checker:** unabhängiger zweiter Agent (Claude) prüft L1 gegen `cleaned/{agent}.txt`, liefert Korrekturreport (Halluzinationen, fehlende Felder, gedropte Conditions) + korrigiertes L1.
 - **Benchmark-Suite:** 8 manuell gecheckte MSWL-Profile in `batch_capture_output/cleaned/` als permanente Testsuite für die 4 Qualitätsdimensionen (Completeness, Faithfulness, Condition Preservation, Structural Linkage).
 - **Streamlit Review-Interface:** Anzeige von L1-Output + L1-V-Report nebeneinander, Editieren, Genehmigen/Ablehnen/Überspringen, Link zur Originalseite. Dient als QA-Oberfläche für den Fact-Checker.
@@ -345,7 +348,7 @@ Einzige Ausnahme: Innerhalb von Schritt 4 können Crawling und Review parallelis
 | 2. Capture & Cleaning | Schritt 1 | L0, L0.3, L0.6 | `02_crawler_engine` |
 | 3. Extraktion & Review | Schritt 2 | L1, L1-V | `05_llm_extraction`, `06_review_interface` |
 | 4. Daten befüllen | Schritt 3 | — (nutzt L0–L1-V) | `03_browser_agent`, `06_review_interface` |
-| — | — | L2 (Kanonisierung) | in Recherche |
+| — | — | L2 (Kanonisierung) | `16_l2_canonicalization` |
 | 5. Embeddings | Schritt 4 | L3 | `07_embedding_pipeline` |
 | 6. Matching | Schritt 5 | nutzt L2 + L3 (+ optional L1) | `08_matching_algorithm` |
 | 7. Backend-API | Schritt 6 | — | `09_auth_and_users`, `10_author_input_flow`, `12_interaction_logging` |

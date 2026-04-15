@@ -15,6 +15,18 @@
 
 ---
 
+## Pipeline-Schichten (L0–L3)
+
+| Layer | Name | Status | Date |
+|---|---|---|---|
+| L0 / L0.3 / L0.6 | Screenshot-Capture / DOM-Text / Cleaning | DONE | — |
+| L1 | Note-Taker | DONE (Prompt v2.0 integriert, Parser + Schema/Migration 005 in place; legacy flat columns als temporäre Projektion erhalten) | 2026-04-15 |
+| L1-V | Fact-Checker | DESIGN ONLY | — |
+| **L2** | **Kanonisierung (Thema-basiert)** | **v0 CANON ARTEFAKTE DEFINIERT** (50-Profile MSWL-Stichprobe + Dry-Run als pre-Step-4-Validierung; v1-Lock weiterhin nach Schritt 4) | **2026-04-15** |
+| L3 | Per-Section Embeddings | IN RECHERCHE | — |
+
+---
+
 ## Step 1 — Completion Notes
 - Docker Compose with all services (PostgreSQL+pgvector, Redis, Ollama, FastAPI, Celery, Streamlit)
 - Alembic migrations: 001_initial_schema (14 tables), 002_add_crawled_pages
@@ -90,6 +102,38 @@
 - Performance regression: 3 tests (200-agent pipeline <3s, 1000-agent scoring <5s, MMR rerank <500ms)
 - Weight tuning CLI: `scripts/tune_weights.py` with grid search over weight combinations
 - 51 new tests, 215 total passing
+
+## L2 — Canon v0 Notes
+- Thema v1.6 (2025-04-10 englisch) als Backbone, unter `canon/_source/` als Audit-Trail abgelegt
+- Generierte Artefakte: `canon/thema_subjects.yaml` (629 Codes), `canon/thema_audience.yaml` (27), `canon/thema_form.yaml` (56)
+- Handgepflegt: `canon/extensions.yaml` (8 `LOCAL:*`-Einträge), `canon/hard_nos.yaml` (23 Tags), `canon/aliases.yaml` (~200 Rohphrasen)
+- Dry-Run-Script `scripts/canon_coverage.py` vorhanden; `canon/coverage_report.md` wartet auf Erstlauf mit API-Key
+- Design-Dokumentation: `docs/features/16_l2_canonicalization.md`
+- Laufzeit-Integration (Canonicalizer-Klasse, Alembic-Migration für `thema_*`-Spalten, `unmapped_terms`-Tabelle, Hook in `crawl_url_task`) explizit nicht in v0 — Folge-Spezifikation
+
+## MSWL Sample & Canon Dry-Run Notes (pre-Step-4)
+- Internal one-time Capture von 50 MSWL-Profilen (`manuscriptwishlist.com/mswl-post/...`) als Validierungs-Stichprobe — nicht im `agents`-Table, nicht im Produkt, Dateicache unter `data/mswl_sample/`
+- MSWL bleibt in `config/blacklist.yaml`; Bypass nur am Call-Site dieser Capture-Skripte via `fetch_page(..., skip_blacklist=True)`
+- Pipeline: `scripts/harvest_mswl_sample.py` → `scripts/analyze_mswl_sample.py` → `scripts/canon_dryrun.py`
+- Outputs: `data/mswl_sample/analysis.md` (Profil-Struktur-Report), `data/mswl_sample/canon_dryrun.md` (Coverage + unmapped-term-Leaderboard mit alias/LOCAL/dismiss-Tags)
+- Altes `scripts/canon_coverage.py` ist gegen das neue Note-Taker-Schema veraltet; `canon_dryrun.py` ersetzt es für diese Validierung (kein Rewrite des alten Scripts in diesem Pass)
+- 50 Profile ist erste Stichprobe, kein v1-Lock; v1-Lock benötigt weiterhin ≥200 Profile via Step 4 (direct-to-source)
+
+## L1 — Note-Taker Integration Notes (2026-04-15)
+- Prompt-Asset: `autoquery/extractor/prompts/note_taker_v1.txt` (`PROMPT_VERSION = "2.0"`)
+- Parser: `autoquery/extractor/note_parser.py` (deterministisch, 9 Unit-Tests grün)
+- Persistenz: `agents.profile_notes` (JSONB) + `profile_notes_raw` + `prompt_version`
+- Migration: `005_add_profile_notes.py`
+- ProfileExtractor.`_project_to_columns` füllt `genres_raw`, `audience`, `hard_nos_keywords`, `keywords`, `wishlist_raw` als temporäre Kompatibilitätsschicht
+- 235 Tests grün (incl. 9 Parser-Tests + 7 neue Extractor-Tests)
+- **Bekannte Folge-Arbeiten** (eigene Pläne):
+  - Matcher-Rewrite (Step 6) auf `preference_sections[*]` — derzeit in Recherche
+  - Embeddings pro Sektion statt pro Agent (`autoquery/embeddings/`)
+  - L2-Runtime-Canonicalizer + `unmapped_terms`-Tabelle, Hook in `crawl_url_task`
+  - Review-UI (Streamlit) für Sektionen
+  - `AgentPublic` API-Schema auf Sektionen umstellen
+  - Backfill der bestehenden 7 Benchmark-Profile durch den neuen Prompt
+  - Drop der flachen Legacy-Spalten — erst sicher, wenn alle Konsumenten umgestellt sind
 
 ## Known Issues
 - No IMPLEMENTATION_PLAN.md or feature specs were on disk (only in conversation transcript) — fixed 2026-03-08
