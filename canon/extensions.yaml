@@ -1,0 +1,89 @@
+# Local (non-Thema) additions to the canonical vocabulary.
+# Every LOCAL:* code MUST have: name, facet, justification, added_in_version.
+# Promote to Thema proper if EDItEUR ever adds the code; retire LOCAL:* by moving
+# aliases to the new Thema code and dropping the entry here.
+#
+# Bar for inclusion (enforced starting v1, post-Step-4):
+#   - Appears in ≥5 distinct profiles, AND
+#   - Cannot be expressed as a combination of existing Thema codes, AND
+#   - Has broad market recognition (not a single-agent idiosyncrasy).
+#
+# v0 entries below are seeded from domain knowledge without the 5-profile rule
+# because Step 4 hasn't run yet. Each MUST be re-validated during v1 lock.
+
+codes:
+
+  # ---- Subject facet ------------------------------------------------
+  "LOCAL:commercial_fiction":
+    facet: subject
+    name: "Commercial fiction"
+    justification: >
+      Agent-industry term for plot-forward, broadly accessible fiction. Thema
+      has FB (general non-genre) and FBA (modern literary) but no split for
+      "commercial" as opposed to "literary" — the distinction is fundamental
+      to how agents describe their lists.
+    added_in_version: v0.1
+
+  "LOCAL:upmarket_fiction":
+    facet: subject
+    name: "Upmarket fiction"
+    justification: >
+      Agent-industry term for fiction sitting between literary and commercial
+      (e.g. book-club fiction with literary sentence-level craft but commercial
+      plotting). No Thema code captures this distinction.
+    added_in_version: v0.1
+
+  "LOCAL:womens_fiction":
+    facet: subject
+    name: "Women's fiction"
+    justification: >
+      US publishing category distinct from romance (no guaranteed HEA, broader
+      emotional arc). Thema has no direct equivalent; FQ (contemporary
+      lifestyle) is adjacent but not synonymous.
+    added_in_version: v0.1
+
+  "LOCAL:dark_academia":
+    facet: subject
+    name: "Dark academia"
+    justification: >
+      Emerging subgenre/aesthetic (academic setting, obsession, moral decay)
+      that crosses literary, mystery, and gothic. No Thema code; widely used
+      in agent MSWLs since ~2020.
+    added_in_version: v0.1
+
+  "LOCAL:portal_fantasy":
+    facet: subject
+    name: "Portal fantasy / Isekai"
+    justification: >
+      Distinct fantasy sub-category. Thema encodes this only within comics
+      (XQMP), not within FM* prose fantasy.
+    added_in_version: v0.1
+
+  # ---- Audience facet -----------------------------------------------
+  "LOCAL:adult":
+    facet: audience
+    name: "Adult (18+)"
+    justification: >
+      Thema conveys "adult" by absence of a 5A* qualifier, which is an
+      awkward negative to match against. An explicit LOCAL:adult code makes
+      audience-proximity scoring symmetric.
+    added_in_version: v0.1
+
+  # ---- Form facet ---------------------------------------------------
+  "LOCAL:novel":
+    facet: form
+    name: "Novel (full-length prose fiction)"
+    justification: >
+      Thema encodes "novella" (FYC) and "short stories" (FYB) as subject
+      features but has no explicit "novel" form qualifier — novel is assumed
+      by default. An explicit code is needed so form-filters can distinguish
+      novels from short fiction in agent submission rules.
+    added_in_version: v0.1
+
+  "LOCAL:webtoon":
+    facet: form
+    name: "Webtoon / vertical scroll comic"
+    justification: >
+      Distinct digital-native comic form. Thema XAM* covers manga/manhwa/
+      manhua by regional tradition but not webtoon as a format.
+    added_in_version: v0.1

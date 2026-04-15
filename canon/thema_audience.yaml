@@ -1,0 +1,119 @@
+# Thema 5A* audience qualifiers (interest age)
+# Source: EDItEUR Thema v1.6 (2025-04-10 English release).
+# Do not edit by hand — regenerate via canon/_source/filter_thema.py.
+# Local (non-Thema) additions live in canon/extensions.yaml.
+
+codes:
+  5A:
+    name: Interest age / level (Content adapted or suitable for this age and above)
+    notes: 'Use all 5A* age codes for: defining the Y* or X* codes – 5A* age numbers are used instead of named codes, such
+      as juvenile, middle grade, young adult, as these have different meanings in different countries or languages. Select
+      one 5A* code indicating a general guideline starting or base interest age of the content in any works aimed primarily
+      at children or teenagers. All Y* codes (except YP* which use 4* codes) MUST be accompanied by one 5A* qualifier code
+      to give guidance of interest age, for example: book content for an audience of 9 to 12 age group, should use 5AK, as
+      the lower age; content of interest to teenagers should use 5AP or 5AQ; content for older teenagers and young adults
+      should use 5AS, 5AT or 5AU as appropriate. 5AR, 5AX and 5AZ can be used with any relevant subject code. All 5A* codes
+      can be used with X* subject codes if the Comic book is aimed at children or teenagers. DO NOT USE: 5A itself – always
+      use 5A* codes. NB: Greater detail of age range, reading age, interest age etc would be communicated in other metadata'
+    parent: 5
+  5AB:
+    name: For children c 0–36 months
+    parent: 5A
+  5ABB:
+    name: For babies from birth
+    parent: 5AB
+  5ABD:
+    name: For babies from 3 months
+    parent: 5AB
+  5ABF:
+    name: For babies from 6 months
+    parent: 5AB
+  5ABH:
+    name: For infants from c 12 months
+    parent: 5AB
+  5ABJ:
+    name: For infants from c 18 months
+    parent: 5AB
+  5ABK:
+    name: 'Interest age: from c 24 months'
+    parent: 5AB
+  5AC:
+    name: 'Interest age: from c 3 years'
+    parent: 5A
+  5AD:
+    name: 'Interest age: from c 4 years'
+    parent: 5A
+  5AF:
+    name: 'Interest age: from c 5 years'
+    parent: 5A
+  5AG:
+    name: 'Interest age: from c 6 years'
+    parent: 5A
+  5AH:
+    name: 'Interest age: from c 7 years'
+    parent: 5A
+  5AJ:
+    name: 'Interest age: from c 8 years'
+    parent: 5A
+  5AK:
+    name: 'Interest age: from c 9 years'
+    parent: 5A
+  5AL:
+    name: 'Interest age: from c 10 years'
+    parent: 5A
+  5AM:
+    name: 'Interest age: from c 11 years'
+    parent: 5A
+  5AN:
+    name: 'Interest age: from c 12 years'
+    parent: 5A
+  5AP:
+    name: 'Interest age: from c 13 years'
+    parent: 5A
+  5AQ:
+    name: 'Interest age: from c 14 years'
+    parent: 5A
+  5AR:
+    name: Content adapted or suitable for reluctant or struggling readers (children / teenagers)
+    notes: 'Also class here: High-low readers, Hi-Lo content aimed at children or teenagers. Use for: books that are specially
+      written for or considered suitable for young people who do not want to read, have difficulty reading, or are struggling
+      to read. Usually these books will have a higher interest age and a lower reading age. Content is usually aimed at a
+      particular interest age but the language used is purposefully slightly simpler than most average content aimed at the
+      same interest age in that language, so that it is easier to read or listen to than other titles. These are often titles
+      in specific named collections and will often have notions of levels of difficulty associated with them by the publisher
+      and / or may be accompanied by indications of complexity. Use with: one other 5A* Interest age qualifier. Prefer: 5AX
+      for reluctant adult readers or 5AZ for accessible content and 4L codes for second language titles, See also: 5AX 5AZ
+      4L*'
+    parent: 5A
+  5AS:
+    name: 'Interest age: from c 15 years'
+    parent: 5A
+  5AT:
+    name: 'Interest age: from c 16 years'
+    parent: 5A
+  5AU:
+    name: 'Interest age: from c 17 years'
+    parent: 5A
+  5AV:
+    name: 'Interest age: from c 17 years to c 29 years'
+    notes: 'Use for: works aimed specifically at older teens and young adults in their 20s, those who are newly adult, emerging
+      adulthood. This age group may be referred to in some places as young adults or sometimes as new adults. The content
+      is specifically created for and about this group but can also appeal to other groups as well. Prefer: 5LKE for titles
+      about this age group. DO NOT USE: with Y* codes, See also: 5LKE'
+    parent: 5A
+  5AX:
+    name: Content adapted or suitable for adult emergent / reluctant readers
+    notes: 'Also class here: High-low readers, Hi-Lo content aimed at adults. Use for: books that are specifically aimed at
+      adult literacy or helping adult readers with reading difficulties or books that are suitable for adult readers who are
+      not confident in their reading abilities or suitable for the newly literate. Content is aimed at adult interests but
+      the language used is purposefully slightly simpler than most average content aimed at adults so that it is easier to
+      read or listen to than other titles'
+    parent: 5A
+  5AZ:
+    name: Content adapted or suitable for people with learning / communication difficulties or impairments
+    notes: 'Use for: indicating works where the content is specifically adapted for, or purposefully written for, or aimed
+      at people, regardless of age, with special or additional needs, who may have difficulty in accessing or reading the
+      content of most titles. This could include content specifically adapted for people with, for example, dyslexia and other
+      reading or learning disabilities, cognitive impairments or disorders, memory disorders, dementia or Alzheimer’s, visual
+      or other sensory impairments, profound and multiple learning disabilities, etc. Use with: 5PM* Qualifiers as appropriate'
+    parent: 5A

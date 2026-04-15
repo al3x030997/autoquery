@@ -1,0 +1,118 @@
+# Hard-no canonical tags.
+# These are NOT part of Thema — Thema classifies what a book IS, not what an
+# agent refuses. Hard-nos drive the deterministic filter in Step 6 (matcher).
+#
+# Each entry:
+#   name        — human-readable label
+#   definition  — single sentence, what counts
+#   severity    — strict|soft; strict = deterministic exclusion, soft = warning
+#
+# v0 seed from publishing domain knowledge. Real population / validation
+# happens during Step 4 data-driven pass against 200 profiles. Do NOT add new
+# tags here without ≥5-profile evidence post-v1.
+
+tags:
+
+  # ---- Content-warning categories ---------------------------------
+  graphic_violence:
+    name: "Graphic violence / gore"
+    definition: "On-page detailed violence or gore presented without narrative distance."
+    severity: strict
+  sexual_assault:
+    name: "Sexual assault / rape"
+    definition: "On-page sexual assault. Backstory references usually OK — this is for on-page depiction."
+    severity: strict
+  csa:
+    name: "Child sexual abuse"
+    definition: "Any depiction of child sexual abuse, on-page or explicit flashback."
+    severity: strict
+  animal_harm:
+    name: "Harm to animals"
+    definition: "Graphic animal death, abuse, or suffering as narrative content."
+    severity: strict
+  onpage_sex:
+    name: "On-page / explicit sex"
+    definition: "Explicit sex scenes. Common hard-no in MG, PB, YA, and non-romance adult."
+    severity: strict
+  self_harm:
+    name: "Self-harm"
+    definition: "Detailed depiction of self-injury."
+    severity: soft
+  suicide:
+    name: "Suicide (on-page)"
+    definition: "On-page suicide or detailed suicide ideation. Many agents exclude for MG/YA."
+    severity: soft
+  school_shooting:
+    name: "School shooting"
+    definition: "Fictional school-shooting plotlines."
+    severity: strict
+
+  # ---- Trope / content exclusions ---------------------------------
+  talking_animals:
+    name: "Talking animals / anthropomorphic protagonists"
+    definition: "Animals as primary characters speaking and acting as humans."
+    severity: strict
+  rhyming_pb:
+    name: "Rhyming picture books"
+    definition: "Picture-book manuscripts written in rhyme. Very common MSWL exclusion."
+    severity: strict
+  chosen_one:
+    name: "Chosen-one narratives"
+    definition: "Protagonist is the prophesied / destined savior."
+    severity: soft
+  love_triangle:
+    name: "Love triangle"
+    definition: "Central romantic conflict between three characters."
+    severity: soft
+  insta_love:
+    name: "Instant love"
+    definition: "Romantic pairing falls in love at first sight without development."
+    severity: soft
+  vampires:
+    name: "Vampires"
+    definition: "Vampire characters as core element."
+    severity: soft
+  werewolves:
+    name: "Werewolves"
+    definition: "Werewolf / shifter characters as core element."
+    severity: soft
+  zombies:
+    name: "Zombies"
+    definition: "Zombies / reanimated dead as core element."
+    severity: soft
+  angels_demons:
+    name: "Angels and demons"
+    definition: "Angel / demon characters as core element."
+    severity: soft
+
+  # ---- Craft / origin exclusions ----------------------------------
+  ai_generated:
+    name: "AI-generated content"
+    definition: "Manuscript written wholly or substantially by generative AI."
+    severity: strict
+  co_written:
+    name: "Co-written manuscripts"
+    definition: "Manuscripts with multiple authors (some agents only sign solo)."
+    severity: soft
+  celebrity_memoir:
+    name: "Celebrity memoir"
+    definition: "Memoirs whose market hook is the author's fame rather than the story."
+    severity: soft
+
+  # ---- Thematic exclusions ----------------------------------------
+  religious_themes:
+    name: "Overtly religious themes"
+    definition: "Books whose central purpose is religious instruction or evangelism."
+    severity: soft
+  evangelical:
+    name: "Evangelical / proselytizing content"
+    definition: "Content intended to convert readers to a religious position."
+    severity: strict
+  anti_religion:
+    name: "Anti-religious polemic"
+    definition: "Content whose central purpose is to attack a religious tradition."
+    severity: soft
+  political_polemic:
+    name: "Political polemic"
+    definition: "Content whose central purpose is partisan political argument."
+    severity: soft

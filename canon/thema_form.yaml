@@ -1,0 +1,317 @@
+# Thema X* form qualifiers (graphic novels / comics / manga)
+# Source: EDItEUR Thema v1.6 (2025-04-10 English release).
+# Do not edit by hand — regenerate via canon/_source/filter_thema.py.
+# Local (non-Thema) additions live in canon/extensions.yaml.
+
+codes:
+  X:
+    name: Graphic novels, Comic books, Manga, Cartoons
+    notes: 'Use all X* codes for: general adult, teenage or children’s comic book titles in any form and from any style or
+      tradition. DO NOT USE: code ‘X’ itself, but select specific categories from section X*. Use all X* codes with: other
+      subject A* – W* OR Y* categories (but not both) and qualifiers where appropriate, in particular with PLACE 1*, TIME
+      PERIOD 3* and INTEREST 5* Qualifiers. Use an XA* code to indicate the tradition, an XQ* to indicate genre plus other
+      codes to give greater detail. NB: INTEREST AGE 5A* Qualifiers MUST be used with comic books, graphic novels or manga
+      titles aimed at children or teenagers'
+    parent: null
+  XA:
+    name: 'Graphic novel / Comic book / Manga: styles / traditions'
+    notes: 'Use for: any style, tradition or form when the content is presented as sequential art, any form of comic book.
+      Use all XA* codes for: indicating the tradition or style which the title is from. Use XA itself only where specific
+      tradition or type style is not known, is a mixture of different traditions or is not listed in XA* codes below. Use
+      all XA* codes with: XQ* code(s) to indicate a genre as applicable'
+    parent: X
+  XAB:
+    name: Graphic novels
+    notes: 'Use for: comic-strip publications, that are published as stand-alone works and that use illustration to tell a
+      complete story (or narrate a work of non-fiction) in a single work rather than being part of a sequential series of
+      stories or comic-book story-arc. A graphic novel can be fiction or non-fiction, and will usually offer a resolution
+      of its story or narrative within the single work, even if it is part of a wider collection of works'
+    parent: XA
+  XAD:
+    name: European style / tradition comic books
+    notes: 'Also class here: ‘comic albums’, bandes dessinées (BDs), fumetti, euro-comics, Franco-Belgian comics. Use for:
+      comic-strip and graphic narratives that are part of or have been inspired by the styles associated with the different
+      European comic book traditions and that are typically published in ongoing series, often featuring the same characters,
+      as distinct from ‘one-off’ graphic novels'
+    parent: XA
+  XADC:
+    name: Classic European style / tradition comic books
+    notes: 'Also class here: classic comic books which can usually be read and enjoyed by everyone from children to adults,
+      and which are widely regarded or presented as ‘classic’ and typically but not necessarily published and in print for
+      several decades'
+    parent: XAD
+  XAK:
+    name: American style / tradition comic books
+    notes: 'Use for: comic-strip narratives that are part of or have been inspired by the styles associated with the comic
+      book traditions that originated in the United States. These often feature super-hero style characters or heightened
+      realities and were originally published in the traditional 32 page comic. They are usually part of a larger, serialised
+      narrative, universe or story-arc that may have been published over a long period of time. This style has inspired many
+      comics around the world and use of this code does not mean the comic is published or created in the USA, only that the
+      work is seen as being an example of that style of comic book'
+    parent: XA
+  XAKC:
+    name: Classic American style / tradition comic books
+    notes: 'Also class here: early and classic comic book characters, including from the so-called ‘Golden Age’ or ‘Silver
+      age’ of American style comics and which can usually be read and enjoyed by everyone from children to adults, and which
+      are widely regarded or presented as ‘classic’ and typically but not necessarily published and in print for several decades'
+    parent: XAK
+  XAM:
+    name: Manga and other East Asian style / tradition comic books (Manhwa, Manhua, International Manga, etc)
+    notes: 'Also class here: OEL manga, Original English-language manga (and similar concepts in other languages), Manga-influenced
+      comics, World manga, Global manga, La nouvelle manga, Manfra, Amerimanga, etc. Use for: XAM* codes includes all Japanese
+      style comic books (Manga) plus those from other East Asian countries including Korean style (Manhwa) and Chinese style
+      (Manhua) and from non-Asian countries, but designed according the ‘Manga or East Asian styles’. Use with: XQ* codes
+      to give detail of subject or genre and other subject A*– W* OR Y* categories and qualifiers where appropriate'
+    parent: XA
+  XAMA:
+    name: Manga - (Japanese) style / tradition comics
+    notes: 'Use with: XQ* codes to give detail of subject or genre and other subject A*– W* OR Y* categories and qualifiers
+      where appropriate'
+    parent: XAM
+  XAMB:
+    name: Classic East Asian style / tradition comic books
+    notes: 'Also class here: classic East Asian style comics (Manga, Manhwa, Manhua, etc) which can usually be read and enjoyed
+      by everyone from children to adults, and which are widely regarded or presented as ‘classic’ and typically but not necessarily
+      published and in print for several decades'
+    parent: XAM
+  XAMC:
+    name: 'Manga: Kodomo (for children)'
+    notes: 'Use for: Manga or other East Asian style comics for children, boys and girls, of an interest age from around 6
+      to 10. Use with: 5A* qualifiers to indicate interest age'
+    parent: XAM
+  XAMD:
+    name: Manhwa - (Korean) style / tradition comics
+    notes: 'Use with: XQ* codes to give detail of subject or genre and other subject A*– W* OR Y* categories and qualifiers
+      where appropriate'
+    parent: XAM
+  XAME:
+    name: Manhua - (Chinese) style / tradition comics
+    notes: 'Use with: XQ* codes to give detail of subject or genre and other subject A*– W* OR Y* categories and qualifiers
+      where appropriate'
+    parent: XAM
+  XAMF:
+    name: 'Manga: Shōjo (for teenage girls)'
+    notes: 'Use for: Manga or other East Asian comics designed for primarily younger teenage girls, adolescent females, of
+      an interest age from around 10 to 15. Use with: 5A* qualifiers to indicate interest age'
+    parent: XAM
+  XAMG:
+    name: 'Manga: Shōnen (for teenage boys)'
+    notes: 'Use for: Manga or other East Asian style comics designed primarily for younger teenage boys, adolescent males,
+      of an interest age from around 10 to 15. Use with: 5A* qualifiers to indicate interest age'
+    parent: XAM
+  XAML:
+    name: 'Manga: Seinen (for men)'
+    notes: 'Use for: Manga or other East Asian style comics designed primarily for older teenage boys, young adult and adult
+      men, from about 15 years old and up'
+    parent: XAM
+  XAMR:
+    name: 'Manga: Josei (for women)'
+    notes: 'Use for: Manga designed primarily for older teenage girls, young adult and adult women, from about 15 years old
+      and up'
+    parent: XAM
+  XAMT:
+    name: 'Manga: Yaoi (BL / boys’ love)'
+    notes: 'Also class here: danmei, shounen-ai. Use for: Manga or other East Asian style comics featuring male same-sex relationships,
+      created principally, but not exclusively, for a female readership. Use with: 5PSG as appropriate, See also: FYQ'
+    parent: XAM
+  XAMV:
+    name: 'Manga: Bara (gay manga / Gei Komi)'
+    notes: 'Also class here: Men’s Love (ML) manga. Use for: manga or other East Asian style comics focusing on male same-sex
+      love, usually created by gay men for a gay male audience. Use with: 5PSG and 5X as appropriate'
+    parent: XAM
+  XAMX:
+    name: 'Manga: Adult (erotic, extreme violence)'
+    notes: 'Use for: Manga or other East Asian style comics designed for adults featuring scenes of an overtly adult nature
+      only suitable for an aware and mature audience. Use with: other XAM* codes as appropriate and Qualifier 5X as appropriate,
+      See also: XAMX2'
+    parent: XAM
+  XAMX2:
+    name: 'Manga: Hentai manga'
+    notes: 'Use for: Manga or other East Asian style comics designed for adults (over about 18 years), of an extreme erotic
+      or pornographic nature. Use with: Qualifier 5X as appropriate, See also: XAML'
+    parent: XAMX
+  XAMY:
+    name: 'Manga: Yuri (GL / girls’ love)'
+    notes: 'Also class here: shoujo-ai, baihe. Use for: Manga or other East Asian style comics featuring young female same-sex
+      relationships often (but not exclusively) for a young female readership. Use with: 5PSL as appropriate'
+    parent: XAM
+  XAX:
+    name: Alternative comic styles / traditions
+    notes: 'Also class here: post-underground comics, independent comics, indie comics, auteur comics, small press comics,
+      new wave comics, creator-owned comics, art comics, underground comix, etc'
+    parent: XA
+  XQ:
+    name: 'Comics (Graphic novel / Comic book / Manga etc): genres'
+    notes: 'Use all XQ* codes with: F* or YF* codes, as applicable, to give further extra level of details of fiction genres
+      where required, or, for non-fiction, with A*–W* or relevant Y* codes, as applicable, to indicate the key subject of
+      narrative, for example a comic about an action war story use with FJM*, but one where war or conflict is the background,
+      use with FXF'
+    parent: X
+  XQA:
+    name: 'Graphic novel / Comic book / Manga: Memoirs, true stories and non-fiction'
+    notes: 'Also class here: biographies, politics, travel or other non-fiction subjects that do not have a more precise XQ*
+      code. Use with: Non-fiction A*–W* categories to indicate the subject or Y* codes for comics aimed at children or teenagers,
+      as appropriate'
+    parent: XQ
+  XQAY:
+    name: 'Graphic novel / Comic book / Manga: Educational'
+    notes: 'Use for: titles published as comics or manga where the content is primarily non-fiction and aimed at educating
+      people about the subject. Use with: YN* codes if for young people or other relevant non-fiction A*– W* codes for titles
+      aimed at adults, and use with relevant XA* code to indicate type. If created for use in educational institutions use
+      with YP* codes and EDUCATIONAL PURPOSE 4* Qualifiers as appropriate, for graphic medicine or other comics about health
+      or medical or public health topics use with VF* codes or YPJJ6 for educational works for schools, or educational titles
+      about science or technology, use with P* or T* codes or YPM* codes'
+    parent: XQA
+  XQB:
+    name: 'Graphic novel / Comic book / Manga: Literary adaptations'
+    notes: 'Use for: adaptations of pre-existing literary works into graphic form. Use with: DB*, DC*, DD*, F*, YF*, YND*
+      or YPC* codes as appropriate'
+    parent: XQ
+  XQC:
+    name: 'Graphic novel / Comic book / Manga: Inspired by or adapted from other media'
+    notes: 'Use for: stories that were published as spin-offs or companions to pre-existing non-book media or merchandise,
+      for example story books based on a popular film franchise, an online game or a TV series. DO NOT USE: for titles that
+      were subsequently made into films etc'
+    parent: XQ
+  XQD:
+    name: 'Graphic novel / Comic book / Manga: Crime, mystery and thrillers'
+    notes: 'Use with: FF* or FH* YFC* codes to give further details of crime or thriller genres where required'
+    parent: XQ
+  XQE:
+    name: 'Graphic novel / Comic book / Manga: Society / culture'
+    notes: 'Also class here: chroniques sociales, contemporary cultural, political or social topics or issues, comics that
+      present aspects of the arts, culture, food, cuisine, music or society either as a story or as a work of non-fiction,
+      etc. Use with: codes from A*– W* for works of non-fiction aimed adults to give more specific details about the topic
+      covered or Y* codes for works aimed at children or teenagers, to give further details where required'
+    parent: XQ
+  XQED:
+    name: 'Graphic novel / Comic book / Manga: Idol / celebrity'
+    notes: 'Also class here: Idol manga, Idol manhwa. Use for: comics where the main theme of the story is about idols or
+      celebrities, or the search to become an idol, sometimes linked to famous singers, entertainers or multimedia stars,
+      such as stars of K-pop, as well as fictional idols or groups'
+    parent: XQE
+  XQF:
+    name: 'Graphic novel / Comic book / Manga: Modern and contemporary fiction / literature'
+    notes: 'Use for: comic books that are works of fiction or original stories, that do not fall into another fiction genre.
+      Use with: F* or YF* codes to give further details of fiction genres where required. Prefer: XQB for novels or other
+      works of literature that were adapted into comics, See also: XQB'
+    parent: XQ
+  XQG:
+    name: 'Graphic novel / Comic book / Manga: Action and adventure'
+    notes: 'Use with: FJ* or YF* codes to indicate genre as appropriate, for example for war stories use with FJM* codes,
+      for martial arts stories, use with FJD, or with YFC* codes for comics aimed at children or teenagers'
+    parent: XQ
+  XQGW:
+    name: 'Graphic novel / Comic book / Manga: Westerns'
+    parent: XQG
+  XQH:
+    name: 'Graphic novel / Comic book / Manga: Horror / ghost stories / supernatural'
+    notes: 'Use with: FK* or other F* or YFD codes to indicate specific genres, plus VXQ* or YNX* codes as appropriate'
+    parent: XQ
+  XQJ:
+    name: 'Graphic novel / Comic book / Manga: Sports'
+    notes: 'Also class here: comic books featuring sports, athletic and competitive pursuits. Use with: FG or YFR for works
+      of fiction and S* or YNW* codes for non-fiction works to give more specific details of which sport as appropriate'
+    parent: XQ
+  XQK:
+    name: 'Graphic novel / Comic book / Manga: Superheroes and super-villains'
+    notes: 'Use with: other XQ* codes as appropriate'
+    parent: XQ
+  XQL:
+    name: 'Graphic novel / Comic book / Manga: Science fiction'
+    notes: 'Use with: FL* or YFG* codes to give further details of science fiction genres where required'
+    parent: XQ
+  XQLM:
+    name: 'Graphic novel / Comic book / Manga: Science fiction: Mecha and robots'
+    notes: 'Also class here: Super-robots, real robots, transforming robots, armour, machines, AI technology'
+    parent: XQL
+  XQM:
+    name: 'Graphic novel / Comic book / Manga: Fantasy, esoteric'
+    notes: 'Use for: comic books featuring traditions of mythical, secret or esoteric knowledge, or particular fantasy genres.
+      Use with: FM* or YFH*codes to give further details of fantasy genres where required, plus VXQ* or YNX* codes, as appropriate'
+    parent: XQ
+  XQMM:
+    name: 'Graphic novel / Comic book / Manga: Fantasy: Magical Girl / Magical Boy / Magical Creature'
+    notes: 'Also class here: maho shojo, majokko. Use for: comics featuring characters with magical abilities'
+    parent: XQM
+  XQMP:
+    name: 'Graphic novel / Comic book / Manga: Fantasy: Portal fantasy / Isekai / Other worlds'
+    notes: 'Also class here: travel to parallel universes or other worlds, crossing to other worlds, otherworld‘s, world hopping,
+      alternate realities'
+    parent: XQM
+  XQN:
+    name: 'Graphic novel / Comic book / Manga: Anthropomorphic / animal stories'
+    notes: 'Use with: other XQ* codes as appropriate'
+    parent: XQ
+  XQP:
+    name: 'Graphic novel / Comic book / Manga: Cultural heritage and Traditional stories, myths, legends'
+    notes: 'Also class here: mythic fiction, retellings. Use for: stories that often have a long and continuous existence
+      through multiple generations, stories that get told and retold, traditional local folktales, tall tales, folklore, folk
+      literature, wisdom tales, cautionary stories, teaching stories, origin tales, or any form of traditional story told
+      or retold, or modern retellings or works inspired by traditional stories, mythology, legends, fairy tales or folklore
+      in comic book or any sequential art form. Use with: FN* or YFJ or YFH codes to indicate specific genres or QR* or YNRU
+      codes for non-fiction works plus PLACE1* qualifiers, to indicate a particular tradition, as appropriate'
+    parent: XQ
+  XQQ:
+    name: 'Graphic novel / Comic book / Manga: Slice of life'
+    notes: 'Also class here: Iyashikei. Use for: stories that are based on ordinary, everyday life, or parts of a character’s
+      life, or a sequence of events in a characters life or mundane experiences in a characters life'
+    parent: XQ
+  XQR:
+    name: 'Graphic novel / Comic book / Manga: Romance'
+    notes: 'Use with: FR* or YFM codes to give further details of romance genres where required'
+    parent: XQ
+  XQS:
+    name: 'Graphic novel / Comic book / Manga: School / college life'
+    notes: 'Use with: other XQ* codes or F* or YF* codes to indicate genre plus 5L* code as appropriate'
+    parent: XQ
+  XQT:
+    name: 'Graphic novel / Comic book / Manga: Humorous / Funny stories'
+    notes: 'Use with: other XQ* codes as appropriate or WH* codes or YFQ as appropriate'
+    parent: XQ
+  XQV:
+    name: 'Graphic novel / Comic book / Manga: Historical / History'
+    notes: 'Use with: F* codes for specific genres of historical fiction aimed at adults or YFT for historical fiction aimed
+      at children or teenagers, OR with specific N* codes for adults or YNH* codes for works aimed at children or teenagers
+      that are non-fiction history titles about particular periods or topics in history, and use with PLACE * plus TIME PERIOD
+      3* Qualifiers as appropriate'
+    parent: XQ
+  XQW:
+    name: 'Graphic novel / Comic book / Manga: Religious, spiritual, inspirational'
+    notes: 'Use with: INTEREST 5PG* qualifiers, F* or YF* for specific genres of fiction, or QR*, VX* or YNR* codes for non-fiction
+      titles'
+    parent: XQ
+  XQX:
+    name: 'Graphic novel / Comic book / Manga: Adult only content'
+    notes: 'Use for: comic books designed for adults featuring scenes of an overtly adult nature or dealing with graphic themes
+      only suitable for an aware, mature audience. Use with: Qualifier 5X plus other X* codes as appropriate, See also: XAMX'
+    parent: XQ
+  XQXE:
+    name: 'Graphic novel / Comic book / Manga: Adult – erotic'
+    notes: 'Use for: comic books designed for adults featuring scenes of an overtly erotic nature or dealing with graphic
+      sexual themes only suitable for an aware mature audience. Use with: Qualifier 5X plus other X* codes as appropriate,
+      See also: XAMX2'
+    parent: XQX
+  XQXV:
+    name: 'Graphic novel / Comic book / Manga: Adult – extreme violence / gore'
+    notes: 'Use for: comic books designed for adults featuring scenes of an overtly violent or gory nature or dealing with
+      graphic or disturbingly violent themes only suitable for an aware mature audience. Use with: Qualifier 5X plus other
+      X* codes as appropriate, See also: XAMX'
+    parent: XQX
+  XR:
+    name: 'Graphic novel / Comic book / Manga: Reference, guides and reviews'
+    notes: 'Also class here: History of Comics, comic studies. Use with: other subject codes as appropriate, for example,
+      with FZ for Companion works or DSB* for histories of comic books or GB* codes for reference works, or DS* for works
+      that analyse, study, critique comic books or Graphic narrative studies, AKLC* for works about comic book art or Sequential
+      art studies, or other subject codes for titles about comics, See also: DSR FZ'
+    parent: X
+  XRM:
+    name: 'Manga and East Asian style / tradition: Reference, guides and reviews'
+    notes: 'Use with: other subject codes as appropriate, for example, with FZ for Companion works or DSB* for histories of
+      manga or GB* codes for reference works, or DS* for works that analyse, study, critique manga, See also: DSR FZ'
+    parent: XR
+  XY:
+    name: Funny cartoons and comic strips
+    notes: 'Also class here: Strip cartoons, humorous comic strips or funnies. Use for: collections of typically humorous
+      cartoons, usually originally published in newspapers or magazines or online, See also: YNUC'
+    parent: X

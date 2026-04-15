@@ -1,0 +1,331 @@
+# Raw phrase → canonical code map.
+# - Subject codes resolve against thema_subjects.yaml OR extensions.yaml (LOCAL:*).
+# - Audience codes resolve against thema_audience.yaml.
+# - Form codes resolve against thema_form.yaml OR extensions.yaml.
+# - Hard-no codes resolve against hard_nos.yaml.
+# Keys are normalized at runtime (lowercase, punctuation stripped, whitespace collapsed)
+# before lookup — so "Sci-Fi", "sci fi", "SCIFI" all hit the "sci fi" entry.
+# Do not add a phrase under more than one facet.
+
+aliases:
+
+  # ==== SUBJECT ====================================================
+  subject:
+    # Literary / general
+    "literary": FBA
+    "literary fiction": FBA
+    "lit fic": FBA
+    "literary fic": FBA
+    "modern literary fiction": FBA
+    "contemporary literary fiction": FBA
+    "contemporary fiction": FBA
+    "contemporary": FBA
+    "contemporary fic": FBA
+    "classic fiction": FBC
+    "general fiction": FB
+    "book club fiction": FBA         # agents use this for upmarket-literary
+    "book club": FBA
+
+    # Commercial / upmarket (agent-industry terms — no direct Thema match)
+    "commercial": "LOCAL:commercial_fiction"
+    "commercial fiction": "LOCAL:commercial_fiction"
+    "commercial fic": "LOCAL:commercial_fiction"
+    "upmarket": "LOCAL:upmarket_fiction"
+    "upmarket fiction": "LOCAL:upmarket_fiction"
+    "upmarket fic": "LOCAL:upmarket_fiction"
+    "women's fiction": "LOCAL:womens_fiction"
+    "womens fiction": "LOCAL:womens_fiction"
+    "women's fic": "LOCAL:womens_fiction"
+    "chick lit": "LOCAL:womens_fiction"
+    "chick-lit": "LOCAL:womens_fiction"
+
+    # Speculative / SFF
+    "speculative": FD
+    "speculative fiction": FD
+    "spec fic": FD
+    "dystopia": FDB
+    "dystopian": FDB
+    "post-apocalyptic": FLQ
+    "post apocalyptic": FLQ
+    "apocalyptic": FLQ
+    "alternative history": FDK
+    "alt history": FDK
+
+    "science fiction": FL
+    "sci-fi": FL
+    "sci fi": FL
+    "scifi": FL
+    "sf": FL
+    "hard sf": FLH
+    "hard sci fi": FLH
+    "space opera": FLS
+    "steampunk": FLM
+    "cyberpunk": FL
+    "time travel": FLG
+    "cozy sci fi": FLJ
+    "cosy sci fi": FLJ
+    "military sci fi": FLR
+
+    "fantasy": FM
+    "epic fantasy": FMB
+    "high fantasy": FMB
+    "urban fantasy": FMX
+    "contemporary fantasy": FMW
+    "low fantasy": FMW
+    "dark fantasy": FMT
+    "cozy fantasy": FMJ
+    "cosy fantasy": FMJ
+    "historical fantasy": FMH
+    "magical realism": FMM
+    "portal fantasy": "LOCAL:portal_fantasy"
+    "sword and sorcery": FMB
+    "fantasy romance": FMR
+    "romantic fantasy": FMR
+    "romantasy": FMR
+    "dark academia": "LOCAL:dark_academia"
+
+    # Horror / supernatural
+    "horror": FK
+    "dark horror": FK
+    "contemporary horror": FKM
+    "gothic": FYL
+    "gothic fiction": FYL
+    "ghost stories": FK
+    "supernatural": FK
+    "supernatural fiction": FK
+    "occult": FKW
+    "paranormal": FKW
+    "paranormal fiction": FKW
+
+    # Crime / mystery / thriller
+    "crime": FF
+    "crime fiction": FF
+    "crime fic": FF
+    "mystery": FF
+    "mysteries": FF
+    "cozy mystery": FFJ
+    "cosy mystery": FFJ
+    "cozy mysteries": FFJ
+    "cozies": FFJ
+    "cosies": FFJ
+    "locked room mystery": FFC
+    "historical mystery": FFH
+    "noir": FFL
+    "hard-boiled": FFL
+    "police procedural": FFP
+    "amateur detective": FFD
+    "private investigator": FFD
+    "thriller": FH
+    "thrillers": FH
+    "psychological thriller": FHX
+    "domestic thriller": FHX
+    "domestic suspense": FHX
+    "legal thriller": FHP
+    "political thriller": FHP
+    "spy thriller": FHD
+    "espionage": FHD
+    "technothriller": FHK
+    "medical thriller": FHM
+    "suspense": FH
+
+    # Romance
+    "romance": FR
+    "rom-com": FRB
+    "romcom": FRB
+    "romantic comedy": FRB
+    "contemporary romance": FRD
+    "spicy romance": FRX
+    "erotic romance": FRX
+    "dark romance": FRV
+    "romantic suspense": FRM
+    "historical romance": FRH
+    "paranormal romance": FRT
+    "fantasy romance": FMR    # alias into fantasy tree on purpose
+    "sports romance": FRN
+    "why-choose": FRS
+    "why choose": FRS
+    "reverse harem": FRS
+    "friends to lovers": FRLC
+    "enemies to lovers": FRLE
+    "fake relationship": FRLF
+    "forced proximity": FRLH
+    "clean romance": FRF
+    "wholesome romance": FRF
+    "western romance": FRJ
+
+    # Adventure / historical / other fiction
+    "adventure": FJ
+    "adventure fiction": FJ
+    "western": FJW
+    "westerns": FJW
+    "war fiction": FJM
+    "military fiction": FJM
+    "sea stories": FJN
+    "historical": FV
+    "historical fiction": FV
+    "hist fic": FV
+    "historical fic": FV
+    "humor": FU
+    "humour": FU
+    "comedy": FU
+    "humorous fiction": FU
+    "satire": FUP
+    "satirical fiction": FUP
+    "family saga": FT
+    "generational saga": FT
+    "family fiction": FS
+    "erotica": FP
+    "erotic fiction": FP
+    "religious fiction": FW
+    "inspirational fiction": FW
+
+    # Narrative themes / special features
+    "coming of age": FXB
+    "coming-of-age": FXB
+    "short stories": FYB
+    "short story collection": FYB
+    "novella": FYC
+    "novellas": FYC
+    "gothic novel": FYL
+    "dual timeline": FYJ
+    "litrpg": FYW
+    "epistolary": FYD
+    "epistolary fiction": FYD
+
+    # Fairy tales / myth / folk
+    "fairy tale": FNF
+    "fairy tales": FNF
+    "fairy tale retelling": FNF
+    "folk tales": FNF
+    "myth": FNM
+    "mythology": FNM
+    "mythic fiction": FNM
+    "retelling": FNF
+
+    # Children's / teen (subject side — audience goes under audience)
+    "picture book": YBC
+    "picture books": YBC
+    "pb": YBC
+    "board book": YBCB
+    "middle grade": YF
+    "middle-grade": YF
+    "mg": YF
+    "chapter book": YFB
+    "chapter books": YFB
+    "young adult": YF
+    "ya fiction": YF
+    "ya": YF
+
+    # Nonfiction (kept narrow — agents repping nonfiction)
+    "memoir": DNC
+    "memoirs": DNC
+    "personal memoir": DNC
+    "biography": DNB
+    "biographies": DNB
+    "bio": DNB
+    "narrative nonfiction": DN
+    "narrative non-fiction": DN
+    "creative nonfiction": DN
+    "creative non-fiction": DN
+    "narrative nf": DN
+    "essays": DNL
+    "essay collection": DNL
+    "personal essays": DNL
+    "true crime": DNX
+    "true-crime": DNX
+    "true stories": DNX
+    "journalism": DNP
+    "reportage": DNP
+    "poetry": DC
+    "poems": DC
+    "poetry collection": DC
+
+  # ==== AUDIENCE ===================================================
+  # Map informal labels to the canonical Thema 5A* code. The matcher's
+  # audience-proximity score uses the numeric ordering of these codes.
+  audience:
+    "adult": "LOCAL:adult"            # Thema has no explicit "adult" code; implied absence of 5A*
+    "new adult": 5AV
+    "na": 5AV
+    "young adult": 5AQ
+    "ya": 5AQ
+    "teen": 5AP
+    "teens": 5AP
+    "teenage": 5AP
+    "middle grade": 5AK
+    "mg": 5AK
+    "upper middle grade": 5AN
+    "chapter book": 5AH
+    "early reader": 5AG
+    "early readers": 5AG
+    "picture book": 5AD
+    "picture books": 5AD
+    "pb": 5AD
+    "board book": 5AB
+    "board books": 5AB
+
+  # ==== FORM =======================================================
+  form:
+    "graphic novel": XAB
+    "graphic novels": XAB
+    "graphic novels & comics": XAB
+    "comics": XAB
+    "comic book": XAB
+    "manga": XAM
+    "manhwa": XAMD
+    "manhua": XAME
+    "webtoon": "LOCAL:webtoon"
+    "shojo": XAMF
+    "shonen": XAMG
+    "seinen": XAML
+    # Non-Thema forms (novel/novella/short story live under FY* as subject features,
+    # but are also surfaced here as form aliases for agent phrasing)
+    "novel": "LOCAL:novel"
+    "novels": "LOCAL:novel"
+    # "novella" lives under subject (FYC) — Thema encodes novella as a subject feature
+
+  # ==== HARD-NO ====================================================
+  # Resolve against hard_nos.yaml canonical keys.
+  hard_no:
+    "graphic violence": graphic_violence
+    "excessive violence": graphic_violence
+    "extreme violence": graphic_violence
+    "gore": graphic_violence
+    "sexual assault": sexual_assault
+    "rape": sexual_assault
+    "on-page sex": onpage_sex
+    "onpage sex": onpage_sex
+    "explicit sex": onpage_sex
+    "explicit sexual content": onpage_sex
+    "child abuse": csa
+    "csa": csa
+    "animal death": animal_harm
+    "animal harm": animal_harm
+    "harm to animals": animal_harm
+    "suicide": suicide
+    "self harm": self_harm
+    "self-harm": self_harm
+    "talking animals": talking_animals
+    "anthropomorphic": talking_animals
+    "rhyming picture books": rhyming_pb
+    "rhyming pb": rhyming_pb
+    "rhyming": rhyming_pb
+    "vampires": vampires
+    "werewolves": werewolves
+    "zombies": zombies
+    "angels": angels_demons
+    "demons": angels_demons
+    "chosen one": chosen_one
+    "love triangle": love_triangle
+    "insta love": insta_love
+    "insta-love": insta_love
+    "ai generated": ai_generated
+    "ai-generated": ai_generated
+    "ai written": ai_generated
+    "co-written": co_written
+    "celebrity memoir": celebrity_memoir
+    "religious themes": religious_themes
+    "evangelical": evangelical
+    "anti-religious": anti_religion
+    "political polemic": political_polemic
+    "school shooting": school_shooting
