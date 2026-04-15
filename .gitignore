@@ -19,3 +19,14 @@ node_modules/
 # Screenshot/capture outputs (scraped content — not for repo)
 batch_capture_output/
 test_capture_output/
+
+# Internal validation captures (MSWL sample — keep raw artifacts local, publish reports/charts)
+data/mswl_sample/raw_html/
+data/mswl_sample/cleaned/
+data/mswl_sample/notes_raw/
+data/mswl_sample/notes_parsed/
+data/mswl_sample/manifest.csv
+data/mswl_sample/failures.csv
+canon/_cache/
+
+.DS_Store

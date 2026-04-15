@@ -1,0 +1,160 @@
+MSWL SAMPLE — DETAILED TEXT ANALYSIS (48 profiles)
+====================================================
+
+First-pass deep-dive of 48 ManuscriptWishlist agent profiles captured through
+L0→L1 (Note-Taker prompt v2.0, Sonnet 4.5). Internal validation material —
+nothing here has touched the product database.
+
+
+HEADLINE FINDINGS
+-----------------
+
+- Capture worked. 48/48 pages fetched, 0 parse failures on the LLM side.
+  Median 3.5 preference sections per profile, max 15. Total run ~83 minutes,
+  API cost ~$2.
+- Canon coverage is well below v1 targets on every facet. Subject 51.5%,
+  audience 53.1%, hard_no 0.4%. Targets are 90% / 90% / 70%.
+- Hard-no is effectively unmapped (2 of 463 terms matched). This is the
+  single biggest finding of the run — a vocabulary mismatch that needs
+  redesign, not patches.
+- Identity extraction is noisier than expected. Only 83% of profiles
+  yielded a name. The same 8 profiles fail name + organization + role +
+  availability together → one specific template variant the parser misses.
+- Prompt is self-aware. Mean 3.1 MISSING flags vs 1.4 INFERRED per profile
+  — the Note-Taker prefers to admit absence over hallucinating. Good
+  signal for downstream trust.
+
+
+1 · CANON COVERAGE (see coverage.png)
+-------------------------------------
+
+  Facet    | Mapped | Total | Coverage | v1 target
+  ---------+--------+-------+----------+----------
+  subject  |   308  |  598  |  51.5%   |   90%
+  audience |   112  |  211  |  53.1%   |   90%
+  hard_no  |     2  |  463  |   0.4%   |   70%
+
+Subject at ~52%: every second genre label agents write has no home in the
+current canon. Most of the gap is synonyms ("feminist horror", "upmarket
+commercial fiction") that need aliasing, not new concepts. A small number
+are genuine category gaps — mostly horror subgenres.
+
+Audience at ~53%: the misses are largely normalization artefacts. The
+Note-Taker emits `young_adult` and `middle_grade` (underscore form) but the
+alias map keys them with spaces. A one-line normalizer fix would lift this
+facet to ~80% without adding any aliases.
+
+Hard-no at 0.4% is the alarm bell. `hard_nos.yaml` was designed before the
+Note-Taker integration; the phrases agents actually write ("graphic sexual
+violence", "gratuitous gore", "torture porn", "sexual assault on-page")
+bear almost no resemblance to the compact tags in that file. This facet
+needs a rewrite, not patches.
+
+
+2 · PROFILE STRUCTURE (see section_histogram.png, section_types.png)
+--------------------------------------------------------------------
+
+- Median 3.5 sections per agent, max 15.
+- 12 profiles returned zero preference sections. Two failure modes:
+  - Group A (8 profiles): no name, no sections → different LLM template
+    variant the prompt doesn't handle.
+  - Group B (4 profiles: brandy-vallance, elizabeth-poteet, emelie-burl,
+    mark-falkin): sections use prose headings like "### GENERAL (All Ages
+    — Eclectic)" instead of the expected "### [SECTION LABEL]" bracket
+    form. Parser needs a no-brackets fallback.
+- 94% of sections are hybrid (audience + genre). Agents almost never
+  split preferences on a single axis. The matcher should weight the
+  combination of axes, not each axis independently.
+
+
+3 · IDENTITY COMPLETENESS (see identity_fill.png)
+-------------------------------------------------
+
+- Name, organization, role, availability all cluster at ~83%. The same
+  8 profiles fail all four together — strong signal of a single template
+  variant rather than independent extraction failures.
+- Email only in 52% of profiles. Many agents route through a portal
+  (QueryManager, Submittable) rather than listing an address. The
+  `submission_portal` field at 81% corroborates this — it's working
+  as designed.
+- Pronouns at 12%. Reflects real MSWL profile sparsity, not a parser bug.
+
+
+4 · HARD-NOS (see hardno_buckets.png)
+-------------------------------------
+
+- All four buckets (content / format / trope / category) fire in 29–52%
+  of profiles — agents do declare exclusions.
+- The `trope` bucket lags at 29% because many agents fold trope dislikes
+  into free-text `content` prose rather than listing them separately.
+  The prompt could disambiguate more aggressively.
+- Combined with the 0.4% canon-mapping rate: we have the data, we just
+  can't filter on it yet.
+
+
+5 · CONFIDENCE FLAGS (see confidence.png)
+-----------------------------------------
+
+- INFERRED mean 1.4, NUANCED 1.1, MISSING 3.1 per profile.
+- MISSING > INFERRED is the healthy pattern. The prompt is more willing
+  to admit absence than to guess. That's exactly the behavior we want
+  feeding L2/L3 — it stops downstream layers from building on fabricated
+  signal.
+
+
+6 · COMP TITLES (see comps.png)
+-------------------------------
+
+- 33/48 profiles list at least one comp. Median 7, max 110.
+- The outlier at 110 is one agent who lists favorite books broadly, not
+  per-section comps. The matcher should cap per-profile contribution to
+  prevent that profile from dominating similarity scores.
+
+
+7 · UNMAPPED VOCABULARY LEADERBOARDS
+------------------------------------
+
+See unmapped_subject.png, unmapped_audience.png, unmapped_hard_no.png.
+
+Subject: Green bars (≥5 profiles) are LOCAL-extension candidates. At
+48 profiles the bar is high — expect many more to clear it as the
+sample grows toward the Step 4 target of 200. Obvious LOCAL candidates
+already: gothic horror, psychological horror.
+
+Audience: Small absolute counts but 4 of 6 are LOCAL candidates. Most
+are normalization issues ("adults" vs adult, "teens" vs young_adult,
+underscore-form vs space-form).
+
+Hard-no: this is the facet that needs most attention. The unmapped
+terms are long, specific phrases written in natural language —
+nothing in the current alias file comes close.
+
+
+8 · IMMEDIATE ACTION LIST
+-------------------------
+
+1. Audit `canon/hard_nos.yaml` against the top-50 unmapped hard_no
+   terms. It's not an alias problem; it's a vocabulary mismatch that
+   needs redesign.
+
+2. Fix the normalizer: map underscore-form audience tokens
+   (young_adult, middle_grade, new_adult, picture_books) to the
+   space-form keys. One-line change, lifts audience coverage to ~80%.
+
+3. Add aliases for obvious token-overlap candidates in subject. Low
+   risk, immediate coverage lift. Estimate: +15–20 percentage points
+   with a 60-line edit.
+
+4. Add LOCAL:gothic_horror and LOCAL:psychological_horror — both
+   cleared the 5-profile bar already.
+
+5. Investigate the 12 zero-section profiles. Group A (8) and Group B
+   (4) have different root causes; Group B is fixable with a parser
+   regex relaxation.
+
+6. Rerun `scripts/canon_dryrun.py` after aliases/extensions land. No
+   re-crawl needed — it reads cached notes_parsed/.
+
+7. Do not treat this as v1 readiness. 48 profiles is a diagnostic,
+   not a lock. Step 4's 200-profile production run is still required
+   per docs/features/16_l2_canonicalization.md.
